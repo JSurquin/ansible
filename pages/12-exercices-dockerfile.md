@@ -48,6 +48,8 @@ LABEL author="moi"
 COPY index.html /usr/share/nginx/html/
 ```
 
+---
+
 ```bash
 # 3. Build et test
 docker build -t my-nginx:v1 .
@@ -79,6 +81,8 @@ mkdir my-app && cd my-app
 }
 ```
 
+---
+
 ```javascript
 # 3. Créer le fichier server.js
 const express = require('express');
@@ -97,6 +101,8 @@ app.listen(PORT, () => {
     console.log(`Serveur sur le port ${PORT}`);
 });
 ```
+
+---
 
 ```dockerfile
 # 2. Dockerfile pour Node.js
@@ -166,6 +172,8 @@ LABEL stage="production"
 COPY --from=builder /app/dist/ /usr/share/nginx/html/
 ```
 
+---
+
 ```dockerfile
 # 3. Comparaison avec version simple
 FROM node:18-alpine
@@ -174,6 +182,8 @@ COPY . .
 RUN npm run build
 COPY dist/ /usr/share/nginx/html/
 ```
+
+---
 
 ```bash
 # 4. Build des 2 versions
