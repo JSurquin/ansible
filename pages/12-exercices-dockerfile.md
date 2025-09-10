@@ -503,10 +503,11 @@ LABEL stage="production"
 LABEL optimized="true"
 
 # Copier SEULEMENT les fichiers finaux
-COPY --from=builder /dist/ /usr/share/nginx/html/
-
 # nginx:alpine est déjà optimisé
+COPY --from=builder /dist/ /usr/share/nginx/html/
 ```
+
+---
 
 ```dockerfile
 # Version non-optimisée pour comparaison
