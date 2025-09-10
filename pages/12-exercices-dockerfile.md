@@ -132,8 +132,11 @@ docker stop test-app && docker rm test-app
 ```bash
 # 1. Préparer le projet
 mkdir optimized-app && cd optimized-app
+```
 
 # App simple qui génère du contenu statique
+
+```javascript
 const fs = require('fs');
 
 const html = `
@@ -157,6 +160,8 @@ console.log('✅ Contenu généré');
     "build": "mkdir -p dist && node build.js"
   }
 }
+```
+---
 
 ```dockerfile
 # 2. Dockerfile multi-stage
