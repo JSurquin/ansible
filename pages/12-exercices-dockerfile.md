@@ -3,7 +3,7 @@ layout: new-section
 routeAlias: 'exercices-dockerfile'
 ---
 
-<a name="EXERCICES_DOCKERFILE" id="EXERCICES_DOCKERFILE"></a>
+<a name="exercices-dockerfile" id="exercices-dockerfile"></a>
 
 # Exercices Dockerfile 📝
 
@@ -26,7 +26,9 @@ Avant les exercices principaux, des Dockerfiles simples pour s'échauffer !
 ```bash
 # 1. Créer une page personnalisée
 mkdir my-nginx && cd my-nginx
+```
 
+```html
 # 2. Créer le fichier HTML : index.html
 <!DOCTYPE html>
 <html>
@@ -37,12 +39,16 @@ mkdir my-nginx && cd my-nginx
     <p>Version: <strong>1.0</strong></p>
 </body>
 </html>
+```
 
+```dockerfile
 # 2. Créer le Dockerfile
 FROM nginx:alpine
 LABEL author="moi"
 COPY index.html /usr/share/nginx/html/
+```
 
+```bash
 # 3. Build et test
 docker build -t my-nginx:v1 .
 docker run -d --name test-nginx -p 8080:80 my-nginx:v1
@@ -59,7 +65,9 @@ docker stop test-nginx && docker rm test-nginx
 ```bash
 # 1. Créer l'app Node.js
 mkdir my-app && cd my-app
+```
 
+```json
 # 2. Créer le fichier package.json
 {
   "name": "docker-app",
@@ -69,7 +77,9 @@ mkdir my-app && cd my-app
     "express": "^4.18.0"
   }
 }
+```
 
+```javascript
 # 3. Créer le fichier server.js
 const express = require('express');
 const app = express();
@@ -86,7 +96,9 @@ app.get('/', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Serveur sur le port ${PORT}`);
 });
+```
 
+```dockerfile
 # 2. Dockerfile pour Node.js
 FROM node:18-alpine
 WORKDIR /app
@@ -95,7 +107,9 @@ RUN npm install
 COPY server.js .
 EXPOSE 3000
 CMD ["node", "server.js"]
+```
 
+```bash
 # 3. Build et test
 docker build -t my-app:v1 .
 docker run -d --name test-app -p 3000:3000 my-app:v1
@@ -138,6 +152,7 @@ console.log('✅ Contenu généré');
   }
 }
 
+```dockerfile
 # 2. Dockerfile multi-stage
 # Étape 1: Builder
 FROM node:18-alpine AS builder
@@ -149,14 +164,18 @@ RUN npm run build
 FROM nginx:alpine AS production
 LABEL stage="production"
 COPY --from=builder /app/dist/ /usr/share/nginx/html/
+```
 
+```dockerfile
 # 3. Comparaison avec version simple
 FROM node:18-alpine
 WORKDIR /app
 COPY . .
 RUN npm run build
 COPY dist/ /usr/share/nginx/html/
+```
 
+```bash
 # 4. Build des 2 versions
 docker build -t optimized:multistage .
 docker build -f Dockerfile.simple -t optimized:simple .
@@ -201,7 +220,9 @@ docker stop test-opt && docker rm test-opt
 # 1. Créer le projet
 mkdir mon-site
 cd mon-site
+```
 
+```html
 # 2. Créer une page web simple
 # 2. Créer le fichier HTML : index.html
 <!DOCTYPE html>
@@ -258,7 +279,9 @@ ENV VERSION="1.0"
 COPY index.html /usr/share/nginx/html/
 
 # Le port 80 est déjà exposé par nginx
+```
 
+```bash
 # 4. Build de l'image
 docker build -t mon-site:v1 .
 
@@ -300,7 +323,9 @@ docker stop test-site && docker rm test-site
 # 1. Créer le projet
 mkdir outils-docker
 cd outils-docker
+```
 
+```bash
 # 2. Script d'aide simple
 #!/bin/sh
 echo "🛠️ Outils disponibles:"
@@ -350,7 +375,9 @@ RUN echo 'echo "Tapez: aide"' >> /etc/profile
 
 # Commande par défaut
 CMD ["sh", "-l"]
+```
 
+```bash
 # 4. Build et test
 docker build -t outils:v2 .
 
@@ -391,7 +418,9 @@ docker rm test-outils
 # 1. Créer le projet
 mkdir site-optimise
 cd site-optimise
+```
 
+```html
 # 2. Créer plusieurs pages
 <!DOCTYPE html>
 <html>
@@ -410,7 +439,9 @@ cd site-optimise
     </div>
 </body>
 </html>
+```
 
+```html
 <!DOCTYPE html>
 <html>
 <head>
@@ -465,15 +496,18 @@ LABEL optimized="true"
 COPY --from=builder /dist/ /usr/share/nginx/html/
 
 # nginx:alpine est déjà optimisé
+```
 
-# 4. Construire les deux versions pour comparer
-docker build -t site-optimise:multistage .
-
+```dockerfile
 # Version non-optimisée pour comparaison
 FROM nginx:alpine
 RUN apk add --no-cache curl
 COPY *.html /usr/share/nginx/html/
+```
 
+```bash
+# 4. Construire les deux versions pour comparer
+docker build -t site-optimise:multistage .
 docker build -f Dockerfile.simple -t site-optimise:simple .
 
 # 5. Comparer les tailles
