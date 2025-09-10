@@ -134,6 +134,8 @@ docker stop test-app && docker rm test-app
 mkdir optimized-app && cd optimized-app
 ```
 
+---
+
 # App simple qui génère du contenu statique
 
 ```javascript
