@@ -1,164 +1,108 @@
 ---
-layout: new-section
 routeAlias: 'qcm-ansible'
 ---
 
 <a name="QCM_ANSIBLE" id="QCM_ANSIBLE"></a>
 
-# QCM : Maîtrise d'Ansible
+# QCM : Évaluation Ansible
+
+### Testez vos connaissances par module
 
 ---
 
-## QCM sur la maîtrise d'Ansible
+# Module 1 : Fondamentaux Ansible
 
-### 1. Quel est le principe fondamental d'Ansible ?
+### Question 1
 
-- [ ]  Ansible nécessite des agents sur tous les serveurs cibles
-- [ ]  Ansible fonctionne en mode "push" sans agent
-- [ ]  Ansible utilise uniquement le protocole HTTP
-- [ ]  Ansible remplace complètement SSH
+Quel est le principe fondamental d'Ansible ?
 
-### 2. Quels sont les composants principaux d'Ansible ?
+A) Ansible nécessite des agents sur tous les serveurs cibles
 
-- [ ]  Control Node, Managed Nodes, Playbooks
-- [ ]  Master, Workers, Registry
-- [ ]  Client, Server, Database
-- [ ]  Controller, Executors, Storage
+B) Ansible fonctionne en mode "push" sans agent
+
+C) Ansible utilise uniquement le protocole HTTP
+
+D) Ansible remplace complètement SSH
 
 ---
 
-# QCM Ansible (suite)
+### Question 2
 
-### 3. Que signifie "idempotent" dans le contexte Ansible ?
+Quels sont les composants principaux d'Ansible ?
 
-- [ ]  Les tâches s'exécutent toujours plus rapidement à la deuxième fois
-- [ ]  Exécuter un playbook plusieurs fois produit le même résultat
-- [ ]  Les erreurs sont automatiquement corrigées
-- [ ]  Les tâches sont executées en parallèle
+A) Control Node, Managed Nodes, Playbooks
 
-### 4. Dans quel format sont écrits les playbooks Ansible ?
+B) Master, Workers, Registry
 
-- [ ]  JSON
-- [ ]  XML
-- [ ]  YAML
-- [ ]  TOML
+C) Client, Server, Database
+
+D) Controller, Executors, Storage
 
 ---
 
-### 5. Qu'est-ce qu'un inventaire Ansible ?
+### Question 3
 
-- [ ]  La liste des playbooks disponibles
-- [ ]  La liste des serveurs et groupes gérés par Ansible
-- [ ]  L'historique des exécutions
-- [ ]  Le catalogue des modules disponibles
+Que signifie "idempotent" dans le contexte Ansible ?
 
----
+A) Les tâches s'exécutent toujours plus rapidement à la deuxième fois
 
-# QCM Ansible (suite 2)
+B) Exécuter un playbook plusieurs fois produit le même résultat
 
-### 6. À quoi sert Ansible Vault ?
+C) Les erreurs sont automatiquement corrigées
 
-- [ ]  Stocker les playbooks de manière sécurisée
-- [ ]  Chiffrer les données sensibles comme les mots de passe
-- [ ]  Sauvegarder l'inventaire
-- [ ]  Gérer les versions des playbooks
-
-### 7. Quelle est la différence entre un module et un rôle ?
-
-- [ ]  Un module est réutilisable, un rôle ne l'est pas
-- [ ]  Un module exécute une tâche spécifique, un rôle est un ensemble de tâches organisées
-- [ ]  Un rôle est plus rapide qu'un module
-- [ ]  Il n'y a pas de différence
+D) Les tâches sont exécutées en parallèle
 
 ---
 
-### 8. Quelle commande exécute une tâche ad-hoc sur tous les serveurs web ?
+# Module 2 : Inventaires et Playbooks
 
-- [ ]  `ansible webservers -m ping`
-- [ ]  `ansible-playbook -i webservers ping.yml`
-- [ ]  `ansible all -m webservers -a ping`
-- [ ]  `ansible run webservers ping`
+### Question 4
 
----
+Qu'est-ce qu'un inventaire Ansible ?
 
-# QCM Ansible (suite 3)
+A) La liste des playbooks disponibles
 
-### 9. Quelle est la structure standard d'un rôle Ansible ?
+B) La liste des serveurs et groupes gérés par Ansible
 
-- [ ]  `tasks/, handlers/, vars/, files/`
-- [ ]  `src/, build/, test/, deploy/`
-- [ ]  `main/, config/, scripts/, docs/`
-- [ ]  `playbooks/, inventories/, modules/, plugins/`
+C) L'historique des exécutions
 
-### 10. Comment ignorer les erreurs pour une tâche spécifique ?
-
-- [ ]  `ignore_errors: true`
-- [ ]  `failed_when: false`
-- [ ]  `error_handling: ignore`
-- [ ]  `skip_errors: yes`
+D) Le catalogue des modules disponibles
 
 ---
 
-### 11. À quoi servent les tags dans Ansible ?
+### Question 5
 
-- [ ]  Identifier les versions des playbooks
-- [ ]  Exécuter seulement certaines tâches d'un playbook
-- [ ]  Catégoriser les serveurs dans l'inventaire
-- [ ]  Marquer les erreurs dans les logs
+Dans quel format sont écrits les playbooks Ansible ?
 
----
+A) JSON
 
-# QCM Ansible (suite 4)
+B) XML
 
-### 12. Comment implémenter un déploiement blue-green avec Ansible ?
+C) YAML
 
-- [ ]  Utiliser des groupes d'inventaire distincts et des variables conditionnelles
-- [ ]  Créer deux playbooks séparés
-- [ ]  Utiliser uniquement des rôles
-- [ ]  Impossible avec Ansible seul
-
-### 13. Quelle n'est PAS une bonne pratique de sécurité avec Ansible ?
-
-- [ ]  Utiliser Ansible Vault pour les secrets
-- [ ]  Stocker les clés SSH dans les playbooks
-- [ ]  Limiter les privilèges avec `become_user`
-- [ ]  Utiliser des connexions SSH avec clés
+D) TOML
 
 ---
 
-# Réponses (1-5)
+### Question 6
 
-1. **Ansible fonctionne en mode "push" sans agent**
-2. **Control Node, Managed Nodes, Playbooks**
-3. **Exécuter un playbook plusieurs fois produit le même résultat**
-4. **YAML**
-5. **La liste des serveurs et groupes gérés par Ansible**
+Comment exécuter un playbook avec un inventaire spécifique ?
 
----
+A) `ansible-playbook playbook.yml -i inventory.yml`
 
-# Réponses (6-10)
+B) `ansible playbook.yml --inventory inventory.yml`
 
-6. **Chiffrer les données sensibles comme les mots de passe**
-7. **Un module exécute une tâche spécifique, un rôle est un ensemble de tâches organisées**
-8. **`ansible webservers -m ping`**
-9. **`tasks/, handlers/, vars/, files/`**
-10. **`ignore_errors: true`**
+C) `ansible-run -p playbook.yml -i inventory.yml`
+
+D) `ansible execute playbook.yml inventory.yml`
 
 ---
 
-# Réponses (11-13)
+# Module 3 : Modules et Variables
 
-11. **Exécuter seulement certaines tâches d'un playbook**
-12. **Utiliser des groupes d'inventaire distincts et des variables conditionnelles**
-13. **Stocker les clés SSH dans les playbooks**
+### Question 7
 
----
-
-# 🎯 Questions Pratiques
-
-### Question 7 : Modules vs Rôles 🧩
-
-**Quelle est la différence entre un module et un rôle ?**
+Quelle est la différence entre un module et un rôle ?
 
 A) Un module est réutilisable, un rôle ne l'est pas
 
@@ -170,9 +114,9 @@ D) Il n'y a pas de différence
 
 ---
 
-### Question 8 : Commandes ad-hoc ⚡
+### Question 8
 
-**Quelle commande exécute une tâche ad-hoc sur tous les serveurs web ?**
+Quelle commande exécute une tâche ad-hoc sur tous les serveurs web ?
 
 A) `ansible webservers -m ping`
 
@@ -184,9 +128,69 @@ D) `ansible run webservers ping`
 
 ---
 
-### Question 9 : Structure de rôle 📁
+### Question 9
 
-**Quelle est la structure standard d'un rôle Ansible ?**
+Comment définir une variable dans un playbook ?
+
+A) `set var_name: value`
+
+B) `vars: var_name = value`
+
+C) `vars:` suivi de `var_name: value`
+
+D) `define: var_name value`
+
+---
+
+# Module 4 : Templates et Handlers
+
+### Question 10
+
+Quel langage de template utilise Ansible ?
+
+A) Mustache
+
+B) Jinja2
+
+C) Handlebars
+
+D) EJS
+
+---
+
+### Question 11
+
+Quand un handler est-il exécuté ?
+
+A) Immédiatement quand il est appelé
+
+B) À la fin du playbook, seulement si notifié et que la tâche a changé quelque chose
+
+C) Au début de chaque play
+
+D) Uniquement en cas d'erreur
+
+---
+
+### Question 12
+
+Comment appeler un handler depuis une tâche ?
+
+A) `trigger: handler_name`
+
+B) `call: handler_name`
+
+C) `notify: handler_name`
+
+D) `execute: handler_name`
+
+---
+
+# Module 5 : Rôles et Collections
+
+### Question 13
+
+Quelle est la structure standard d'un rôle Ansible ?
 
 A) `tasks/, handlers/, vars/, files/`
 
@@ -198,53 +202,67 @@ D) `playbooks/, inventories/, modules/, plugins/`
 
 ---
 
-### Question 10 : Gestion des erreurs 🚨
+### Question 14
 
-**Comment ignorer les erreurs pour une tâche spécifique ?**
+Comment installer une collection Ansible depuis Galaxy ?
 
-A) `ignore_errors: true`
+A) `ansible install collection community.docker`
 
-B) `failed_when: false`
+B) `ansible-galaxy collection install community.docker`
 
-C) `error_handling: ignore`
+C) `ansible-galaxy install community.docker`
 
-D) `skip_errors: yes`
-
----
-
-### Question 11 : Tags 🏷️
-
-**À quoi servent les tags dans Ansible ?**
-
-A) Identifier les versions des playbooks
-
-B) Exécuter seulement certaines tâches d'un playbook
-
-C) Catégoriser les serveurs dans l'inventaire
-
-D) Marquer les erreurs dans les logs
+D) `ansible add-collection community.docker`
 
 ---
 
-# 🏆 Scénarios Avancés
+### Question 15
 
-### Question 12 : Déploiement Blue-Green 🔄
+Où sont stockés les rôles téléchargés depuis Ansible Galaxy par défaut ?
 
-**Comment implémenter un déploiement blue-green avec Ansible ?**
+A) `~/.ansible/roles/`
 
-A) Utiliser des groupes d'inventaire distincts et des variables conditionnelles
+B) `/etc/ansible/roles/`
 
-B) Créer deux playbooks séparés
+C) `./roles/`
 
-C) Utiliser uniquement des rôles
-
-D) Impossible avec Ansible seul
+D) `/usr/share/ansible/roles/`
 
 ---
 
-### Question 13 : Sécurité 🛡️
+# Module 6 : Ansible Vault et Sécurité
 
-**Quelle n'est PAS une bonne pratique de sécurité avec Ansible ?**
+### Question 16
+
+À quoi sert Ansible Vault ?
+
+A) Stocker les playbooks de manière sécurisée
+
+B) Chiffrer les données sensibles comme les mots de passe
+
+C) Sauvegarder l'inventaire
+
+D) Gérer les versions des playbooks
+
+---
+
+### Question 17
+
+Comment créer un fichier chiffré avec Ansible Vault ?
+
+A) `ansible-vault encrypt fichier.yml`
+
+B) `ansible-vault create fichier.yml`
+
+C) `ansible vault new fichier.yml`
+
+D) `ansible-encrypt fichier.yml`
+
+---
+
+### Question 18
+
+Quelle n'est PAS une bonne pratique de sécurité avec Ansible ?
 
 A) Utiliser Ansible Vault pour les secrets
 
@@ -256,137 +274,214 @@ D) Utiliser des connexions SSH avec clés
 
 ---
 
-# 📊 Correction et Barème
+# Module 7 : Gestion des erreurs et Tags
 
-### Réponses Correctes (Fondamentaux)
+### Question 19
 
-**Questions 1-6**
-1. **B** - Mode push sans agent
-2. **A** - Control Node, Managed Nodes, Playbooks
-3. **B** - Même résultat à chaque exécution
-4. **C** - Format YAML
-5. **B** - Liste des serveurs gérés
-6. **B** - Chiffrement des données sensibles
+Comment ignorer les erreurs pour une tâche spécifique ?
 
----
+A) `ignore_errors: true`
 
-# 📊 Correction (suite)
+B) `failed_when: false`
 
-### Réponses Correctes (Concepts)
+C) `error_handling: ignore`
 
-**Questions 7-11**
-
-7. **B** - Module = tâche spécifique, Rôle = ensemble organisé
-
-8. **A** - `ansible webservers -m ping`
-
-9. **A** - Structure standard des rôles
-
-10. **A** - `ignore_errors: true`
-
-11. **B** - Exécution sélective de tâches
-
-**Questions 12-13 (Avancé)**
-
-12. **A** - Groupes d'inventaire + variables
-
-13. **B** - Ne jamais stocker les clés dans les playbooks
+D) `skip_errors: yes`
 
 ---
 
-# 📊 Score d'évaluation
+### Question 20
 
-### Barème de notation
+À quoi servent les tags dans Ansible ?
 
-- **12-13 bonnes réponses** : 🏆 Expert Ansible !
-- **10-11 bonnes réponses** : 🥇 Niveau avancé
-- **8-9 bonnes réponses** : 🥈 Bon niveau
-- **6-7 bonnes réponses** : 🥉 Niveau intermédiaire
-- **< 6 bonnes réponses** : 📚 Reprenez les bases
+A) Identifier les versions des playbooks
 
----
+B) Exécuter seulement certaines tâches d'un playbook
 
-# 💡 Explications Détaillées
+C) Catégoriser les serveurs dans l'inventaire
 
-### Points clés à retenir
-
-**Question 3 - Idempotence** :
-L'idempotence est cruciale : si l'état désiré est déjà atteint, Ansible ne fait rien. Cela permet d'exécuter le même playbook plusieurs fois sans effet de bord.
-
-**Question 7 - Modules vs Rôles** :
+D) Marquer les erreurs dans les logs
 
 ---
 
-# 💡 Exemples de code
+### Question 21
 
-```yaml
-# Module = action unique
-- name: Installer nginx
-  apt:
-    name: nginx
-    state: present
-```
+Comment exécuter uniquement les tâches avec le tag "config" ?
 
----
+A) `ansible-playbook playbook.yml --tag config`
 
-# 💡 Exemples de code (suite)
+B) `ansible-playbook playbook.yml --tags config`
 
-```yaml
-# Rôle = collection organisée
-- hosts: webservers
-  roles:
-    - webserver  # Contient installation + config + service
-```
+C) `ansible-playbook playbook.yml -t config`
+
+D) Les réponses B et C sont correctes
 
 ---
 
-# 💡 Sécurité avec Ansible
+# Module 8 : Bonnes pratiques et CI/CD
 
-```yaml
-# ❌ Mauvais - clé dans le playbook
-ssh_key: -----BEGIN RSA PRIVATE KEY-----
-```
+### Question 22
 
----
+Comment implémenter un déploiement blue-green avec Ansible ?
 
-# 💡 Sécurité (suite)
+A) Utiliser des groupes d'inventaire distincts et des variables conditionnelles
 
-```yaml
-# ✅ Bon - référence sécurisée
-ssh_key_path: "{{ vault_ssh_key_path }}"
-```
+B) Créer deux playbooks séparés
+
+C) Utiliser uniquement des rôles
+
+D) Impossible avec Ansible seul
 
 ---
 
-# 💡 Bonnes pratiques
+### Question 23
 
-### À retenir absolument
+Quelle est la meilleure façon d'organiser un projet Ansible en production ?
 
-✅ Ansible est agentless et idempotent
+A) Tout mettre dans un seul fichier playbook.yml
 
-✅ YAML est le format standard
+B) Utiliser une structure avec roles/, inventories/, group_vars/
 
-✅ Utilisez Vault pour les secrets
+C) Créer un fichier par serveur
 
-✅ Les rôles permettent la réutilisabilité
+D) Utiliser uniquement des commandes ad-hoc
 
-✅ Les tags facilitent l'exécution sélective
+---
+
+### Question 24
+
+Dans quel contexte utilise-t-on `delegate_to` ?
+
+A) Pour déléguer une tâche à un autre serveur que celui de l'hôte actuel
+
+B) Pour donner des permissions sudo
+
+C) Pour transférer des fichiers
+
+D) Pour exécuter des tâches en parallèle
+
+---
+
+### Question 25
+
+Quelle directive permet de continuer l'exécution même si une tâche échoue sur certains hôtes ?
+
+A) `continue_on_failure: true`
+
+B) `any_errors_fatal: false`
+
+C) `ignore_all_errors: true`
+
+D) `force_continue: true`
+
+---
+
+# 📊 Réponses - Tous les modules
+
+### Corrections complètes
+
+**Module 1 : Fondamentaux**
+- Question 1 : **B** - Ansible fonctionne en mode "push" sans agent
+- Question 2 : **A** - Control Node, Managed Nodes, Playbooks
+- Question 3 : **B** - Exécuter un playbook plusieurs fois produit le même résultat
+
+**Module 2 : Inventaires et Playbooks**
+- Question 4 : **B** - La liste des serveurs et groupes gérés par Ansible
+- Question 5 : **C** - YAML
+- Question 6 : **A** - `ansible-playbook playbook.yml -i inventory.yml`
+
+**Module 3 : Modules et Variables**
+- Question 7 : **B** - Un module exécute une tâche spécifique, un rôle est un ensemble de tâches organisées
+- Question 8 : **A** - `ansible webservers -m ping`
+- Question 9 : **C** - `vars:` suivi de `var_name: value`
+
+---
+
+# 📊 Réponses (suite)
+
+**Module 4 : Templates et Handlers**
+- Question 10 : **B** - Jinja2
+- Question 11 : **B** - À la fin du playbook, seulement si notifié et que la tâche a changé quelque chose
+- Question 12 : **C** - `notify: handler_name`
+
+**Module 5 : Rôles et Collections**
+- Question 13 : **A** - `tasks/, handlers/, vars/, files/`
+- Question 14 : **B** - `ansible-galaxy collection install community.docker`
+- Question 15 : **A** - `~/.ansible/roles/`
+
+**Module 6 : Ansible Vault et Sécurité**
+- Question 16 : **B** - Chiffrer les données sensibles comme les mots de passe
+- Question 17 : **B** - `ansible-vault create fichier.yml`
+- Question 18 : **B** - Stocker les clés SSH dans les playbooks
+
+---
+
+# 📊 Réponses (fin)
+
+**Module 7 : Gestion des erreurs et Tags**
+- Question 19 : **A** - `ignore_errors: true`
+- Question 20 : **B** - Exécuter seulement certaines tâches d'un playbook
+- Question 21 : **D** - Les réponses B et C sont correctes
+
+**Module 8 : Bonnes pratiques et CI/CD**
+- Question 22 : **A** - Utiliser des groupes d'inventaire distincts et des variables conditionnelles
+- Question 23 : **B** - Utiliser une structure avec roles/, inventories/, group_vars/
+- Question 24 : **A** - Pour déléguer une tâche à un autre serveur que celui de l'hôte actuel
+- Question 25 : **B** - `any_errors_fatal: false`
+
+---
+
+# 🎯 Barème de notation
+
+### Évaluez votre niveau
+
+- **23-25 bonnes réponses** : 🏆 Expert Ansible ! Vous maîtrisez parfaitement
+- **20-22 bonnes réponses** : 🥇 Niveau avancé - Excellent travail
+- **16-19 bonnes réponses** : 🥈 Bon niveau - Quelques révisions recommandées
+- **12-15 bonnes réponses** : 🥉 Niveau intermédiaire - Continuez à pratiquer
+- **< 12 bonnes réponses** : 📚 Revoir les fondamentaux
+
+---
+
+# 💡 Points clés à retenir
+
+### Concepts essentiels
+
+✅ **Idempotence** : Ansible garantit le même résultat à chaque exécution
+
+✅ **Sans agent** : Utilise SSH, pas besoin d'installer d'agent sur les serveurs cibles
+
+✅ **YAML** : Format standard pour les playbooks, lisible et simple
+
+✅ **Jinja2** : Moteur de templates pour générer des configurations dynamiques
+
+✅ **Vault** : Chiffrement des données sensibles (mots de passe, clés API)
+
+✅ **Rôles** : Organisation modulaire et réutilisable du code
+
+✅ **Tags** : Exécution sélective de parties d'un playbook
+
+✅ **Handlers** : Actions déclenchées uniquement si une tâche change quelque chose
 
 ---
 
 # 🚀 Prochaines étapes
 
-Maintenant que vous maîtrisez Ansible, explorez :
-- **Ansible Tower/AWX** : Interface web et orchestration
-- **Molecule** : Tests automatisés des rôles
-- **Ansible Collections** : Modules spécialisés
-- **CI/CD Integration** : GitLab, Jenkins, GitHub Actions
-- **Kubernetes** : Ansible Operator
+### Pour aller plus loin
 
-### Resources recommandées
+**Approfondissement**
 - 📖 Documentation officielle Ansible
 - 🎥 Ansible YouTube channel
 - 🌟 Ansible Galaxy pour les rôles communautaires
-- 💬 Communauté Ansible sur Reddit/Discord
 
-**Pro tip** : Pratiquez en créant vos propres rôles et contribuez à la communauté !
+**Outils avancés**
+- **Ansible Tower/AWX** : Interface web et orchestration
+- **Molecule** : Tests automatisés des rôles
+- **Ansible Lint** : Vérification de la qualité du code
+
+**Intégrations**
+- **CI/CD** : GitLab, Jenkins, GitHub Actions
+- **Kubernetes** : Ansible Operator
+- **Cloud** : AWS, Azure, GCP modules
+
+**💡 Conseil** : Pratiquez en créant vos propres rôles et contribuez à la communauté !
