@@ -1,0 +1,57 @@
+# Inventaire Ansible pour le lab Docker
+# Ce fichier définit tous nos "serveurs" de test (containers Docker)
+
+all:
+  vars:
+    ansible_connection: docker
+    ansible_user: root
+    ansible_password: ansible
+    ansible_python_interpreter: /usr/bin/python3
+
+  children:
+    # Groupe des serveurs web
+    webservers:
+      hosts:
+        web01:
+          ansible_host: ansible-lab-web01
+        web02:
+          ansible_host: ansible-lab-web02
+        web03:
+          ansible_host: ansible-lab-web03
+
+    # Groupe des serveurs de base de données
+    databases:
+      hosts:
+        db01:
+          ansible_host: ansible-lab-db01
+        db02:
+          ansible_host: ansible-lab-db02
+
+    # Groupe des serveurs applicatifs
+    appservers:
+      hosts:
+        app01:
+          ansible_host: ansible-lab-app01
+        app02:
+          ansible_host: ansible-lab-app02
+        app03:
+          ansible_host: ansible-lab-app03
+
+    # Groupe des serveurs de monitoring
+    monitoring:
+      hosts:
+        monitor01:
+          ansible_host: ansible-lab-monitor01
+        monitor02:
+          ansible_host: ansible-lab-monitor02
+
+    # Groupes logiques pour les exercices
+    production:
+      children:
+        webservers:
+        databases:
+        appservers:
+
+    infrastructure:
+      children:
+        monitoring:

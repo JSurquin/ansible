@@ -60,6 +60,114 @@ caption: 'ANSIBLE'
 ### Dans cette formation nous allons voir les commandes principales et les bonnes pratiques d'Ansible en 2025.
 
 ---
+layout: text-image
+media: 'https://media.giphy.com/media/3o7qDEq2bMbcbPRQ2c/giphy.gif'
+---
+
+# Pourquoi Docker dans cette formation Ansible ? 🤔
+
+### Docker = Notre infrastructure de test
+
+**Le défi** : Pour apprendre Ansible, il faut plusieurs serveurs à gérer.
+
+**Solutions classiques** :
+- ❌ 10 machines virtuelles → Lourd, lent, coûteux
+- ❌ Cloud providers → Coûte de l'argent  
+- ❌ Vagrant → Encore une techno à installer
+
+---
+
+# Notre solution : Docker comme lab 🐳
+
+### Approche pratique et moderne
+
+**Notre choix** :
+- ✅ Docker Compose = 10 containers en 30 secondes
+- ✅ Chaque container = Un serveur Linux simulé
+- ✅ Ansible les gère comme de vrais serveurs
+- ✅ Léger, gratuit, destructible à volonté
+
+**💡 Important** : Docker est juste l'infrastructure de test, **pas le sujet principal** !
+
+En production, vous remplacerez ces containers par de vrais serveurs (VMs, cloud, bare metal).
+
+---
+
+# Setup de notre lab 🔧
+
+### Notre environnement d'entraînement
+
+```yaml
+# docker-compose-lab.yml - Infrastructure pour les exercices
+version: '3.8'
+services:
+  web-server-1:
+    image: ubuntu:22.04
+    hostname: web01
+    command: sleep infinity
+  
+  web-server-2:
+    image: ubuntu:22.04
+    hostname: web02
+    command: sleep infinity
+  
+  db-server-1:
+    image: ubuntu:22.04
+    hostname: db01
+    command: sleep infinity
+  
+  # ... Jusqu'à 10 serveurs selon les besoins
+```
+
+---
+
+# Lancement du lab 🚀
+
+### Démarrage rapide de l'infrastructure
+
+```bash
+# 1. Lancer tous nos "serveurs" de test
+docker-compose -f docker-compose-lab.yml up -d
+
+# 2. Vérifier que tout est up
+docker ps
+
+# 3. Tester la connexion à un serveur
+docker exec -it web-server-1 bash
+
+# 4. Voilà ! Vous avez 10 serveurs prêts pour Ansible
+```
+
+**Résultat** : Infrastructure multi-serveurs opérationnelle en quelques secondes ! 🎉
+
+**Analogie** : C'est comme avoir un datacenter miniature sur votre laptop.
+
+---
+
+# Ansible voit des serveurs, pas des containers 🎯
+
+### La magie de l'abstraction
+
+```yaml
+# inventory.yml - Ansible ne sait même pas que ce sont des containers !
+all:
+  children:
+    webservers:
+      hosts:
+        web01: {ansible_host: web-server-1}
+        web02: {ansible_host: web-server-2}
+    databases:
+      hosts:
+        db01: {ansible_host: db-server-1}
+```
+
+**Pour Ansible** : Ce sont de vrais serveurs.
+
+**Pour nous** : Ce sont des containers pratiques pour apprendre.
+
+**En prod** : Ce seront vos vraies machines !
+
+---
 layout: two-cols
 routeAlias: 'sommaire'
 ---
@@ -69,6 +177,10 @@ routeAlias: 'sommaire'
 # SOMMAIRE ANSIBLE 📜
 
 ### Formation pratique en 2 jours
+
+**🐳 Infrastructure** : Docker Compose (containers = serveurs de test)
+
+**🤖 Sujet** : Automatisation avec Ansible 2025
 
 <br>
 
@@ -83,6 +195,8 @@ routeAlias: 'sommaire'
 ## PROGRAMME 2 JOURS 📅
 
 ### Structure pédagogique optimisée
+
+> 💡 **Note** : Docker sert uniquement d'infrastructure de test pour simuler plusieurs serveurs. En production, vous utiliserez de vraies machines !
 
 **Jour 1 - Fondamentaux Ansible**
 
