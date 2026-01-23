@@ -210,7 +210,9 @@ routeAlias: 'sommaire'
 <Link to="qcm-ansible">✅ QCM de validation</Link>
 </div>
 
-::right::
+---
+layout: two-cols
+---
 
 ## PROGRAMME 2 JOURS 📅
 
@@ -228,6 +230,8 @@ routeAlias: 'sommaire'
 - Premiers playbooks
 - Variables et facts
 - Exercices pratiques niveau 1 & 2
+
+::right::
 
 **Jour 2 - Ansible avancé**
 
