@@ -1,0 +1,32 @@
+---
+# Playbook utilisant des rôles
+- name: Déploiement avec rôles
+  hosts: webservers
+  become: true
+  
+  vars:
+    # Variables spécifiques à ce déploiement
+    nginx_vhosts:
+      - server_name: "{{ inventory_hostname }}"
+        root: "/var/www/html"
+        port: 80
+  
+  roles:
+    # Utilisation du rôle nginx
+    - role: nginx
+      tags: ['nginx', 'webserver']
+
+  post_tasks:
+    # Tâches exécutées après tous les rôles
+    - name: Vérifier que Nginx répond
+      uri:
+        url: "http://localhost"
+        status_code: 200
+      register: nginx_check
+      retries: 3
+      delay: 2
+    
+    - name: Afficher le résultat
+      debug:
+        msg: "✅ Nginx fonctionne correctement sur {{ inventory_hostname }}"
+      when: nginx_check is success

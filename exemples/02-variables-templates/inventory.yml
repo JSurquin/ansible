@@ -1,0 +1,19 @@
+# Inventaire avec groupes de serveurs
+all:
+  vars:
+    ansible_connection: docker
+    ansible_user: root
+    ansible_python_interpreter: /usr/bin/python3
+
+  children:
+    # Groupe des serveurs web
+    webservers:
+      hosts:
+        web01:
+          ansible_host: ansible-lab-web01
+        web02:
+          ansible_host: ansible-lab-web02
+      vars:
+        # Variables spécifiques au groupe webservers
+        server_role: "webserver"
+        nginx_worker_processes: 2

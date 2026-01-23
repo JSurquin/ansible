@@ -1,0 +1,34 @@
+---
+# Variables par défaut du rôle nginx
+# Ces valeurs peuvent être surchargées dans le playbook
+
+# Configuration de base
+nginx_user: "www-data"
+nginx_worker_processes: "auto"
+nginx_worker_connections: 1024
+nginx_keepalive_timeout: 65
+
+# Ports
+nginx_listen_port: 80
+nginx_listen_ipv6: true
+
+# Chemins
+nginx_conf_path: "/etc/nginx/nginx.conf"
+nginx_vhost_path: "/etc/nginx/sites-available"
+nginx_vhost_enabled_path: "/etc/nginx/sites-enabled"
+nginx_log_path: "/var/log/nginx"
+
+# Virtual hosts (peut être défini dans le playbook)
+nginx_vhosts: []
+#  - server_name: "example.com"
+#    root: "/var/www/example"
+#    port: 80
+
+# Options
+nginx_remove_default_vhost: true
+nginx_gzip_enabled: true
+nginx_client_max_body_size: "10m"
+
+# Gestion du service
+nginx_service_state: "started"
+nginx_service_enabled: true

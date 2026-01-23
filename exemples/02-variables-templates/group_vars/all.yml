@@ -1,0 +1,23 @@
+---
+# Variables globales pour tous les serveurs
+app_name: "Mon Application Ansible"
+app_version: "1.0.0"
+environment: "development"
+
+# Configuration Nginx
+nginx_config:
+  port: 80
+  worker_connections: 1024
+  client_max_body_size: "10m"
+
+# Informations sur l'entreprise
+company:
+  name: "Andromed"
+  url: "https://www.andromed.fr"
+  support_email: "support@andromed.fr"
+
+# Couleurs par environnement
+env_colors:
+  development: "#e3f2fd"
+  staging: "#fff3e0"
+  production: "#e8f5e8"

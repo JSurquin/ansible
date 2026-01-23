@@ -1,0 +1,32 @@
+---
+# Variables STAGING
+
+environment: "staging"
+
+# Application
+app_version: "latest"
+app_replicas: 1
+app_debug: true
+
+# Ressources
+max_memory: "512m"
+max_cpu: "0.5"
+
+# Base de données
+db_host: "db-staging.internal"
+db_name: "myapp_staging"
+db_user: "staging_user"
+# db_password: voir secrets.yml (Vault)
+
+# URLs
+app_url: "https://staging.monapp.com"
+api_url: "https://api-staging.monapp.com"
+
+# SSL
+ssl_enabled: false
+
+# Monitoring
+monitoring_interval: 60
+
+# Backup
+backup_schedule: "0 2 * * *"  # 2h du matin

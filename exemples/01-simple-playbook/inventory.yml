@@ -1,0 +1,12 @@
+# Inventaire simple : liste des serveurs à gérer
+all:
+  vars:
+    # Variables communes à tous les serveurs
+    ansible_connection: docker
+    ansible_user: root
+    ansible_python_interpreter: /usr/bin/python3
+
+  hosts:
+    # Serveur web
+    web01:
+      ansible_host: ansible-lab-web01

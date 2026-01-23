@@ -1,0 +1,42 @@
+---
+# Variables PRODUCTION
+
+environment: "production"
+
+# Application
+app_version: "v1.2.0"  # Version fixe en prod
+app_replicas: 3
+app_debug: false
+
+# Ressources
+max_memory: "2g"
+max_cpu: "2"
+
+# Base de données
+db_host: "db-prod.internal"
+db_name: "myapp_production"
+db_user: "prod_user"
+# db_password: voir secrets.yml (Vault)
+
+# URLs
+app_url: "https://monapp.com"
+api_url: "https://api.monapp.com"
+
+# SSL
+ssl_enabled: true
+ssl_cert_path: "/etc/ssl/certs/monapp.crt"
+ssl_key_path: "/etc/ssl/private/monapp.key"
+
+# Monitoring
+monitoring_interval: 30  # Plus fréquent en prod
+
+# Backup
+backup_schedule: "0 1,13 * * *"  # 1h et 13h (2 fois par jour)
+
+# Performance
+nginx_cache_enabled: true
+nginx_cache_max_size: "1g"
+
+# Sécurité
+firewall_enabled: true
+fail2ban_enabled: true

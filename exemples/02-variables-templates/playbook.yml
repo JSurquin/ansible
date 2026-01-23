@@ -1,0 +1,65 @@
+---
+# Playbook avec variables et templates
+- name: Déploiement avec configuration personnalisée
+  hosts: webservers
+  become: true
+  
+  tasks:
+    # Tâche 1 : Installer Nginx
+    - name: Installer Nginx
+      apt:
+        name: nginx
+        state: present
+        update_cache: yes
+    
+    # Tâche 2 : Créer le répertoire web
+    - name: Créer le répertoire web
+      file:
+        path: /var/www/html
+        state: directory
+        owner: www-data
+        group: www-data
+        mode: '0755'
+    
+    # Tâche 3 : Générer la configuration Nginx depuis le template
+    - name: Configurer Nginx avec template
+      template:
+        src: templates/nginx.conf.j2
+        dest: /etc/nginx/nginx.conf
+        owner: root
+        group: root
+        mode: '0644'
+        backup: yes  # Sauvegarde de l'ancien fichier
+      notify: Redémarrer Nginx
+    
+    # Tâche 4 : Générer la page HTML personnalisée
+    - name: Déployer la page HTML personnalisée
+      template:
+        src: templates/index.html.j2
+        dest: /var/www/html/index.html
+        owner: www-data
+        group: www-data
+        mode: '0644'
+    
+    # Tâche 5 : S'assurer que Nginx est démarré
+    - name: Démarrer Nginx
+      service:
+        name: nginx
+        state: started
+        enabled: yes
+    
+    # Tâche 6 : Afficher les informations
+    - name: Afficher les informations de déploiement
+      debug:
+        msg: |
+          ✅ Déploiement terminé pour {{ inventory_hostname }}
+          🌐 Application: {{ app_name }} v{{ app_version }}
+          🏷️ Environnement: {{ environment }}
+          🔗 URL: http://{{ ansible_host }}:{{ nginx_config.port }}
+  
+  # Handlers : Actions déclenchées par notify
+  handlers:
+    - name: Redémarrer Nginx
+      service:
+        name: nginx
+        state: restarted

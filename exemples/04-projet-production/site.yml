@@ -1,0 +1,40 @@
+---
+# Playbook principal : Déploiement complet
+
+- name: Configuration commune de tous les serveurs
+  hosts: all
+  roles:
+    - role: common
+      tags: ['common', 'base']
+
+- name: Configuration des serveurs web
+  hosts: webservers
+  roles:
+    - role: nginx
+      tags: ['nginx', 'web']
+
+- name: Déploiement de l'application
+  hosts: appservers
+  roles:
+    - role: app
+      tags: ['app', 'application']
+
+- name: Configuration du monitoring
+  hosts: monitoring
+  roles:
+    - role: monitoring
+      tags: ['monitoring', 'observability']
+
+# Post-déploiement
+- name: Vérifications post-déploiement
+  hosts: all
+  tasks:
+    - name: Afficher le résumé du déploiement
+      debug:
+        msg: |
+          ✅ Déploiement terminé avec succès !
+          🌍 Environnement: {{ environment }}
+          🏷️ Version: {{ app_version }}
+          📊 Serveurs: {{ ansible_play_hosts | length }}
+      run_once: true
+      tags: ['always']

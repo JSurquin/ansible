@@ -1,0 +1,43 @@
+# Virtual Host pour {{ item.server_name }}
+# Généré par Ansible le {{ ansible_date_time.date }}
+
+server {
+    listen {{ item.port | default(nginx_listen_port) }};
+{% if nginx_listen_ipv6 %}
+    listen [::]:{{ item.port | default(nginx_listen_port) }};
+{% endif %}
+
+    server_name {{ item.server_name }};
+    
+    root {{ item.root }};
+    index index.html index.htm index.nginx-debian.html;
+
+    # Logs spécifiques
+    access_log {{ nginx_log_path }}/{{ item.server_name }}-access.log;
+    error_log {{ nginx_log_path }}/{{ item.server_name }}-error.log;
+
+    # Configuration principale
+    location / {
+        try_files $uri $uri/ =404;
+    }
+
+    # Health check endpoint
+    location /health {
+        access_log off;
+        return 200 "OK\n";
+        add_header Content-Type text/plain;
+    }
+
+    # Status endpoint (optionnel)
+    location /status {
+        stub_status on;
+        access_log off;
+        allow 127.0.0.1;
+        deny all;
+    }
+
+{% if item.extra_config is defined %}
+    # Configuration supplémentaire
+    {{ item.extra_config | indent(4) }}
+{% endif %}
+}

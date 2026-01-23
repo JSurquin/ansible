@@ -1,0 +1,18 @@
+---
+# Handlers du rôle nginx
+
+- name: Recharger Nginx
+  service:
+    name: nginx
+    state: reloaded
+
+- name: Redémarrer Nginx
+  service:
+    name: nginx
+    state: restarted
+
+- name: Vérifier la configuration Nginx
+  command: nginx -t
+  register: nginx_test
+  changed_when: false
+  failed_when: nginx_test.rc != 0

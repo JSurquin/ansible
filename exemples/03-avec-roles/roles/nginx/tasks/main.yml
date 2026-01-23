@@ -1,0 +1,85 @@
+---
+# Tâches principales du rôle nginx
+
+- name: Mettre à jour le cache APT
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+  tags: ['packages']
+
+- name: Installer Nginx
+  apt:
+    name: nginx
+    state: present
+  tags: ['packages']
+
+- name: Créer les répertoires nécessaires
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ nginx_user }}"
+    group: "{{ nginx_user }}"
+    mode: '0755'
+  loop:
+    - "{{ nginx_vhost_path }}"
+    - "{{ nginx_vhost_enabled_path }}"
+  tags: ['config']
+
+- name: Configurer Nginx (nginx.conf)
+  template:
+    src: nginx.conf.j2
+    dest: "{{ nginx_conf_path }}"
+    owner: root
+    group: root
+    mode: '0644'
+    validate: 'nginx -t -c %s'
+  notify: Recharger Nginx
+  tags: ['config']
+
+- name: Supprimer le vhost par défaut
+  file:
+    path: "{{ nginx_vhost_enabled_path }}/default"
+    state: absent
+  when: nginx_remove_default_vhost
+  notify: Recharger Nginx
+  tags: ['config']
+
+- name: Configurer les virtual hosts
+  template:
+    src: vhost.conf.j2
+    dest: "{{ nginx_vhost_path }}/{{ item.server_name }}.conf"
+    owner: root
+    group: root
+    mode: '0644'
+  loop: "{{ nginx_vhosts }}"
+  when: nginx_vhosts | length > 0
+  notify: Recharger Nginx
+  tags: ['config', 'vhosts']
+
+- name: Activer les virtual hosts
+  file:
+    src: "{{ nginx_vhost_path }}/{{ item.server_name }}.conf"
+    dest: "{{ nginx_vhost_enabled_path }}/{{ item.server_name }}.conf"
+    state: link
+  loop: "{{ nginx_vhosts }}"
+  when: nginx_vhosts | length > 0
+  notify: Recharger Nginx
+  tags: ['config', 'vhosts']
+
+- name: Créer les répertoires web
+  file:
+    path: "{{ item.root }}"
+    state: directory
+    owner: "{{ nginx_user }}"
+    group: "{{ nginx_user }}"
+    mode: '0755'
+  loop: "{{ nginx_vhosts }}"
+  when: nginx_vhosts | length > 0
+  tags: ['config']
+
+- name: Démarrer et activer Nginx
+  service:
+    name: nginx
+    state: "{{ nginx_service_state }}"
+    enabled: "{{ nginx_service_enabled }}"
+  tags: ['service']

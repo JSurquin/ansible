@@ -1,0 +1,10 @@
+# Configuration logrotate pour l'application
+{{ log_path }}/*.log {
+    daily
+    rotate {{ backup_retention_days }}
+    compress
+    delaycompress
+    notifempty
+    missingok
+    create 0644 root root
+}

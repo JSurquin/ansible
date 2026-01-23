@@ -1,0 +1,35 @@
+---
+# Variables globales pour tous les environnements
+
+# Application
+app_name: "MonApp"
+app_port: 8080
+app_user: "appuser"
+
+# Nginx
+nginx_worker_processes: "auto"
+nginx_worker_connections: 1024
+
+# Monitoring
+monitoring_enabled: true
+monitoring_port: 9090
+
+# Backup
+backup_enabled: true
+backup_retention_days: 7
+
+# Logs
+log_level: "info"
+log_path: "/var/log/app"
+
+# Timezone
+timezone: "Europe/Paris"
+
+# Packages communs
+common_packages:
+  - curl
+  - wget
+  - vim
+  - git
+  - htop
+  - net-tools

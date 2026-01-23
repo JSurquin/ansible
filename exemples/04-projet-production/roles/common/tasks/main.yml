@@ -1,0 +1,46 @@
+---
+# Rôle common : Configuration de base pour tous les serveurs
+
+- name: Mettre à jour le cache APT
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Installer les packages communs
+  apt:
+    name: "{{ common_packages }}"
+    state: present
+
+- name: Configurer le timezone
+  timezone:
+    name: "{{ timezone }}"
+
+- name: Créer les répertoires de logs
+  file:
+    path: "{{ log_path }}"
+    state: directory
+    mode: '0755'
+
+- name: Configurer la rotation des logs
+  template:
+    src: logrotate.conf.j2
+    dest: /etc/logrotate.d/app
+    mode: '0644'
+
+- name: Désactiver les services inutiles
+  service:
+    name: "{{ item }}"
+    state: stopped
+    enabled: no
+  loop:
+    - snapd
+  ignore_errors: yes
+
+- name: Afficher les informations système
+  debug:
+    msg: |
+      📊 Serveur: {{ inventory_hostname }}
+      💻 OS: {{ ansible_distribution }} {{ ansible_distribution_version }}
+      🔧 CPU: {{ ansible_processor_vcpus }} vCPUs
+      💾 RAM: {{ ansible_memtotal_mb }}MB
+      🌐 IP: {{ ansible_default_ipv4.address | default('N/A') }}

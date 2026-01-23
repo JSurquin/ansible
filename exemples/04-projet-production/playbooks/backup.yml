@@ -1,0 +1,46 @@
+---
+# Playbook de backup
+
+- name: Backup des serveurs
+  hosts: all
+  
+  vars:
+    backup_dir: "/backup"
+    backup_date: "{{ ansible_date_time.date }}"
+  
+  tasks:
+    - name: Créer le répertoire de backup
+      file:
+        path: "{{ backup_dir }}/{{ backup_date }}"
+        state: directory
+        mode: '0750'
+    
+    - name: Backup configuration Nginx
+      archive:
+        path: /etc/nginx
+        dest: "{{ backup_dir }}/{{ backup_date }}/nginx-{{ inventory_hostname }}.tar.gz"
+      when: inventory_hostname in groups['webservers']
+    
+    - name: Backup logs application
+      archive:
+        path: "{{ log_path }}"
+        dest: "{{ backup_dir }}/{{ backup_date }}/logs-{{ inventory_hostname }}.tar.gz"
+      when: inventory_hostname in groups['appservers']
+    
+    - name: Nettoyer les anciens backups
+      find:
+        paths: "{{ backup_dir }}"
+        age: "{{ backup_retention_days }}d"
+        file_type: directory
+      register: old_backups
+    
+    - name: Supprimer les backups expirés
+      file:
+        path: "{{ item.path }}"
+        state: absent
+      loop: "{{ old_backups.files }}"
+      when: old_backups.files | length > 0
+    
+    - name: Résumé des backups
+      debug:
+        msg: "✅ Backup créé: {{ backup_dir }}/{{ backup_date }}"
