@@ -8,6 +8,7 @@
     backup_dir: "/backup"
     backup_date: "{{ ansible_date_time.date }}"
     backup_retention_days: 7
+    app_log_path: "/var/log/app"
   
   tasks:
     - name: Créer le répertoire de backup
@@ -24,7 +25,7 @@
     
     - name: Backup logs application
       archive:
-        path: "{{ log_path }}"
+        path: "{{ app_log_path }}"
         dest: "{{ backup_dir }}/{{ backup_date }}/logs-{{ inventory_hostname }}.tar.gz"
       when: inventory_hostname in groups['appservers']
     

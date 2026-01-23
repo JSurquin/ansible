@@ -20,7 +20,7 @@ backup_retention_days: 7
 
 # Logs
 log_level: "info"
-log_path: "/var/log/app"
+app_log_path: "/var/log/app"
 
 # Timezone
 timezone: "Europe/Paris"
