@@ -14,13 +14,32 @@ Créer 10 serveurs Linux simulés avec Docker pour pratiquer Ansible sans avoir 
 
 ## 🔧 Installation rapide
 
-### 1. Démarrer l'infrastructure
+⚠️ **IMPORTANT** : L'installation des containers peut prendre **5 à 10 minutes** au premier démarrage (installation de SSH, Python3, sudo). Le temps varie selon votre connexion internet.
+
+### Option 1 : Script automatique (Recommandé)
 
 ```bash
-# Lancer les 10 "serveurs" de test
+# Utiliser le script qui attend automatiquement
+chmod +x wait-for-lab.sh
+./wait-for-lab.sh
+
+# Le script:
+# - Lance les 10 containers
+# - Attend qu'ils soient tous prêts
+# - Affiche le temps total
+```
+
+### Option 2 : Démarrage manuel
+
+```bash
+# 1. Lancer les 10 "serveurs" de test
 docker-compose -f docker-compose-lab.yml up -d
 
-# Vérifier que tous les containers sont up
+# 2. Attendre 5-10 minutes (installation en cours)
+# Vous pouvez suivre l'installation:
+docker logs -f ansible-lab-web01
+
+# 3. Vérifier que tous les containers sont up
 docker ps
 ```
 
@@ -30,17 +49,38 @@ Vous devriez voir 10 containers :
 - 3 serveurs applicatifs (app01, app02, app03)
 - 2 serveurs de monitoring (monitor01, monitor02)
 
-### 2. Tester la connexion Ansible
+### 2. Vérifier que les containers sont PRÊTS
+
+⚠️ **CRITIQUE** : Les containers doivent avoir fini d'installer Python3/SSH
 
 ```bash
-# Ping tous les serveurs avec Ansible
+# Tester la connexion Ansible (DOIT RÉUSSIR sur tous)
 ansible -i inventory-lab.yml all -m ping
 
+# ❌ Si vous voyez "python3: not found" :
+#    → Les containers installent encore les packages
+#    → Attendez 2-3 minutes et réessayez
+
+# ✅ Si tous répondent "SUCCESS => pong" :
+#    → Le lab est prêt !
+```
+
+**Combien de temps attendre ?**
+- 1ère fois : **5-10 minutes** (dépend du réseau)
+- Fois suivantes : **2-3 minutes** (si cache Docker)
+- Avec images pré-construites : **<30 secondes**
+
+### 3. Commandes de vérification
+
+```bash
 # Lister l'inventaire
 ansible-inventory -i inventory-lab.yml --graph
 
 # Tester une commande sur tous les serveurs web
 ansible -i inventory-lab.yml webservers -m command -a "hostname"
+
+# Vérifier Python3 dans un container
+docker exec ansible-lab-web01 python3 --version
 ```
 
 ### 3. Premier playbook de test
