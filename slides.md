@@ -176,12 +176,6 @@ routeAlias: 'sommaire'
 
 # SOMMAIRE ANSIBLE 📜
 
-### Formation pratique en 2 jours
-
-**🐳 Infrastructure** : Docker Compose (containers = serveurs de test)
-
-**🤖 Sujet** : Automatisation avec Ansible 2025
-
 <br>
 
 <div class="flex flex-col gap-2">
@@ -214,9 +208,7 @@ routeAlias: 'sommaire'
 layout: two-cols
 ---
 
-## PROGRAMME 2 JOURS 📅
-
-### Structure pédagogique optimisée
+#### PROGRAMME 2 JOURS 📅
 
 > 💡 **Note** : Docker sert uniquement d'infrastructure de test pour simuler plusieurs serveurs. En production, vous utiliserez de vraies machines !
 
