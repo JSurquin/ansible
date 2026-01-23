@@ -7,6 +7,7 @@
   vars:
     backup_dir: "/backup"
     backup_date: "{{ ansible_date_time.date }}"
+    backup_retention_days: 7
   
   tasks:
     - name: Créer le répertoire de backup
