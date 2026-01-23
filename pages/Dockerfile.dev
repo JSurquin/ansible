@@ -1,0 +1,3 @@
+# 2. Créer le Dockerfile
+FROM nginx:alpine
+LABEL author="moi"

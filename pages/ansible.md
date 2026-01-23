@@ -169,6 +169,7 @@ routeAlias: 'ci-cd-integration'
 # Module 3 : Intégration CI/CD
 
 ---
+
 # Intégration d’Ansible dans un workflow CI/CD
 
 ## Option 1 — Utilisation avec GitHub Actions
