@@ -55,6 +55,80 @@ media: 'https://i.pinimg.com/originals/f5/5e/80/f55e8059ea945abfd6804b887dd4a0af
 caption: 'ANSIBLE'
 ---
 
+# Vous connaissez Puppet ? Parfait ! 🎭
+
+### Vous avez déjà les bons réflexes
+
+- ✅ Infrastructure as Code
+- ✅ Idempotence
+- ✅ Automatisation
+
+**Les différences clés avec Ansible** :
+- 🚀 **Agentless** : Pas d'agent à installer (juste SSH)
+- 📝 **YAML** : Plus simple que le DSL Puppet
+- ⚡ **Push** : Exécution à la demande (vs pull)
+- 🎯 **Séquentiel** : Ordre naturel (vs dépendances explicites)
+
+---
+layout: two-cols
+---
+
+# Comparaison rapide ⚖️
+
+### DSL Puppet
+
+```puppet
+class apache {
+  package { 'apache2':
+    ensure => installed,
+  }
+  
+  service { 'apache2':
+    ensure => running,
+    enable => true,
+    require => Package['apache2'],
+  }
+}
+```
+
+::right::
+
+### YAML Ansible
+
+```yaml
+- name: Apache
+  hosts: webservers
+  tasks:
+    - name: Install
+      apt:
+        name: apache2
+        state: present
+    
+    - name: Start
+      service:
+        name: apache2
+        state: started
+```
+
+---
+
+# Transposition Puppet → Ansible 🔄
+
+| Puppet | Ansible |
+|--------|---------|
+| Manifests | Playbooks |
+| Classes | Roles |
+| Modules | Modules |
+| Hiera | Variables/Vault |
+| Templates (ERB) | Templates (Jinja2) |
+| Facts | Facts |
+| Forge | Galaxy |
+| Puppet Master | Pas besoin ! |
+
+**Bonne nouvelle** : Les concepts sont les mêmes, seule la syntaxe change ! 🎉
+
+---
+
 # DISCLAIMER 🐧
 
 ### Dans cette formation nous allons voir les commandes principales et les bonnes pratiques d'Ansible en 2025.
