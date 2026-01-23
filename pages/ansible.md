@@ -1,11 +1,11 @@
 ---
 layout: new-section
-routeAlias: 'fondamentaux-ansible'
+routeAlias: 'intro-ansible'
 ---
 
-<a name="fondamentaux-ansible" id="fondamentaux-ansible"></a>
+<a name="intro-ansible" id="intro-ansible"></a>
 
-# Ansible - Automatisation Infrastructure 🎯
+# Module 1 : Introduction à Ansible
 
 ---
 
@@ -48,6 +48,15 @@ Exemple concret : Automatiser le déploiement d’une app Dockerisée sur plusie
 📈 **Scalable** : De 1 à 10,000+ serveurs
 
 🔒 **Sécurisé** : Utilise vos connexions existantes
+
+---
+layout: new-section
+routeAlias: 'installation-setup'
+---
+
+<a name="installation-setup" id="installation-setup"></a>
+
+# Module 2 : Installation et Setup 2025
 
 ---
 
@@ -105,6 +114,8 @@ pip3 install ansible
 
 ---
 
+# Fonctionnement d'Ansible
+
 Pour bien comprendre schématiquement le fonctionnement d'ansible, voici un schéma :
 
 ```mermaid
@@ -148,6 +159,16 @@ Vous pouvez avoir plusieurs buts à l'utilisation d'ansible :
 
 ---
 
+---
+layout: new-section
+routeAlias: 'ci-cd-integration'
+---
+
+<a name="ci-cd-integration" id="ci-cd-integration"></a>
+
+# Module 3 : Intégration CI/CD
+
+---
 # Intégration d’Ansible dans un workflow CI/CD
 
 ## Option 1 — Utilisation avec GitHub Actions
@@ -250,6 +271,17 @@ flowchart LR
 
 ---
 
+---
+layout: new-section
+routeAlias: 'inventaires'
+---
+
+<a name="inventaires" id="inventaires"></a>
+
+# Module 4 : Inventaires et serveurs
+
+---
+
 # Qu'est-ce qu'un Inventaire ? 📋
 
 ### Le carnet d'adresses de vos serveurs
@@ -323,6 +355,17 @@ Vous aurez un graphique qui ressemblera à ça :
   |--@local:
   |  |--localhost
 ```
+
+---
+
+---
+layout: new-section
+routeAlias: 'playbooks'
+---
+
+<a name="playbooks" id="playbooks"></a>
+
+# Module 5 : Playbooks
 
 ---
 
@@ -419,6 +462,17 @@ ansible-playbook -i inventory/hosts.yml deploy.yml
 
 ---
 
+---
+layout: new-section
+routeAlias: 'modules'
+---
+
+<a name="modules" id="modules"></a>
+
+# Module 6 : Modules essentiels
+
+---
+
 # Qu'est-ce qu'un Module ? 📦
 
 ### Les outils prêts à l'emploi
@@ -494,6 +548,17 @@ Un **module** est une fonction prête à utiliser dans Ansible :
 
 ---
 
+---
+layout: new-section
+routeAlias: 'variables'
+---
+
+<a name="variables" id="variables"></a>
+
+# Module 7 : Variables
+
+---
+
 # Qu'est-ce qu'une Variable ? 🔧
 
 ### Les données personnalisables
@@ -537,6 +602,17 @@ environments:
     domain: 'myapp.com'
     replicas: 3
 ```
+
+---
+
+---
+layout: new-section
+routeAlias: 'templates'
+---
+
+<a name="templates" id="templates"></a>
+
+# Module 8 : Templates Jinja2
 
 ---
 
@@ -670,6 +746,17 @@ server {
 
 ---
 
+---
+layout: new-section
+routeAlias: 'handlers'
+---
+
+<a name="handlers" id="handlers"></a>
+
+# Module 9 : Handlers
+
+---
+
 # Qu'est-ce qu'un Handler ? 🎯
 
 ### Les actions déclenchées automatiquement
@@ -738,6 +825,17 @@ handlers:
 
 ---
 
+---
+layout: new-section
+routeAlias: 'roles'
+---
+
+<a name="roles" id="roles"></a>
+
+# Module 10 : Rôles
+
+---
+
 # Qu'est-ce qu'un Rôle ? 📦
 
 ### Les modules réutilisables
@@ -794,6 +892,17 @@ Un **rôle** est un ensemble organisé de tâches réutilisables :
 
 ---
 
+---
+layout: new-section
+routeAlias: 'stack-complete'
+---
+
+<a name="stack-complete" id="stack-complete"></a>
+
+# Module 11 : Stack Ansible + Docker
+
+---
+
 # Ansible + Docker : Stack complète 🐳
 
 ### Déploiement d'application containerisée
@@ -839,6 +948,17 @@ tasks:
   retries: 5
   delay: 10
 ```
+
+---
+
+---
+layout: new-section
+routeAlias: 'collections'
+---
+
+<a name="collections" id="collections"></a>
+
+# Module 12 : Collections
 
 ---
 
@@ -911,6 +1031,17 @@ ansible-galaxy collection install kubernetes.core
 
 ---
 
+---
+layout: new-section
+routeAlias: 'vault'
+---
+
+<a name="vault" id="vault"></a>
+
+# Module 13 : Ansible Vault
+
+---
+
 # Qu'est-ce qu'Ansible Vault ? 🔐
 
 ### Le coffre-fort pour vos secrets
@@ -958,6 +1089,17 @@ database:
 api:
   key: '{{ vault_api_key }}'
 ```
+
+---
+
+---
+layout: new-section
+routeAlias: 'bonnes-pratiques'
+---
+
+<a name="bonnes-pratiques" id="bonnes-pratiques"></a>
+
+# Module 14 : Optimisation & Bonnes pratiques
 
 ---
 
@@ -1013,6 +1155,17 @@ ansible-project/
 ├── .env.development
 └── secrets.yml (vault)
 ```
+
+---
+
+---
+layout: new-section
+routeAlias: 'tags'
+---
+
+<a name="tags" id="tags"></a>
+
+# Module 15 : Tags et exécution sélective
 
 ---
 

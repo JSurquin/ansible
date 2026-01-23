@@ -185,9 +185,29 @@ routeAlias: 'sommaire'
 <br>
 
 <div class="flex flex-col gap-2">
-<Link to="fondamentaux-ansible">🤖 Fondamentaux Ansible</Link>
-<Link to="exercices-ansible">🎯 Exercices Ansible</Link>
-<Link to="qcm-ansible">✅ QCM Ansible</Link>
+<Link to="intro-ansible">🚀 1. Introduction à Ansible</Link>
+<Link to="installation-setup">⚙️ 2. Installation et Setup 2025</Link>
+<Link to="ci-cd-integration">🔄 3. Intégration CI/CD</Link>
+<Link to="inventaires">📋 4. Inventaires et serveurs</Link>
+<Link to="playbooks">🎭 5. Playbooks</Link>
+<Link to="modules">📦 6. Modules essentiels</Link>
+<Link to="variables">🔧 7. Variables</Link>
+<Link to="templates">📄 8. Templates Jinja2</Link>
+</div>
+
+::right::
+
+<div class="flex flex-col gap-2">
+<Link to="handlers">🎯 9. Handlers</Link>
+<Link to="roles">📦 10. Rôles</Link>
+<Link to="stack-complete">🐳 11. Stack Ansible + Docker</Link>
+<Link to="collections">🌐 12. Collections</Link>
+<Link to="vault">🔐 13. Ansible Vault</Link>
+<Link to="bonnes-pratiques">🚀 14. Optimisation & Bonnes pratiques</Link>
+<Link to="tags">🏷️ 15. Tags et exécution sélective</Link>
+<br/>
+<Link to="exercices-ansible">🎯 Exercices pratiques</Link>
+<Link to="qcm-ansible">✅ QCM de validation</Link>
 </div>
 
 ::right::
