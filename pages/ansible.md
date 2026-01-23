@@ -158,8 +158,6 @@ Vous pouvez avoir plusieurs buts à l'utilisation d'ansible :
 - Vous voulez gérer des secrets de manière sécurisée
 
 ---
-
----
 layout: new-section
 routeAlias: 'ci-cd-integration'
 ---
@@ -271,8 +269,6 @@ flowchart LR
 ```
 
 ---
-
----
 layout: new-section
 routeAlias: 'inventaires'
 ---
@@ -356,8 +352,6 @@ Vous aurez un graphique qui ressemblera à ça :
   |--@local:
   |  |--localhost
 ```
-
----
 
 ---
 layout: new-section
@@ -462,8 +456,6 @@ ansible-playbook -i inventory/hosts.yml deploy.yml
 ```
 
 ---
-
----
 layout: new-section
 routeAlias: 'modules'
 ---
@@ -548,8 +540,6 @@ Un **module** est une fonction prête à utiliser dans Ansible :
 ```
 
 ---
-
----
 layout: new-section
 routeAlias: 'variables'
 ---
@@ -603,8 +593,6 @@ environments:
     domain: 'myapp.com'
     replicas: 3
 ```
-
----
 
 ---
 layout: new-section
@@ -746,8 +734,6 @@ server {
 **💡 Astuce** : Les templates utilisent l'extension `.j2` (pour Jinja2)
 
 ---
-
----
 layout: new-section
 routeAlias: 'handlers'
 ---
@@ -825,8 +811,6 @@ handlers:
 ```
 
 ---
-
----
 layout: new-section
 routeAlias: 'roles'
 ---
@@ -892,8 +876,6 @@ Un **rôle** est un ensemble organisé de tâches réutilisables :
 ```
 
 ---
-
----
 layout: new-section
 routeAlias: 'stack-complete'
 ---
@@ -949,8 +931,6 @@ tasks:
   retries: 5
   delay: 10
 ```
-
----
 
 ---
 layout: new-section
@@ -1031,8 +1011,6 @@ ansible-galaxy collection install kubernetes.core
 ```
 
 ---
-
----
 layout: new-section
 routeAlias: 'vault'
 ---
@@ -1090,8 +1068,6 @@ database:
 api:
   key: '{{ vault_api_key }}'
 ```
-
----
 
 ---
 layout: new-section
@@ -1156,8 +1132,6 @@ ansible-project/
 ├── .env.development
 └── secrets.yml (vault)
 ```
-
----
 
 ---
 layout: new-section
