@@ -455,6 +455,8 @@ D) `force_continue: true`
 - **12-15 bonnes réponses** : 🥉 Niveau intermédiaire - Continuez à pratiquer
 - **< 12 bonnes réponses** : 📚 Revoir les fondamentaux
 
+</small>
+
 ---
 
 #### 💡 Points clés à retenir
