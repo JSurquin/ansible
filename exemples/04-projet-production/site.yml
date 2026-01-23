@@ -33,7 +33,7 @@
       debug:
         msg: |
           ✅ Déploiement terminé avec succès !
-          🌍 Environnement: {{ environment }}
+          🌍 Environnement: {{ app_environment }}
           🏷️ Version: {{ app_version }}
           📊 Serveurs: {{ ansible_play_hosts | length }}
       run_once: true

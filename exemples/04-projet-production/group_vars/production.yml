@@ -1,7 +1,7 @@
 ---
 # Variables PRODUCTION
 
-environment: "production"
+app_environment: "production"
 
 # Application
 app_version: "v1.2.0"  # Version fixe en prod

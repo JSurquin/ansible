@@ -17,7 +17,7 @@
         msg: |
           🚀 Déploiement de {{ app_name }}
           🏷️ Version: {{ app_version }}
-          🌍 Environnement: {{ environment }}
+          🌍 Environnement: {{ app_environment }}
           📍 Serveurs: {{ ansible_play_hosts | join(', ') }}
   
   roles:

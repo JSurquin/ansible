@@ -1,7 +1,7 @@
 ---
 # Variables STAGING
 
-environment: "staging"
+app_environment: "staging"
 
 # Application
 app_version: "latest"

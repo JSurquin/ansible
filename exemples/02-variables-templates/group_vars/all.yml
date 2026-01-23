@@ -2,7 +2,7 @@
 # Variables globales pour tous les serveurs
 app_name: "Mon Application Ansible"
 app_version: "1.0.0"
-environment: "development"
+app_environment: "development"
 
 # Configuration Nginx
 nginx_config:

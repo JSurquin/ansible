@@ -54,7 +54,7 @@
         msg: |
           ✅ Déploiement terminé pour {{ inventory_hostname }}
           🌐 Application: {{ app_name }} v{{ app_version }}
-          🏷️ Environnement: {{ environment }}
+          🏷️ Environnement: {{ app_environment }}
           🔗 URL: http://{{ ansible_host }}:{{ nginx_config.port }}
   
   # Handlers : Actions déclenchées par notify

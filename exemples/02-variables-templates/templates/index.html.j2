@@ -10,7 +10,7 @@
             max-width: 800px;
             margin: 50px auto;
             padding: 20px;
-            background-color: {{ env_colors[environment] | default('#f0f0f0') }};
+            background-color: {{ env_colors[app_environment] | default('#f0f0f0') }};
         }
         .container {
             background: white;
@@ -60,7 +60,7 @@
                 <span class="label">🏷️ Version:</span> {{ app_version }}
             </div>
             <div class="info-item">
-                <span class="label">🌍 Environnement:</span> {{ environment }}
+                <span class="label">🌍 Environnement:</span> {{ app_environment }}
             </div>
             <div class="info-item">
                 <span class="label">🎭 Rôle:</span> {{ server_role | default('N/A') }}

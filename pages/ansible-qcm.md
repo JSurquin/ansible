@@ -465,9 +465,11 @@ D) `force_continue: true`
 
 ---
 
-# 🚀 Prochaines étapes
+#### 🚀 Prochaines étapes
 
-### Pour aller plus loin
+#### Pour aller plus loin
+
+<small>
 
 **Approfondissement**
 - 📖 Documentation officielle Ansible
@@ -485,3 +487,5 @@ D) `force_continue: true`
 - **Cloud** : AWS, Azure, GCP modules
 
 **💡 Conseil** : Pratiquez en créant vos propres rôles et contribuez à la communauté !
+
+</small>
