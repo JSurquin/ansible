@@ -1,5 +1,5 @@
-@import url("https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&display=swap');
 
 :root {
   --slidev-theme-primary: #3e5166;
@@ -42,7 +42,7 @@ html:not(.dark) #slide-content {
 }
 
 .slidev-layout code {
-  font-family: "Source Code Pro", monospace !important;
+  font-family: 'Source Code Pro', monospace !important;
   //color: #f8f8f2;
   /* background-color: #2d2d2d; */
   padding: 0.2rem 0.4rem;
@@ -53,14 +53,14 @@ html:not(.dark) #slide-content {
   font-size: 0.9em;
   background: transparent;
   font-weight: 300;
-  font-family: "IBM Plex Mono", monospace !important;
+  font-family: 'IBM Plex Mono', monospace !important;
   padding: 0.2rem 0.4rem;
   border-radius: 0.3rem;
 }
 
 .slidev-layout {
   @apply relative h-full;
-  font-size: 16px;
+  font-size: 14px;
 
   h1 {
     @apply mb-8 mt-0;
@@ -102,12 +102,12 @@ html:not(.dark) #slide-content {
     }
 
     li::before {
-      content: "🐧 ";
+      content: '🐧 ';
     }
   }
 
-  span[style*="color: var(--shiki-token-keyword)"],
-  span[style*="color: var(--shiki-token-function)"] {
+  span[style*='color: var(--shiki-token-keyword)'],
+  span[style*='color: var(--shiki-token-function)'] {
     font-style: italic;
   }
 
@@ -181,4 +181,18 @@ pre.shiki {
 }
 code {
   @apply font-mono;
+}
+
+[data-slidev-no] .slidev-layout .slidev-code-wrapper pre,
+[data-slidev-no] .slidev-layout pre {
+  font-size: 0.6em !important;
+  line-height: 1.1 !important;
+  padding: 0.3em !important;
+  margin: 0 !important;
+  max-width: 100% !important;
+  white-space: pre-wrap !important;
+  word-wrap: break-word !important;
+  overflow: hidden !important;
+  background-color: #3e5066 !important;
+  color: #f8f8f2 !important;
 }

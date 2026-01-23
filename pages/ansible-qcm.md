@@ -376,9 +376,11 @@ D) `force_continue: true`
 
 ---
 
-# 📊 Réponses - Tous les modules
+#### 📊 Réponses - Tous les modules
 
-### Corrections complètes
+<small>
+
+#### Corrections complètes
 
 **Module 1 : Fondamentaux**
 - Question 1 : **B** - Ansible fonctionne en mode "push" sans agent
@@ -395,9 +397,13 @@ D) `force_continue: true`
 - Question 8 : **A** - `ansible webservers -m ping`
 - Question 9 : **C** - `vars:` suivi de `var_name: value`
 
+</small>
+
 ---
 
-# 📊 Réponses (suite)
+#### 📊 Réponses (suite)
+
+<small>
 
 **Module 4 : Templates et Handlers**
 - Question 10 : **B** - Jinja2
@@ -414,9 +420,13 @@ D) `force_continue: true`
 - Question 17 : **B** - `ansible-vault create fichier.yml`
 - Question 18 : **B** - Stocker les clés SSH dans les playbooks
 
+</small>
+
 ---
 
-# 📊 Réponses (fin)
+#### 📊 Réponses (fin)
+
+<small>
 
 **Module 7 : Gestion des erreurs et Tags**
 - Question 19 : **A** - `ignore_errors: true`
@@ -429,11 +439,15 @@ D) `force_continue: true`
 - Question 24 : **A** - Pour déléguer une tâche à un autre serveur que celui de l'hôte actuel
 - Question 25 : **B** - `any_errors_fatal: false`
 
+</small>
+
 ---
 
-# 🎯 Barème de notation
+#### 🎯 Barème de notation
 
-### Évaluez votre niveau
+<small>
+
+#### Évaluez votre niveau
 
 - **23-25 bonnes réponses** : 🏆 Expert Ansible ! Vous maîtrisez parfaitement
 - **20-22 bonnes réponses** : 🥇 Niveau avancé - Excellent travail
@@ -443,9 +457,11 @@ D) `force_continue: true`
 
 ---
 
-# 💡 Points clés à retenir
+#### 💡 Points clés à retenir
 
-### Concepts essentiels
+<small>
+
+#### Concepts essentiels
 
 ✅ **Idempotence** : Ansible garantit le même résultat à chaque exécution
 
@@ -462,6 +478,8 @@ D) `force_continue: true`
 ✅ **Tags** : Exécution sélective de parties d'un playbook
 
 ✅ **Handlers** : Actions déclenchées uniquement si une tâche change quelque chose
+
+</small>
 
 ---
 

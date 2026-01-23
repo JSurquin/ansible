@@ -1389,6 +1389,6 @@ docker compose -f /opt/production-stack/docker-compose.yml ps
 - Scripts de maintenance
 - Monitoring automatisé
 
-### 🚀 **Formation Docker & Ansible complète !**
+### 🚀 **Formation Ansible complète !**
 
 Vous maîtrisez maintenant l'automatisation complète avec Docker et Ansible !
