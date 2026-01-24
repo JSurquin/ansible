@@ -146,6 +146,19 @@ flowchart TD
         st3_containers[containers_managed]
         st3 --> st3_docker --> st3_containers
     end
+
+    style ah fill:#e91e63,stroke:#c2185b,stroke-width:3px,color:#fff
+    style ah_ansible fill:#9c27b0,stroke:#7b1fa2,stroke-width:2px,color:#fff
+    style ah_docker fill:#673ab7,stroke:#512da8,stroke-width:2px,color:#fff
+    style Server_Target_1 fill:#e3f2fd,stroke:#2196f3,stroke-width:2px
+    style Server_Target_2 fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
+    style Server_Target_3 fill:#fff3e0,stroke:#ff9800,stroke-width:2px
+    style st1_docker fill:#42a5f5,stroke:#1976d2,stroke-width:2px,color:#fff
+    style st1_containers fill:#64b5f6,stroke:#1976d2,stroke-width:2px,color:#fff
+    style st2_docker fill:#66bb6a,stroke:#388e3c,stroke-width:2px,color:#fff
+    style st2_containers fill:#81c784,stroke:#388e3c,stroke-width:2px,color:#fff
+    style st3_docker fill:#ffa726,stroke:#f57c00,stroke-width:2px,color:#fff
+    style st3_containers fill:#ffb74d,stroke:#f57c00,stroke-width:2px,color:#fff
 ```
 
 ---
@@ -212,6 +225,17 @@ flowchart LR
     playbook --> srv1
     playbook --> srv2
     playbook --> srv3
+
+    style dev fill:#9c27b0,stroke:#7b1fa2,stroke-width:3px,color:#fff
+    style ci fill:#2196f3,stroke:#1976d2,stroke-width:3px,color:#fff
+    style img fill:#00bcd4,stroke:#0097a7,stroke-width:3px,color:#fff
+    style reg fill:#009688,stroke:#00796b,stroke-width:3px,color:#fff
+    style ssh fill:#ff9800,stroke:#f57c00,stroke-width:3px,color:#fff
+    style ans fill:#e91e63,stroke:#c2185b,stroke-width:3px,color:#fff
+    style playbook fill:#673ab7,stroke:#512da8,stroke-width:2px,color:#fff
+    style srv1 fill:#4caf50,stroke:#388e3c,stroke-width:2px,color:#fff
+    style srv2 fill:#66bb6a,stroke:#388e3c,stroke-width:2px,color:#fff
+    style srv3 fill:#81c784,stroke:#388e3c,stroke-width:2px,color:#fff
 ```
 
 ---
@@ -266,6 +290,19 @@ flowchart LR
     
     prod1 --> health
     prod2 --> health
+
+    style dev fill:#9c27b0,stroke:#7b1fa2,stroke-width:3px,color:#fff
+    style ci fill:#fc6d26,stroke:#e24329,stroke-width:3px,color:#fff
+    style img fill:#00bcd4,stroke:#0097a7,stroke-width:3px,color:#fff
+    style reg fill:#fc6d26,stroke:#e24329,stroke-width:3px,color:#fff
+    style webhook fill:#ff9800,stroke:#f57c00,stroke-width:3px,color:#fff
+    style ans fill:#e91e63,stroke:#c2185b,stroke-width:3px,color:#fff
+    style inventory fill:#673ab7,stroke:#512da8,stroke-width:2px,color:#fff
+    style tasks fill:#3f51b5,stroke:#303f9f,stroke-width:2px,color:#fff
+    style prod1 fill:#4caf50,stroke:#388e3c,stroke-width:2px,color:#fff
+    style prod2 fill:#66bb6a,stroke:#388e3c,stroke-width:2px,color:#fff
+    style stage1 fill:#ffeb3b,stroke:#fbc02d,stroke-width:2px,color:#000
+    style health fill:#f44336,stroke:#d32f2f,stroke-width:2px,color:#fff
 ```
 
 ---
@@ -351,6 +388,61 @@ Vous aurez un graphique qui ressemblera à ça :
   |--ungrouped: # logique, vous n'avez rien qui n'est pas dans un groupe, donc ungrouped est vide
   |--@local:
   |  |--localhost
+```
+
+---
+
+# ✅ Inventory : Nom vs Adresse
+
+### Différence critique
+
+```yaml
+all:
+  children:
+    webservers:
+      hosts:
+        web-01:  # ⚠️ CECI EST LE NOM (alias logique)
+          ansible_host: 10.0.1.10  # ⚠️ CECI EST L'ADRESSE RÉELLE
+```
+
+**Dans vos playbooks, vous utilisez le NOM, pas l'adresse !**
+
+---
+
+# Inventory : Utilisation du nom
+
+```yaml
+# ✅ CORRECT : Utiliser le nom défini dans l'inventory
+- name: Déployer sur un serveur spécifique
+  hosts: web-01  # Le nom logique
+  tasks:
+    - debug: msg="Je suis sur {{ inventory_hostname }}"
+    # Affiche : "Je suis sur web-01"
+```
+
+```yaml
+# ❌ INCORRECT : Utiliser l'IP directement
+- name: Déployer
+  hosts: 10.0.1.10  # ❌ Ansible ne trouvera pas ce host
+```
+
+---
+
+# 🧠 Règle à retenir : Inventory
+
+> **Nom = Ce que vous utilisez dans vos playbooks**
+> 
+> **ansible_host = Où Ansible se connecte vraiment**
+
+Avantage : Vous pouvez changer l'IP sans toucher aux playbooks !
+
+```yaml
+# Avant
+web-01: {ansible_host: 10.0.1.10}
+
+# Après migration vers nouveau serveur
+web-01: {ansible_host: 192.168.50.10}
+# ✅ Vos playbooks fonctionnent toujours sans modification !
 ```
 
 ---
@@ -448,11 +540,247 @@ Un **playbook** est un fichier qui décrit les actions à effectuer :
 
 ---
 
+# ✅ become : Les privilèges sudo
+
+### Comprendre `become: true`
+
+```yaml
+- name: Installer un package
+  hosts: webservers
+  become: true  # ⚠️ Exécuter avec sudo (root)
+  tasks:
+    - apt:
+        name: nginx
+        state: present
+```
+
+**Sans `become: true`** : Ansible se connecte avec votre utilisateur normal.
+
+**Avec `become: true`** : Ansible exécute les commandes avec `sudo` (comme root).
+
+---
+
+# become : Quand l'utiliser ?
+
+### Actions nécessitant les droits root
+
+**Nécessite `become: true`** ✅
+- Installer des packages (`apt`, `yum`)
+- Modifier des fichiers système (`/etc/`)
+- Gérer des services (`systemd`)
+- Créer des utilisateurs
+- Modifier les permissions système
+
+---
+
+**Ne nécessite PAS `become: true`** ❌
+- Créer des fichiers dans `/home/user/`
+- Lire des fichiers accessibles
+- Exécuter des commandes utilisateur
+- Manipuler des fichiers de l'utilisateur
+
+---
+
+# become : Niveaux de granularité
+
+### Global vs par tâche
+
+```yaml
+# Global : Toutes les tâches avec sudo
+- hosts: web
+  become: true  # ✅ Appliqué à TOUTES les tâches
+  tasks:
+    - apt: name=nginx state=present
+    - file: path=/tmp/test state=touch
+```
+
+```yaml
+# Par tâche : Seulement certaines tâches
+- hosts: web
+  tasks:
+    - apt: name=nginx state=present
+      become: true  # ✅ Seulement cette tâche
+    
+    - file: path=/home/user/file state=touch
+      # Pas de sudo ici
+```
+
+---
+
+# ❌ Erreur courante : Oublier become
+
+```yaml
+- name: Installer nginx
+  hosts: web
+  tasks:
+    - apt: name=nginx state=present
+      # ❌ ERREUR : Permission denied !
+```
+
+**Message d'erreur typique** :
+```
+Failed to lock apt for exclusive operation
+```
+
+**Solution** : Ajouter `become: true`
+
+---
+
+# 🧠 Règle à retenir : become
+
+> **`become: true` = sudo = droits root**
+
+Si la commande nécessite `sudo` en ligne de commande, elle nécessite `become: true` dans Ansible !
+
+---
+
 # Exécution du playbook
 
 ```bash
 # Exécution
 ansible-playbook -i inventory/hosts.yml deploy.yml
+```
+
+---
+
+# ✅ Comprendre `state` dans les modules
+
+### Le paramètre le plus important !
+
+```yaml
+# Packages
+- apt:
+    name: nginx
+    state: present  # ⚠️ Installé (mais pas forcément démarré)
+```
+
+```yaml
+# Services
+- systemd:
+    name: nginx
+    state: started  # ⚠️ Démarré (mais pas forcément installé avant)
+```
+
+**Important** : `state` a des valeurs différentes selon le module !
+
+---
+
+# state : Modules de packages
+
+### apt, yum, dnf, package
+
+| State | Signification |
+|-------|---------------|
+| `present` | Package installé (version quelconque) |
+| `absent` | Package désinstallé |
+| `latest` | Package installé à la dernière version |
+
+```yaml
+# ✅ Installer nginx
+- apt: name=nginx state=present
+
+# ✅ Désinstaller nginx
+- apt: name=nginx state=absent
+
+# ✅ Mettre à jour vers la dernière version
+- apt: name=nginx state=latest
+```
+
+---
+
+# state : Modules de services
+
+### systemd, service
+
+| State | Signification |
+|-------|---------------|
+| `started` | Service démarré |
+| `stopped` | Service arrêté |
+| `restarted` | Service redémarré |
+| `reloaded` | Configuration rechargée (sans redémarrage complet) |
+
+```yaml
+# ✅ Démarrer nginx
+- systemd: name=nginx state=started
+
+# ✅ Arrêter nginx
+- systemd: name=nginx state=stopped
+
+# ✅ Redémarrer nginx
+- systemd: name=nginx state=restarted
+```
+
+---
+
+# state : Modules de fichiers/dossiers
+
+### file, copy, template
+
+| State | Signification |
+|-------|---------------|
+| `file` | Fichier existe (ne crée pas) |
+| `directory` | Dossier existe (crée si besoin) |
+| `absent` | Fichier/dossier supprimé |
+| `touch` | Fichier vide créé (comme `touch`) |
+| `link` | Lien symbolique |
+
+```yaml
+# ✅ Créer un dossier
+- file: path=/opt/app state=directory
+
+# ✅ Supprimer un fichier
+- file: path=/tmp/old.txt state=absent
+```
+
+---
+
+# state : Modules Docker
+
+### community.docker.docker_container
+
+| State | Signification |
+|-------|---------------|
+| `started` | Container lancé |
+| `stopped` | Container arrêté |
+| `absent` | Container supprimé |
+| `present` | Container créé (mais pas démarré) |
+
+```yaml
+# ✅ Lancer un container
+- community.docker.docker_container:
+    name: webapp
+    image: nginx
+    state: started
+```
+
+---
+
+# ❌ Erreur courante : Confusion de state
+
+```yaml
+# ❌ ERREUR : state=started n'existe pas pour apt !
+- apt:
+    name: nginx
+    state: started  # ❌ InvalidArgumentError
+```
+
+```yaml
+# ✅ CORRECT : Deux tâches distinctes
+- apt: name=nginx state=present  # 1. Installer
+- systemd: name=nginx state=started  # 2. Démarrer
+```
+
+---
+
+# 🧠 Règle à retenir : state
+
+> **Chaque module a ses propres valeurs de `state`**
+
+Vérifiez toujours la documentation du module :
+```bash
+ansible-doc apt
+ansible-doc systemd
+ansible-doc file
 ```
 
 ---
@@ -734,6 +1062,78 @@ server {
 **💡 Astuce** : Les templates utilisent l'extension `.j2` (pour Jinja2)
 
 ---
+
+# ✅ Template : Extension et chemins
+
+### Comprendre .j2 et les chemins
+
+```yaml
+- name: Déployer config nginx
+  template:
+    src: nginx.conf.j2  # ⚠️ Fichier LOCAL (sur votre machine Ansible)
+    dest: /etc/nginx/nginx.conf  # ⚠️ Fichier DISTANT (sur le serveur cible)
+```
+
+**Important** :
+- `src` : Cherche dans `templates/` par défaut
+- `dest` : Chemin absolu sur le serveur distant
+- `.j2` : Extension pour Jinja2 (le moteur de template)
+
+---
+
+# Template : Où Ansible cherche le fichier source
+
+### Ordre de recherche automatique
+
+```
+Quand vous faites : src: nginx.conf.j2
+
+Ansible cherche dans cet ordre :
+1. templates/nginx.conf.j2  ✅ (dans votre playbook)
+2. roles/ROLE_NAME/templates/nginx.conf.j2  ✅ (si dans un rôle)
+```
+
+Vous n'avez PAS besoin d'écrire `templates/nginx.conf.j2` !
+
+---
+
+# ❌ Erreurs courantes avec les templates
+
+```yaml
+# ❌ ERREUR : Mettre le chemin complet local
+- template:
+    src: /home/user/ansible/templates/nginx.conf.j2
+    # Ansible cherche déjà dans templates/ !
+
+# ✅ CORRECT : Juste le nom du fichier
+- template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/nginx.conf
+```
+
+```yaml
+# ❌ ERREUR : Oublier le chemin absolu pour dest
+- template:
+    src: app.conf.j2
+    dest: app.conf  # ⚠️ Où ça ? Ansible ne sait pas !
+
+# ✅ CORRECT : Chemin absolu complet
+- template:
+    src: app.conf.j2
+    dest: /etc/app/app.conf
+```
+
+---
+
+# 🧠 Règle à retenir : Templates
+
+> **`src` = relatif au dossier templates/ (automatique)**
+> 
+> **`dest` = chemin ABSOLU sur le serveur distant**
+
+L'extension `.j2` n'est qu'une convention, pas une obligation !
+
+---
 layout: new-section
 routeAlias: 'handlers'
 ---
@@ -811,6 +1211,58 @@ handlers:
 ```
 
 ---
+
+# ✅ Comment un Handler est déclenché
+
+### Le nom est la clé !
+
+```yaml
+tasks:
+  - name: Modifier config nginx
+    template:
+      src: nginx.conf.j2
+      dest: /etc/nginx/nginx.conf
+    notify: restart nginx  # ⚠️ CE NOM DOIT CORRESPONDRE EXACTEMENT
+```
+
+```yaml
+handlers:
+  - name: restart nginx  # ⚠️ CE NOM DOIT CORRESPONDRE EXACTEMENT
+    systemd:
+      name: nginx
+      state: restarted
+```
+
+---
+
+# ❌ Erreurs courantes avec les Handlers
+
+### Ces handlers ne seront JAMAIS déclenchés :
+
+```yaml
+notify: restart nginx
+
+handlers:
+  - name: Restart nginx  # ❌ Majuscule différente
+  - name: restart_nginx  # ❌ Underscore vs espace
+  - name: restart nginx service  # ❌ Mots supplémentaires
+  - name: reload nginx  # ❌ Action différente
+```
+
+**Le nom dans `notify` DOIT être identique au nom dans `handlers`**
+
+---
+
+# 🧠 Règle à retenir : Handlers
+
+> **Le nom du handler = l'identifiant unique**
+
+- Sensible à la casse (`restart` ≠ `Restart`)
+- Sensible aux espaces (`restart nginx` ≠ `restart_nginx`)
+- Pas d'alias possible
+- Un notify = un handler exactement
+
+---
 layout: new-section
 routeAlias: 'roles'
 ---
@@ -874,6 +1326,72 @@ Un **rôle** est un ensemble organisé de tâches réutilisables :
     - nginx
     - {role: app, app_version: 'v2.0.0'}
 ```
+
+---
+
+# ✅ Comment Ansible détermine le nom d'un rôle
+
+```
+roles/nginx/
+```
+
+➡️ Le rôle s'appelle `nginx` parce que le dossier s'appelle `nginx`
+
+Rien de plus. Rien de magique.
+
+---
+
+# 📌 Où ce nom est utilisé
+
+### Dans le playbook
+
+```yaml
+- hosts: web
+  roles:
+    - nginx
+```
+
+👉 Ansible cherche automatiquement :
+
+```
+roles/nginx/tasks/main.yml
+```
+
+---
+
+# Si tu renommes le dossier
+
+```
+roles/webserver/
+```
+
+Alors le rôle devient :
+
+```yaml
+roles:
+  - webserver
+```
+
+**C'est tout !** Le nom du dossier = le nom du rôle.
+
+---
+
+# ❌ Ce qui NE définit PAS le nom du rôle
+
+- ❌ `meta/main.yml`
+- ❌ `galaxy_info.name`
+- ❌ Un champ dans `tasks/main.yml`
+- ❌ Une variable
+
+Tout ça est informatif, pas structurel.
+
+---
+
+# 🧠 Règle à retenir (ultra importante)
+
+> **1 dossier = 1 rôle = 1 nom**
+
+Le système de fichiers détermine le nom, pas le contenu.
 
 ---
 layout: new-section
@@ -1011,6 +1529,103 @@ ansible-galaxy collection install kubernetes.core
 ```
 
 ---
+
+# ✅ Modules avec namespace (collections)
+
+### Comprendre `community.docker.docker_container`
+
+```yaml
+- name: Lancer un container
+  community.docker.docker_container:  # ⚠️ Namespace complet !
+    name: webapp
+    image: nginx
+    state: started
+```
+
+**Format** : `namespace.collection.module_name`
+- `community` = namespace
+- `docker` = collection
+- `docker_container` = module
+
+---
+
+# Pourquoi les namespaces ?
+
+### Organisation des milliers de modules
+
+**Avant (Ansible < 2.10)** : Tous les modules dans un seul paquet
+```yaml
+- docker_container:  # ❌ Deprecated
+```
+
+**Maintenant (Ansible 2.10+)** : Modules organisés en collections
+```yaml
+- community.docker.docker_container:  # ✅ Moderne
+```
+
+**Avantage** : Mises à jour indépendantes, meilleure organisation
+
+---
+
+# ❌ Erreur courante : Module introuvable
+
+```yaml
+- name: Lancer container
+  docker_container:  # ❌ ERREUR : Module not found
+    name: webapp
+```
+
+**Message d'erreur** :
+```
+ERROR! couldn't resolve module/action 'docker_container'
+```
+
+**Solutions** :
+
+```yaml
+# ✅ Solution 1 : Utiliser le nom complet
+- community.docker.docker_container:
+    name: webapp
+```
+
+---
+
+```yaml
+# ✅ Solution 2 : Installer la collection
+```
+
+```bash
+ansible-galaxy collection install community.docker
+```
+
+```yaml
+# Puis dans votre playbook
+- name: Lancer container
+  community.docker.docker_container:
+    name: webapp
+```
+
+---
+
+# Collections les plus courantes
+
+| Collection | Modules | Installation |
+|------------|---------|--------------|
+| `community.docker` | Docker/containers | `ansible-galaxy collection install community.docker` |
+| `community.general` | Utilitaires divers | Inclus par défaut |
+| `ansible.posix` | Linux/POSIX | Inclus par défaut |
+| `amazon.aws` | AWS | `ansible-galaxy collection install amazon.aws` |
+| `kubernetes.core` | Kubernetes | `ansible-galaxy collection install kubernetes.core` |
+
+---
+
+# 🧠 Règle à retenir : Collections
+
+> **Si le module a un point (`.`) dans son nom, c'est une collection**
+
+Toujours utiliser le nom complet : `namespace.collection.module`
+
+---
 layout: new-section
 routeAlias: 'vault'
 ---
@@ -1068,6 +1683,65 @@ database:
 api:
   key: '{{ vault_api_key }}'
 ```
+
+---
+
+# ✅ Vault : Convention de nommage
+
+### Pourquoi préfixer avec `vault_` ?
+
+```yaml
+# secrets.yml (chiffré)
+vault_db_password: 'super_secret_password'  # ✅ Préfixé
+vault_api_key: '1234567890abcdef'  # ✅ Préfixé
+```
+
+**Ce n'est PAS obligatoire, mais c'est une bonne pratique !**
+
+---
+
+# Vault : Pourquoi cette convention ?
+
+### Traçabilité et sécurité
+
+```yaml
+# group_vars/all.yml (NON chiffré, visible dans Git)
+db_password: '{{ vault_db_password }}'  # Variable utilisée partout
+api_key: '{{ vault_api_key }}'
+
+# group_vars/vault.yml (CHIFFRÉ avec ansible-vault)
+vault_db_password: 'le_vrai_secret'  # Secret protégé
+vault_api_key: 'la_vraie_clé'
+```
+
+**Avantage** : On voit dans le code NON chiffré qu'une variable vient du vault !
+
+---
+
+# ❌ Sans convention : Risque de confusion
+
+```yaml
+# Tout dans le même fichier non chiffré = DANGER
+db_password: 'super_secret'  # ⚠️ Secret en clair dans Git !
+api_key: 'mon_api_key'  # ⚠️ Secret exposé !
+```
+
+```yaml
+# Avec la convention vault_ : Plus clair
+db_password: '{{ vault_db_password }}'  # ✅ On sait que c'est chiffré ailleurs
+api_key: '{{ vault_api_key }}'  # ✅ On sait que c'est chiffré ailleurs
+```
+
+---
+
+# 🧠 Règle à retenir : Vault
+
+> **Préfixe `vault_` = Bonne pratique, pas une obligation technique**
+
+**Mais ça aide à :**
+- 🔍 Identifier les secrets rapidement
+- 🛡️ Éviter de commiter des secrets en clair
+- 📖 Rendre le code plus lisible pour l'équipe
 
 ---
 layout: new-section
