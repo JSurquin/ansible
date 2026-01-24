@@ -242,6 +242,126 @@ all:
 **En prod** : Ce seront vos vraies machines !
 
 ---
+routeAlias: 'cheatsheet'
+---
+
+# Cheatsheet Ansible 📝
+
+### Les concepts clés en un coup d'œil
+
+---
+
+# Playbook
+
+**Décrit quoi faire et sur quelles machines**
+
+```yaml
+- hosts: web
+  tasks:
+    - name: Installer nginx
+      apt: name=nginx state=present
+```
+
+---
+
+# Inventory
+
+**Liste des machines ciblées**
+
+```ini
+[web]
+192.168.1.10
+```
+
+---
+
+# Task
+
+**Action unique exécutée par Ansible**
+
+```yaml
+- apt: name=nginx state=present
+```
+
+---
+
+# Module
+
+**Outil utilisé par une task**
+
+```yaml
+- service: name=nginx state=started
+```
+
+---
+
+# Role
+
+**Organisation réutilisable de configuration**
+
+```
+roles/nginx/tasks/main.yml
+```
+
+```yaml
+- apt: name=nginx state=present
+```
+
+---
+
+# Handler
+
+**Action déclenchée après un changement**
+
+```yaml
+- name: restart nginx
+  service: name=nginx state=restarted
+```
+
+---
+
+# Variable
+
+**Valeur paramétrable**
+
+```yaml
+nginx_port: 80
+```
+
+---
+
+# Facts
+
+**Infos système automatiques**
+
+```jinja
+{{ ansible_hostname }}
+```
+
+---
+
+# Template
+
+**Fichier généré dynamiquement**
+
+```nginx
+server {
+  listen {{ nginx_port }};
+}
+```
+
+---
+
+# Vault
+
+**Secret chiffré**
+
+```yaml
+db_password: !vault |
+  $ANSIBLE_VAULT;1.1;AES256
+```
+
+---
 layout: two-cols
 routeAlias: 'sommaire'
 ---
@@ -253,6 +373,7 @@ routeAlias: 'sommaire'
 <br>
 
 <div class="flex flex-col gap-2">
+<Link to="cheatsheet">📝 Cheatsheet - Concepts clés</Link>
 <Link to="intro-ansible">🚀 1. Introduction à Ansible</Link>
 <Link to="installation-setup">⚙️ 2. Installation et Setup 2025</Link>
 <Link to="ci-cd-integration">🔄 3. Intégration CI/CD</Link>
