@@ -1,0 +1,50 @@
+═══════════════════════════════════════════════════════════════
+    MINI-QCM : Module 7 - Variables
+═══════════════════════════════════════════════════════════════
+
+Question 1 : Comment définir une variable dans un playbook ?
+
+A) `set: var_name value`
+B) `vars:` puis `var_name: value`
+C) `define var_name = value`
+
+───────────────────────────────────────────────────────────────
+
+Question 2 : Comment utiliser une variable dans une tâche ?
+
+A) `$var_name`
+B) `{{ var_name }}`
+C) `%var_name%`
+
+───────────────────────────────────────────────────────────────
+
+Question 3 : Quelle est la priorité des variables ?
+
+A) Playbook > Inventaire > extra-vars (-e)
+B) extra-vars (-e) > Playbook > Inventaire
+C) Inventaire > extra-vars (-e) > Playbook
+
+═══════════════════════════════════════════════════════════════
+                        RÉPONSES
+═══════════════════════════════════════════════════════════════
+
+Question 1 : B ✓
+Explication : On définit les variables avec la section `vars:` suivie 
+d'une liste clé-valeur en syntaxe YAML :
+  vars:
+    var_name: value
+
+Question 2 : B ✓
+Explication : On utilise la syntaxe Jinja2 avec doubles accolades : 
+`{{ var_name }}`. Cette syntaxe fonctionne partout : dans les tâches, 
+les templates, les conditions, etc.
+
+Question 3 : B ✓
+Explication : Ordre de priorité (du plus fort au plus faible) :
+1. extra-vars (-e) - Ligne de commande, priorité maximale
+2. vars du playbook
+3. group_vars/all
+4. defaults des rôles
+Les extra-vars gagnent toujours, permettant l'override en production.
+
+═══════════════════════════════════════════════════════════════

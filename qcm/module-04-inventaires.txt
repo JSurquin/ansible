@@ -1,0 +1,46 @@
+═══════════════════════════════════════════════════════════════
+    MINI-QCM : Module 4 - Inventaires et serveurs
+═══════════════════════════════════════════════════════════════
+
+Question 1 : Quelle est la différence entre le nom d'hôte et `ansible_host` ?
+
+A) Il n'y a pas de différence
+B) Le nom est un alias, `ansible_host` est l'adresse réelle
+C) `ansible_host` est obsolète
+
+───────────────────────────────────────────────────────────────
+
+Question 2 : Comment grouper des serveurs dans un inventaire ?
+
+A) Avec `children:` en YAML
+B) Avec `[nom_groupe]` en INI
+C) Les deux sont possibles
+
+───────────────────────────────────────────────────────────────
+
+Question 3 : Quelle variable définit l'utilisateur SSH ?
+
+A) `ansible_ssh_user`
+B) `ansible_user`
+C) `ssh_username`
+
+═══════════════════════════════════════════════════════════════
+                        RÉPONSES
+═══════════════════════════════════════════════════════════════
+
+Question 1 : B ✓
+Explication : Le nom (ex: web-01) est un alias logique utilisé dans 
+les playbooks. `ansible_host` contient l'adresse IP ou FQDN réel où 
+Ansible se connecte.
+
+Question 2 : C ✓
+Explication : Les deux formats sont valides. En YAML on utilise 
+`children:`, en INI on utilise `[nom_groupe]`. C'est une question 
+de préférence.
+
+Question 3 : B ✓
+Explication : `ansible_user` est la variable standard actuelle. 
+`ansible_ssh_user` est l'ancienne notation (deprecated mais encore 
+fonctionnelle).
+
+═══════════════════════════════════════════════════════════════

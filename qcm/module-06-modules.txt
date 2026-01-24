@@ -1,0 +1,49 @@
+═══════════════════════════════════════════════════════════════
+    MINI-QCM : Module 6 - Modules essentiels
+═══════════════════════════════════════════════════════════════
+
+Question 1 : Qu'est-ce qu'un module Ansible ?
+
+A) Un fichier de configuration
+B) Une fonction prête à l'emploi pour une tâche spécifique
+C) Un type de playbook
+
+───────────────────────────────────────────────────────────────
+
+Question 2 : Quel module utilise-t-on pour gérer des containers Docker ?
+
+A) `docker_container`
+B) `community.docker.docker_container`
+C) Les deux peuvent fonctionner
+
+───────────────────────────────────────────────────────────────
+
+Question 3 : Pourquoi utiliser le module `template` plutôt que `copy` ?
+
+A) `template` est plus rapide
+B) `template` permet d'utiliser des variables Jinja2
+C) Pas de différence
+
+═══════════════════════════════════════════════════════════════
+                        RÉPONSES
+═══════════════════════════════════════════════════════════════
+
+Question 1 : B ✓
+Explication : Un module est une fonction réutilisable intégrée à 
+Ansible qui exécute une tâche précise (installer un package, copier 
+un fichier, démarrer un service...). Ansible possède des centaines 
+de modules pour toutes les tâches courantes.
+
+Question 2 : B ✓
+Explication : Depuis Ansible 2.10+, il faut utiliser le nom complet 
+avec namespace : `community.docker.docker_container`. Il faut aussi 
+installer la collection au préalable avec 
+`ansible-galaxy collection install community.docker`.
+
+Question 3 : B ✓
+Explication : Le module `template` traite le fichier avec Jinja2, 
+permettant d'utiliser des variables (`{{ ma_var }}`), des conditions 
+(`{% if %}`), des boucles (`{% for %}`). Le module `copy` copie le 
+fichier tel quel sans traitement.
+
+═══════════════════════════════════════════════════════════════

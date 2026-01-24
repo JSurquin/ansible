@@ -1,0 +1,50 @@
+═══════════════════════════════════════════════════════════════
+    MINI-QCM : Module 10 - Rôles
+═══════════════════════════════════════════════════════════════
+
+Question 1 : Comment Ansible détermine-t-il le nom d'un rôle ?
+
+A) Par le nom du dossier
+B) Par le contenu de meta/main.yml
+C) Par le nom dans tasks/main.yml
+
+───────────────────────────────────────────────────────────────
+
+Question 2 : Quelle est la structure minimale d'un rôle ?
+
+A) Juste le dossier tasks/
+B) tasks/, handlers/, vars/, files/
+C) Tous les dossiers sont obligatoires
+
+───────────────────────────────────────────────────────────────
+
+Question 3 : Comment utiliser un rôle dans un playbook ?
+
+A) `roles: - nom_role`
+B) `include_role: nom_role`
+C) Les deux sont possibles
+
+═══════════════════════════════════════════════════════════════
+                        RÉPONSES
+═══════════════════════════════════════════════════════════════
+
+Question 1 : A ✓
+Explication : Le nom du rôle est déterminé uniquement par le nom du 
+dossier. Si votre dossier s'appelle `nginx`, le rôle s'appelle 
+`nginx`, point final. Le contenu de meta/main.yml, galaxy_info.name, 
+ou tout autre fichier n'a AUCUN impact sur le nom du rôle.
+Règle simple : 1 dossier = 1 rôle = 1 nom.
+
+Question 2 : A ✓
+Explication : Seul le dossier `tasks/` (avec un fichier main.yml) 
+est strictement nécessaire. Tous les autres dossiers (handlers/, 
+vars/, defaults/, files/, templates/, meta/) sont optionnels. 
+Ajoutez-les uniquement si vous en avez besoin.
+
+Question 3 : C ✓
+Explication : Deux syntaxes valides :
+- `roles:` : Déclaration statique au niveau du play
+- `include_role:` : Inclusion dynamique dans les tasks
+Les deux ont leurs avantages selon le cas d'usage.
+
+═══════════════════════════════════════════════════════════════

@@ -446,6 +446,57 @@ web-01: {ansible_host: 192.168.50.10}
 ```
 
 ---
+
+# ✅ Mini-QCM : Module 4 - Inventaires
+
+**Question 1** : Quelle est la différence entre le nom d'hôte et `ansible_host` ?
+- A) Il n'y a pas de différence
+- B) Le nom est un alias, `ansible_host` est l'adresse réelle
+- C) `ansible_host` est obsolète
+
+**Question 2** : Comment grouper des serveurs dans un inventaire ?
+- A) Avec `children:` en YAML
+- B) Avec `[nom_groupe]` en INI
+- C) Les deux sont possibles
+
+**Question 3** : Quelle variable définit l'utilisateur SSH ?
+- A) `ansible_ssh_user`
+- B) `ansible_user`
+- C) `ssh_username`
+
+---
+
+# 📝 Réponses Mini-QCM Module 4
+
+**Question 1** : **B** ✅
+Le nom (ex: web-01) est un alias logique. `ansible_host` contient l'IP/FQDN réel.
+
+**Question 2** : **C** ✅
+Les deux formats sont valides : `children:` en YAML ou `[groupe]` en INI.
+
+**Question 3** : **B** ✅
+`ansible_user` est la variable standard (anciennement `ansible_ssh_user`).
+
+---
+
+# 🎯 Mini-exercice : Module 4 (5 min)
+
+**Objectif** : Créer un inventaire multi-groupes
+
+```yaml
+# Créer inventory.yml avec :
+# - Groupe "web" : 2 serveurs (web01: 10.0.1.10, web02: 10.0.1.11)
+# - Groupe "db" : 1 serveur (db01: 10.0.1.20)
+# - Variable globale : ansible_user: ubuntu
+```
+
+**Test** :
+```bash
+ansible-inventory -i inventory.yml --graph
+# Doit afficher la structure complète
+```
+
+---
 layout: new-section
 routeAlias: 'playbooks'
 ---
@@ -784,6 +835,58 @@ ansible-doc file
 ```
 
 ---
+
+# ✅ Mini-QCM : Module 5 - Playbooks
+
+**Question 1** : Que signifie `become: true` ?
+- A) Devenir administrateur système
+- B) Exécuter les tâches avec sudo (privilèges root)
+- C) Se connecter en tant que root
+
+**Question 2** : Quelle est la différence entre `state: present` et `state: started` ?
+- A) Aucune différence
+- B) `present` installe, `started` démarre un service
+- C) `present` est obsolète
+
+**Question 3** : Un playbook s'exécute sur :
+- A) Les hôtes définis dans `hosts:`
+- B) Tous les serveurs de l'inventaire
+- C) Uniquement localhost
+
+---
+
+# 📝 Réponses Mini-QCM Module 5
+
+**Question 1** : **B** ✅
+`become: true` exécute les commandes avec `sudo`. Nécessaire pour installer des packages, modifier `/etc/`, gérer des services.
+
+**Question 2** : **B** ✅
+`state: present` pour les packages (installer), `state: started` pour les services (démarrer). Chaque module a ses propres valeurs de `state`.
+
+**Question 3** : **A** ✅
+Le playbook s'exécute sur les hôtes spécifiés dans `hosts:` (ex: `hosts: webservers` ou `hosts: all`).
+
+---
+
+# 🎯 Mini-exercice : Module 5 (10 min)
+
+**Objectif** : Créer votre premier playbook fonctionnel
+
+```yaml
+# Créer playbook.yml qui :
+# 1. Cible localhost
+# 2. Utilise become: true
+# 3. Installe git (state: present)
+# 4. Crée le dossier /tmp/ansible-test
+# 5. Affiche un message "Playbook terminé !"
+```
+
+**Exécution** :
+```bash
+ansible-playbook -i localhost, playbook.yml
+```
+
+---
 layout: new-section
 routeAlias: 'modules'
 ---
@@ -868,6 +971,58 @@ Un **module** est une fonction prête à utiliser dans Ansible :
 ```
 
 ---
+
+# ✅ Mini-QCM : Module 6 - Modules essentiels
+
+**Question 1** : Qu'est-ce qu'un module Ansible ?
+- A) Un fichier de configuration
+- B) Une fonction prête à l'emploi pour une tâche spécifique
+- C) Un type de playbook
+
+**Question 2** : Quel module utilise-t-on pour gérer des containers Docker ?
+- A) `docker_container`
+- B) `community.docker.docker_container`
+- C) Les deux peuvent fonctionner
+
+**Question 3** : Pourquoi utiliser le module `template` plutôt que `copy` ?
+- A) `template` est plus rapide
+- B) `template` permet d'utiliser des variables Jinja2
+- C) Pas de différence
+
+---
+
+# 📝 Réponses Mini-QCM Module 6
+
+**Question 1** : **B** ✅
+Un module est une fonction réutilisable qui exécute une tâche précise (installer, copier, démarrer...). Ansible a des centaines de modules.
+
+**Question 2** : **B** ✅
+Le nom complet avec namespace est requis depuis Ansible 2.10+ : `community.docker.docker_container`. Il faut installer la collection d'abord.
+
+**Question 3** : **B** ✅
+`template` permet d'utiliser des variables Jinja2 (`{{ variable }}`), des conditions, des boucles. `copy` copie le fichier tel quel.
+
+---
+
+# 🎯 Mini-exercice : Module 6 (10 min)
+
+**Objectif** : Utiliser différents modules
+
+```yaml
+# Créer playbook-modules.yml avec :
+# 1. Module apt: installer nginx
+# 2. Module file: créer /var/www/html/test
+# 3. Module copy: créer index.html avec "Hello Ansible"
+# 4. Module service: démarrer nginx
+```
+
+**Test** :
+```bash
+ansible-playbook -i localhost, playbook-modules.yml --become
+curl localhost
+```
+
+---
 layout: new-section
 routeAlias: 'variables'
 ---
@@ -920,6 +1075,57 @@ environments:
   prod:
     domain: 'myapp.com'
     replicas: 3
+```
+
+---
+
+# ✅ Mini-QCM : Module 7 - Variables
+
+**Question 1** : Comment définir une variable dans un playbook ?
+- A) `set: var_name value`
+- B) `vars:` puis `var_name: value`
+- C) `define var_name = value`
+
+**Question 2** : Comment utiliser une variable dans une tâche ?
+- A) `$var_name`
+- B) `{{ var_name }}`
+- C) `%var_name%`
+
+**Question 3** : Quelle est la priorité des variables ?
+- A) Playbook > Inventaire > extra-vars (-e)
+- B) extra-vars (-e) > Playbook > Inventaire
+- C) Inventaire > extra-vars (-e) > Playbook
+
+---
+
+# 📝 Réponses Mini-QCM Module 7
+
+**Question 1** : **B** ✅
+On définit les variables avec `vars:` suivi d'une liste clé-valeur en YAML (`var_name: value`).
+
+**Question 2** : **B** ✅
+Syntaxe Jinja2 : `{{ var_name }}`. Fonctionne partout : tâches, templates, conditions.
+
+**Question 3** : **B** ✅
+Ordre de priorité (du + fort au + faible) : extra-vars (-e) > vars du playbook > group_vars > defaults. Les extra-vars gagnent toujours.
+
+---
+
+# 🎯 Mini-exercice : Module 7 (5 min)
+
+**Objectif** : Utiliser des variables
+
+```yaml
+# Créer playbook-vars.yml avec :
+# - Variable app_name: "mon-app"
+# - Variable app_version: "1.0.0"
+# - Tâche debug affichant : "Deploying {{ app_name }} v{{ app_version }}"
+```
+
+**Test avec extra-vars** :
+```bash
+ansible-playbook playbook-vars.yml -e app_version=2.0.0
+# Doit afficher version 2.0.0 (override)
 ```
 
 ---
@@ -1134,6 +1340,62 @@ Vous n'avez PAS besoin d'écrire `templates/nginx.conf.j2` !
 L'extension `.j2` n'est qu'une convention, pas une obligation !
 
 ---
+
+# ✅ Mini-QCM : Module 8 - Templates Jinja2
+
+**Question 1** : Où Ansible cherche-t-il les templates par défaut ?
+- A) Dans le dossier courant
+- B) Dans `templates/`
+- C) Dans `/etc/ansible/templates/`
+
+**Question 2** : Quelle est la syntaxe pour afficher une variable dans un template ?
+- A) `${ variable }`
+- B) `{{ variable }}`
+- C) `<%= variable %>`
+
+**Question 3** : Le paramètre `dest:` du module template doit être :
+- A) Relatif au dossier templates/
+- B) Un chemin absolu sur le serveur distant
+- C) N'importe quel chemin
+
+---
+
+# 📝 Réponses Mini-QCM Module 8
+
+**Question 1** : **B** ✅
+Ansible cherche automatiquement dans `templates/` (playbook) ou `roles/ROLE/templates/` (rôle). Pas besoin du chemin complet.
+
+**Question 2** : **B** ✅
+Jinja2 utilise `{{ variable }}` pour afficher, `{% if %}` pour conditions, `{% for %}` pour boucles.
+
+**Question 3** : **B** ✅
+`src` est relatif (cherche dans templates/), `dest` doit être absolu sur le serveur cible (ex: `/etc/app/config.conf`).
+
+---
+
+# 🎯 Mini-exercice : Module 8 (10 min)
+
+**Objectif** : Créer et déployer un template
+
+```yaml
+# 1. Créer templates/app.conf.j2 :
+app_name={{ app_name }}
+environment={{ environment | default('dev') }}
+port={{ app_port }}
+
+# 2. Créer playbook avec :
+vars:
+  app_name: "myapp"
+  app_port: 8080
+tasks:
+  - template:
+      src: app.conf.j2
+      dest: /tmp/app.conf
+```
+
+**Test** : `cat /tmp/app.conf` doit afficher les valeurs.
+
+---
 layout: new-section
 routeAlias: 'handlers'
 ---
@@ -1261,6 +1523,61 @@ handlers:
 - Sensible aux espaces (`restart nginx` ≠ `restart_nginx`)
 - Pas d'alias possible
 - Un notify = un handler exactement
+
+---
+
+# ✅ Mini-QCM : Module 9 - Handlers
+
+**Question 1** : Quand un handler est-il exécuté ?
+- A) Immédiatement quand il est notifié
+- B) À la fin du playbook, seulement si notifié et que la tâche a changé
+- C) Au début du play
+
+**Question 2** : Comment appeler un handler ?
+- A) `trigger: handler_name`
+- B) `notify: handler_name`
+- C) `call: handler_name`
+
+**Question 3** : Le nom du handler doit être :
+- A) Identique au nom dans `notify:` (sensible à la casse)
+- B) Peu importe, Ansible trouve automatiquement
+- C) En majuscules uniquement
+
+---
+
+# 📝 Réponses Mini-QCM Module 9
+
+**Question 1** : **B** ✅
+Les handlers s'exécutent à la FIN du playbook, uniquement si notifiés ET que la tâche a changé quelque chose (`changed: true`).
+
+**Question 2** : **B** ✅
+On utilise `notify: handler_name` dans une tâche. Le handler doit avoir exactement le même nom.
+
+**Question 3** : **A** ✅
+Le nom doit être EXACTEMENT identique : sensible à la casse, aux espaces, aux underscores. `restart nginx` ≠ `Restart nginx`.
+
+---
+
+# 🎯 Mini-exercice : Module 9 (10 min)
+
+**Objectif** : Créer un handler fonctionnel
+
+```yaml
+# Créer playbook-handler.yml avec :
+tasks:
+  - name: Créer fichier config
+    copy:
+      content: "test config"
+      dest: /tmp/app.conf
+    notify: show message
+
+handlers:
+  - name: show message
+    debug:
+      msg: "Config changed!"
+```
+
+**Test** : Exécuter 2x, le handler ne s'exécute que la 1ère fois.
 
 ---
 layout: new-section
@@ -1392,6 +1709,63 @@ Tout ça est informatif, pas structurel.
 > **1 dossier = 1 rôle = 1 nom**
 
 Le système de fichiers détermine le nom, pas le contenu.
+
+---
+
+# ✅ Mini-QCM : Module 10 - Rôles
+
+**Question 1** : Comment Ansible détermine-t-il le nom d'un rôle ?
+- A) Par le nom du dossier
+- B) Par le contenu de meta/main.yml
+- C) Par le nom dans tasks/main.yml
+
+**Question 2** : Quelle est la structure minimale d'un rôle ?
+- A) Juste le dossier tasks/
+- B) tasks/, handlers/, vars/, files/
+- C) Tous les dossiers sont obligatoires
+
+**Question 3** : Comment utiliser un rôle dans un playbook ?
+- A) `roles: - nom_role`
+- B) `include_role: nom_role`
+- C) Les deux sont possibles
+
+---
+
+# 📝 Réponses Mini-QCM Module 10
+
+**Question 1** : **A** ✅
+Le nom du rôle = le nom du dossier. Si le dossier s'appelle `nginx`, le rôle s'appelle `nginx`. Le contenu ne change rien.
+
+**Question 2** : **A** ✅
+Seul `tasks/` est obligatoire (avec main.yml). Les autres dossiers (handlers/, vars/, files/, templates/) sont optionnels.
+
+**Question 3** : **C** ✅
+Les deux syntaxes fonctionnent : `roles:` (statique, au début) ou `include_role:` (dynamique, dans les tasks).
+
+---
+
+# 🎯 Mini-exercice : Module 10 (15 min)
+
+**Objectif** : Créer votre premier rôle
+
+```bash
+# 1. Créer la structure
+mkdir -p roles/hello/tasks
+
+# 2. Créer roles/hello/tasks/main.yml :
+---
+- name: Afficher message
+  debug:
+    msg: "Hello from role!"
+
+# 3. Playbook utilisant le rôle :
+---
+- hosts: localhost
+  roles:
+    - hello
+```
+
+**Test** : Le message doit s'afficher.
 
 ---
 layout: new-section
@@ -1569,6 +1943,57 @@ ansible-galaxy collection install community.docker
 Toujours utiliser le nom complet : `namespace.collection.module`
 
 ---
+
+# ✅ Mini-QCM : Module 11 - Collections
+
+**Question 1** : Qu'est-ce qu'une collection Ansible ?
+- A) Un groupe de serveurs
+- B) Un pack de modules spécialisés
+- C) Un type de playbook
+
+**Question 2** : Comment installer une collection ?
+- A) `ansible install community.docker`
+- B) `ansible-galaxy collection install community.docker`
+- C) `pip install ansible-collection-docker`
+
+**Question 3** : Le format `community.docker.docker_container` signifie :
+- A) community = namespace, docker = collection, docker_container = module
+- B) C'est juste un long nom de module
+- C) community.docker est obsolète
+
+---
+
+# 📝 Réponses Mini-QCM Module 11
+
+**Question 1** : **B** ✅
+Une collection est un pack de modules spécialisés (ex: community.docker pour Docker, amazon.aws pour AWS).
+
+**Question 2** : **B** ✅
+Commande : `ansible-galaxy collection install nom.collection`. Galaxy est le gestionnaire de collections/rôles.
+
+**Question 3** : **A** ✅
+Format : `namespace.collection.module`. Ex: `community.docker.docker_container` = namespace community, collection docker, module docker_container.
+
+---
+
+# 🎯 Mini-exercice : Module 11 (5 min)
+
+**Objectif** : Installer et utiliser une collection
+
+```bash
+# 1. Installer la collection
+ansible-galaxy collection install community.general
+
+# 2. Lister les collections installées
+ansible-galaxy collection list
+
+# 3. Utiliser un module de la collection
+ansible localhost -m community.general.timezone -a "name=Europe/Paris" --become
+```
+
+**Vérification** : La collection doit apparaître dans la liste.
+
+---
 layout: new-section
 routeAlias: 'vault'
 ---
@@ -1685,6 +2110,374 @@ api_key: '{{ vault_api_key }}'  # ✅ On sait que c'est chiffré ailleurs
 - 🔍 Identifier les secrets rapidement
 - 🛡️ Éviter de commiter des secrets en clair
 - 📖 Rendre le code plus lisible pour l'équipe
+
+---
+
+# ✅ Mini-QCM : Module 12 - Ansible Vault
+
+**Question 1** : À quoi sert Ansible Vault ?
+- A) Stocker les playbooks de manière sécurisée
+- B) Chiffrer les données sensibles comme les mots de passe
+- C) Faire des sauvegardes automatiques
+
+**Question 2** : Comment créer un fichier chiffré ?
+- A) `ansible-vault encrypt fichier.yml`
+- B) `ansible-vault create fichier.yml`
+- C) Les deux sont possibles
+
+**Question 3** : Pourquoi préfixer les variables avec `vault_` ?
+- A) C'est obligatoire techniquement
+- B) Bonne pratique pour identifier les secrets
+- C) Ansible l'exige
+
+---
+
+# 📝 Réponses Mini-QCM Module 12
+
+**Question 1** : **B** ✅
+Vault chiffre les données sensibles (mots de passe, clés API, certificats). Le fichier reste dans Git mais chiffré.
+
+**Question 2** : **C** ✅
+`create` : crée un nouveau fichier chiffré. `encrypt` : chiffre un fichier existant. Les deux fonctionnent.
+
+**Question 3** : **B** ✅
+Préfixe `vault_` = bonne pratique (pas obligatoire). Permet d'identifier rapidement qu'une variable vient du vault.
+
+---
+
+# 🎯 Mini-exercice : Module 12 (10 min)
+
+**Objectif** : Créer et utiliser un secret chiffré
+
+```bash
+# 1. Créer fichier chiffré
+ansible-vault create secrets.yml
+# Ajouter : vault_api_key: "secret123"
+
+# 2. Créer playbook utilisant le secret
+---
+- hosts: localhost
+  vars_files:
+    - secrets.yml
+  tasks:
+    - debug:
+        msg: "API Key: {{ vault_api_key }}"
+
+# 3. Exécuter
+ansible-playbook playbook.yml --ask-vault-pass
+```
+
+---
+layout: new-section
+routeAlias: 'debugging'
+---
+
+<a name="debugging" id="debugging"></a>
+
+# Module 13.5 : Debugging & Troubleshooting
+
+---
+
+# Pourquoi le debugging ? 🐛
+
+### Les erreurs font partie du process
+
+**Réalité** : Même les experts Ansible font des erreurs !
+
+**Erreurs courantes** :
+- Syntaxe YAML incorrecte
+- Variables non définies
+- Permissions insuffisantes
+- Modules non trouvés
+- Connexions SSH qui échouent
+
+**L'objectif** : Diagnostiquer et corriger rapidement !
+
+---
+
+# Mode verbeux : -v, -vv, -vvv 📢
+
+### Plus de détails = plus facile à débugger
+
+```bash
+# Niveau 1 : Basique
+ansible-playbook playbook.yml -v
+
+# Niveau 2 : Détaillé
+ansible-playbook playbook.yml -vv
+
+# Niveau 3 : Très détaillé
+ansible-playbook playbook.yml -vvv
+
+# Niveau 4 : Debug SSH
+ansible-playbook playbook.yml -vvvv
+```
+
+**Usage** :
+- `-v` : Voir les résultats des tâches
+- `-vv` : Voir les détails des modules
+- `-vvv` : Voir les commandes exécutées
+- `-vvvv` : Voir le debug SSH complet
+
+---
+
+# Module debug : Afficher des variables 💡
+
+### Votre meilleur ami pour le debugging
+
+```yaml
+# Afficher une variable
+- debug:
+    var: ansible_hostname
+
+# Afficher un message formaté
+- debug:
+    msg: "App: {{ app_name }}, Version: {{ app_version }}"
+
+# Afficher toutes les variables d'un hôte
+- debug:
+    var: hostvars[inventory_hostname]
+
+# Afficher le résultat d'une tâche précédente
+- debug:
+    var: result.stdout
+```
+
+**💡 Astuce** : Utilisez debug pour vérifier les valeurs avant d'exécuter les vraies tâches !
+
+---
+
+# Mode dry-run : --check 🎯
+
+### Tester sans modifier
+
+```bash
+# Simuler l'exécution sans rien changer
+ansible-playbook playbook.yml --check
+
+# Combiner avec diff pour voir les changements prévus
+ansible-playbook playbook.yml --check --diff
+
+# Tester sur un seul serveur
+ansible-playbook playbook.yml --limit web-01 --check
+```
+
+**Avantages** :
+- ✅ Voir ce qui va changer avant de le faire
+- ✅ Tester en production sans risque
+- ✅ Valider la logique du playbook
+
+**⚠️ Attention** : Certains modules ne supportent pas --check
+
+---
+
+# Reprendre l'exécution : --start-at-task 🔄
+
+### Éviter de rejouer tout depuis le début
+
+```bash
+# Reprendre à une tâche spécifique
+ansible-playbook playbook.yml --start-at-task="Install nginx"
+
+# Pratique après une erreur pour ne pas tout refaire
+# 1. Correction du problème
+# 2. Reprise à partir de la tâche qui a échoué
+```
+
+---
+
+# Exécution pas à pas : --step ⏯️
+
+### Contrôle total de l'exécution
+
+```bash
+# Demander confirmation avant chaque tâche
+ansible-playbook playbook.yml --step
+```
+
+**Workflow** :
+1. Ansible affiche la tâche suivante
+2. Vous choisissez : (y)es, (n)o, (c)ontinue
+3. Parfait pour tester des playbooks complexes
+
+---
+
+# Limiter l'exécution : --limit 🎯
+
+### Tester sur un sous-ensemble de serveurs
+
+```bash
+# Sur un seul serveur
+ansible-playbook playbook.yml --limit web-01
+
+# Sur un groupe
+ansible-playbook playbook.yml --limit webservers
+
+# Sur plusieurs serveurs
+ansible-playbook playbook.yml --limit "web-01,web-02"
+
+# Exclure des serveurs
+ansible-playbook playbook.yml --limit "all:!db-01"
+```
+
+**Usage** : Tester sur un serveur avant de déployer partout !
+
+---
+
+# Tags pour exécution sélective 🏷️
+
+### Exécuter seulement certaines parties
+
+```yaml
+tasks:
+  - name: Install packages
+    apt: name=nginx
+    tags: [install, packages]
+
+  - name: Configure nginx
+    template: src=nginx.conf.j2 dest=/etc/nginx/nginx.conf
+    tags: [config]
+
+  - name: Start nginx
+    service: name=nginx state=started
+    tags: [service, start]
+```
+
+```bash
+# Exécuter seulement les tâches "config"
+ansible-playbook playbook.yml --tags config
+
+# Exécuter tout sauf "install"
+ansible-playbook playbook.yml --skip-tags install
+
+# Lister tous les tags disponibles
+ansible-playbook playbook.yml --list-tags
+```
+
+---
+
+# Erreurs courantes et solutions 🔧
+
+### Les pièges classiques
+
+**Erreur 1** : `Module not found: docker_container`
+```bash
+# Solution : Installer la collection
+ansible-galaxy collection install community.docker
+```
+
+**Erreur 2** : `Permission denied`
+```yaml
+# Solution : Ajouter become
+- hosts: web
+  become: true  # ← Ajouter ceci
+```
+
+**Erreur 3** : `Unable to connect to host`
+```bash
+# Solution : Vérifier SSH
+ansible web-01 -m ping
+ssh ubuntu@web-01
+```
+
+---
+
+# Erreurs courantes (suite) 🔧
+
+**Erreur 4** : `Undefined variable: app_version`
+```yaml
+# Solution : Vérifier l'orthographe et définir la variable
+vars:
+  app_version: "1.0.0"  # ← Définir la variable
+```
+
+**Erreur 5** : `YAML syntax error`
+```yaml
+# ❌ Erreur : Mauvaise indentation
+tasks:
+- name: Install nginx
+  apt:
+  name: nginx  # ← Mal indenté
+
+# ✅ Correct :
+tasks:
+  - name: Install nginx
+    apt:
+      name: nginx  # ← Bien indenté
+```
+
+---
+
+# Stratégies de debugging 🎯
+
+### Approche systématique
+
+**1. Lire l'erreur attentivement**
+- Le message indique souvent la solution
+- Noter le numéro de ligne
+
+**2. Vérifier la syntaxe YAML**
+```bash
+# Valider la syntaxe
+ansible-playbook playbook.yml --syntax-check
+```
+
+**3. Tester sur localhost d'abord**
+```yaml
+- hosts: localhost
+  connection: local  # ← Pas de SSH
+```
+
+**4. Ajouter des debug en cascade**
+```yaml
+- debug: var=my_var
+- debug: msg="Avant la tâche problématique"
+- name: Tâche qui pose problème
+  ...
+- debug: msg="Après la tâche"
+```
+
+---
+
+# Outils utiles 🛠️
+
+### Commandes de diagnostic
+
+```bash
+# Vérifier la syntaxe YAML
+ansible-playbook playbook.yml --syntax-check
+
+# Lister les tâches sans les exécuter
+ansible-playbook playbook.yml --list-tasks
+
+# Lister les hôtes ciblés
+ansible-playbook playbook.yml --list-hosts
+
+# Voir la configuration Ansible active
+ansible-config dump
+
+# Tester la connexion aux hôtes
+ansible all -m ping -i inventory.yml
+
+# Obtenir les facts d'un hôte
+ansible web-01 -m setup
+```
+
+---
+
+# 🎯 Checklist de debugging
+
+**Avant de demander de l'aide, vérifiez** :
+
+- [ ] La syntaxe YAML est valide (`--syntax-check`)
+- [ ] Les variables sont bien définies (ajouter `debug`)
+- [ ] L'inventaire est correct (`--list-hosts`)
+- [ ] SSH fonctionne (`ansible host -m ping`)
+- [ ] Les permissions sont suffisantes (`become: true` ?)
+- [ ] Les modules/collections sont installés
+- [ ] Le mode verbeux donne plus d'infos (`-vvv`)
+
+**90% des problèmes se résolvent avec ces vérifications !**
 
 ---
 layout: new-section

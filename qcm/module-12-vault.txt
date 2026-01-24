@@ -1,0 +1,51 @@
+═══════════════════════════════════════════════════════════════
+    MINI-QCM : Module 12 - Ansible Vault
+═══════════════════════════════════════════════════════════════
+
+Question 1 : À quoi sert Ansible Vault ?
+
+A) Stocker les playbooks de manière sécurisée
+B) Chiffrer les données sensibles comme les mots de passe
+C) Faire des sauvegardes automatiques
+
+───────────────────────────────────────────────────────────────
+
+Question 2 : Comment créer un fichier chiffré ?
+
+A) `ansible-vault encrypt fichier.yml`
+B) `ansible-vault create fichier.yml`
+C) Les deux sont possibles
+
+───────────────────────────────────────────────────────────────
+
+Question 3 : Pourquoi préfixer les variables avec `vault_` ?
+
+A) C'est obligatoire techniquement
+B) Bonne pratique pour identifier les secrets
+C) Ansible l'exige
+
+═══════════════════════════════════════════════════════════════
+                        RÉPONSES
+═══════════════════════════════════════════════════════════════
+
+Question 1 : B ✓
+Explication : Ansible Vault chiffre les données sensibles (mots de 
+passe, clés API, certificats, tokens...) en utilisant AES256. Le 
+fichier peut rester dans Git car il est chiffré. Seuls ceux qui ont 
+le mot de passe vault peuvent le déchiffrer.
+
+Question 2 : C ✓
+Explication : Deux commandes possibles :
+- `ansible-vault create fichier.yml` : Crée un nouveau fichier vide 
+  et le chiffre immédiatement
+- `ansible-vault encrypt fichier.yml` : Chiffre un fichier existant
+Les deux sont valides selon votre besoin.
+
+Question 3 : B ✓
+Explication : Le préfixe `vault_` n'est PAS obligatoire techniquement, 
+c'est une convention/bonne pratique. Avantages :
+- Identification rapide des secrets dans le code
+- Évite de commiter des secrets en clair par erreur
+- Rend le code plus lisible pour l'équipe
+
+═══════════════════════════════════════════════════════════════

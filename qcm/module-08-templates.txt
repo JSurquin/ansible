@@ -1,0 +1,50 @@
+═══════════════════════════════════════════════════════════════
+    MINI-QCM : Module 8 - Templates Jinja2
+═══════════════════════════════════════════════════════════════
+
+Question 1 : Où Ansible cherche-t-il les templates par défaut ?
+
+A) Dans le dossier courant
+B) Dans `templates/`
+C) Dans `/etc/ansible/templates/`
+
+───────────────────────────────────────────────────────────────
+
+Question 2 : Quelle est la syntaxe pour afficher une variable dans un template ?
+
+A) `${ variable }`
+B) `{{ variable }}`
+C) `<%= variable %>`
+
+───────────────────────────────────────────────────────────────
+
+Question 3 : Le paramètre `dest:` du module template doit être :
+
+A) Relatif au dossier templates/
+B) Un chemin absolu sur le serveur distant
+C) N'importe quel chemin
+
+═══════════════════════════════════════════════════════════════
+                        RÉPONSES
+═══════════════════════════════════════════════════════════════
+
+Question 1 : B ✓
+Explication : Ansible cherche automatiquement dans le dossier 
+`templates/` à la racine du playbook, ou dans 
+`roles/NOM_ROLE/templates/` si vous utilisez des rôles. Pas besoin 
+de spécifier le chemin complet.
+
+Question 2 : B ✓
+Explication : Jinja2 utilise :
+- `{{ variable }}` pour afficher une valeur
+- `{% if condition %}` pour les conditions
+- `{% for item in liste %}` pour les boucles
+- `{# commentaire #}` pour les commentaires
+
+Question 3 : B ✓
+Explication : 
+- `src:` est relatif (Ansible cherche dans templates/)
+- `dest:` doit être un chemin absolu sur le serveur distant
+  Ex: dest: /etc/nginx/nginx.conf
+
+═══════════════════════════════════════════════════════════════

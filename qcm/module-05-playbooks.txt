@@ -1,0 +1,47 @@
+═══════════════════════════════════════════════════════════════
+    MINI-QCM : Module 5 - Playbooks
+═══════════════════════════════════════════════════════════════
+
+Question 1 : Que signifie `become: true` ?
+
+A) Devenir administrateur système
+B) Exécuter les tâches avec sudo (privilèges root)
+C) Se connecter en tant que root
+
+───────────────────────────────────────────────────────────────
+
+Question 2 : Quelle est la différence entre `state: present` et `state: started` ?
+
+A) Aucune différence
+B) `present` installe, `started` démarre un service
+C) `present` est obsolète
+
+───────────────────────────────────────────────────────────────
+
+Question 3 : Un playbook s'exécute sur :
+
+A) Les hôtes définis dans `hosts:`
+B) Tous les serveurs de l'inventaire
+C) Uniquement localhost
+
+═══════════════════════════════════════════════════════════════
+                        RÉPONSES
+═══════════════════════════════════════════════════════════════
+
+Question 1 : B ✓
+Explication : `become: true` utilise `sudo` pour exécuter les 
+commandes avec des privilèges root. Nécessaire pour installer des 
+packages, modifier des fichiers système (/etc/), gérer des services.
+
+Question 2 : B ✓
+Explication : `state: present` est pour les modules de packages 
+(installer un package). `state: started` est pour les modules de 
+services (démarrer un service). Chaque type de module a ses propres 
+valeurs de state.
+
+Question 3 : A ✓
+Explication : Le playbook s'exécute uniquement sur les hôtes définis 
+dans `hosts:` (ex: `hosts: webservers` cible le groupe webservers, 
+`hosts: all` cible tous les serveurs de l'inventaire).
+
+═══════════════════════════════════════════════════════════════

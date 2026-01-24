@@ -1,0 +1,50 @@
+═══════════════════════════════════════════════════════════════
+    MINI-QCM : Module 9 - Handlers
+═══════════════════════════════════════════════════════════════
+
+Question 1 : Quand un handler est-il exécuté ?
+
+A) Immédiatement quand il est notifié
+B) À la fin du playbook, seulement si notifié et que la tâche a changé
+C) Au début du play
+
+───────────────────────────────────────────────────────────────
+
+Question 2 : Comment appeler un handler ?
+
+A) `trigger: handler_name`
+B) `notify: handler_name`
+C) `call: handler_name`
+
+───────────────────────────────────────────────────────────────
+
+Question 3 : Le nom du handler doit être :
+
+A) Identique au nom dans `notify:` (sensible à la casse)
+B) Peu importe, Ansible trouve automatiquement
+C) En majuscules uniquement
+
+═══════════════════════════════════════════════════════════════
+                        RÉPONSES
+═══════════════════════════════════════════════════════════════
+
+Question 1 : B ✓
+Explication : Les handlers s'exécutent à la FIN du playbook, 
+uniquement si deux conditions sont remplies :
+1. Le handler a été notifié (via `notify:`)
+2. La tâche qui l'a notifié a modifié quelque chose (changed: true)
+Cela évite les redémarrages inutiles.
+
+Question 2 : B ✓
+Explication : On utilise `notify: handler_name` dans une tâche. 
+Le handler correspondant sera ajouté à la file d'attente et exécuté 
+à la fin du play si la tâche a changé quelque chose.
+
+Question 3 : A ✓
+Explication : Le nom du handler dans la section `handlers:` doit être 
+EXACTEMENT identique au nom dans `notify:`. Sensible à :
+- La casse : "restart nginx" ≠ "Restart nginx"
+- Les espaces : "restart nginx" ≠ "restart_nginx"
+- Tout caractère
+
+═══════════════════════════════════════════════════════════════
