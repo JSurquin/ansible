@@ -242,12 +242,96 @@ all:
 **En prod** : Ce seront vos vraies machines !
 
 ---
+layout: two-cols
+routeAlias: 'sommaire'
+---
+
+<a name="SOMMAIRE" id="sommaire"></a>
+
+# SOMMAIRE ANSIBLE 📜
+
+<br>
+
+<div class="flex flex-col gap-2">
+<Link to="intro-ansible">🚀 1. Introduction à Ansible</Link>
+<Link to="installation-setup">⚙️ 2. Installation et Setup 2025</Link>
+<Link to="ci-cd-integration">🔄 3. Intégration CI/CD</Link>
+<Link to="inventaires">📋 4. Inventaires et serveurs</Link>
+<Link to="playbooks">🎭 5. Playbooks</Link>
+<Link to="modules">📦 6. Modules essentiels</Link>
+<Link to="variables">🔧 7. Variables</Link>
+<Link to="templates">📄 8. Templates Jinja2</Link>
+</div>
+
+::right::
+
+<div class="flex flex-col gap-2">
+<Link to="handlers">🎯 9. Handlers</Link>
+<Link to="roles">📦 10. Rôles</Link>
+<Link to="stack-complete">🐳 11. Stack Ansible + Docker</Link>
+<Link to="collections">🌐 12. Collections</Link>
+<Link to="vault">🔐 13. Ansible Vault</Link>
+<Link to="bonnes-pratiques">🚀 14. Optimisation & Bonnes pratiques</Link>
+<Link to="tags">🏷️ 15. Tags et exécution sélective</Link>
+<br/>
+<Link to="exercices-ansible">🎯 Exercices pratiques</Link>
+<Link to="qcm-ansible">✅ QCM de validation</Link>
+<Link to="cheatsheet">📝 Cheatsheet - Référence rapide</Link>
+</div>
+
+---
+layout: two-cols
+---
+
+#### PROGRAMME 2 JOURS 📅
+
+> 💡 **Note** : Docker sert uniquement d'infrastructure de test pour simuler plusieurs serveurs. En production, vous utiliserez de vraies machines !
+
+**Jour 1 - Fondamentaux Ansible**
+
+- Introduction à Ansible
+- Architecture et concepts
+- Installation et configuration
+- Inventaires et groupes
+- Modules essentiels
+- Premiers playbooks
+- Variables et facts
+- Exercices pratiques niveau 1 & 2
+
+::right::
+
+**Jour 2 - Ansible avancé**
+
+- Roles et organisation
+- Templates Jinja2
+- Handlers et notifications
+- Ansible Vault
+- Bonnes pratiques 2025
+- Exercices pratiques niveau 3
+- Projet final
+- QCM de validation
+
+---
+src: './pages/ansible.md'
+---
+
+---
+src: './pages/14-exercices-ansible.md'
+---
+
+---
+src: './pages/ansible-qcm.md'
+---
+
+---
 routeAlias: 'cheatsheet'
 ---
 
 # Cheatsheet Ansible 📝
 
-### Les concepts clés en un coup d'œil
+### Référence rapide des concepts clés
+
+Une aide-mémoire pour retrouver rapidement les concepts essentiels !
 
 ---
 
@@ -362,83 +446,10 @@ db_password: !vault |
 ```
 
 ---
-layout: two-cols
-routeAlias: 'sommaire'
----
 
-<a name="SOMMAIRE" id="sommaire"></a>
+# Fin de la formation 🎉
 
-# SOMMAIRE ANSIBLE 📜
+### Merci et bon déploiement avec Ansible !
 
-<br>
+N'oubliez pas : l'automatisation est votre meilleur ami ! 🚀
 
-<div class="flex flex-col gap-2">
-<Link to="cheatsheet">📝 Cheatsheet - Concepts clés</Link>
-<Link to="intro-ansible">🚀 1. Introduction à Ansible</Link>
-<Link to="installation-setup">⚙️ 2. Installation et Setup 2025</Link>
-<Link to="ci-cd-integration">🔄 3. Intégration CI/CD</Link>
-<Link to="inventaires">📋 4. Inventaires et serveurs</Link>
-<Link to="playbooks">🎭 5. Playbooks</Link>
-<Link to="modules">📦 6. Modules essentiels</Link>
-<Link to="variables">🔧 7. Variables</Link>
-<Link to="templates">📄 8. Templates Jinja2</Link>
-</div>
-
-::right::
-
-<div class="flex flex-col gap-2">
-<Link to="handlers">🎯 9. Handlers</Link>
-<Link to="roles">📦 10. Rôles</Link>
-<Link to="stack-complete">🐳 11. Stack Ansible + Docker</Link>
-<Link to="collections">🌐 12. Collections</Link>
-<Link to="vault">🔐 13. Ansible Vault</Link>
-<Link to="bonnes-pratiques">🚀 14. Optimisation & Bonnes pratiques</Link>
-<Link to="tags">🏷️ 15. Tags et exécution sélective</Link>
-<br/>
-<Link to="exercices-ansible">🎯 Exercices pratiques</Link>
-<Link to="qcm-ansible">✅ QCM de validation</Link>
-</div>
-
----
-layout: two-cols
----
-
-#### PROGRAMME 2 JOURS 📅
-
-> 💡 **Note** : Docker sert uniquement d'infrastructure de test pour simuler plusieurs serveurs. En production, vous utiliserez de vraies machines !
-
-**Jour 1 - Fondamentaux Ansible**
-
-- Introduction à Ansible
-- Architecture et concepts
-- Installation et configuration
-- Inventaires et groupes
-- Modules essentiels
-- Premiers playbooks
-- Variables et facts
-- Exercices pratiques niveau 1 & 2
-
-::right::
-
-**Jour 2 - Ansible avancé**
-
-- Roles et organisation
-- Templates Jinja2
-- Handlers et notifications
-- Ansible Vault
-- Bonnes pratiques 2025
-- Exercices pratiques niveau 3
-- Projet final
-- QCM de validation
-
----
-src: './pages/ansible.md'
----
-
----
-src: './pages/14-exercices-ansible.md'
----
-
----
-src: './pages/ansible-qcm.md'
----
