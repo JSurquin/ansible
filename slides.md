@@ -268,11 +268,10 @@ routeAlias: 'sommaire'
 <div class="flex flex-col gap-2">
 <Link to="handlers">🎯 9. Handlers</Link>
 <Link to="roles">📦 10. Rôles</Link>
-<Link to="stack-complete">🐳 11. Stack Ansible + Docker</Link>
-<Link to="collections">🌐 12. Collections</Link>
-<Link to="vault">🔐 13. Ansible Vault</Link>
-<Link to="bonnes-pratiques">🚀 14. Optimisation & Bonnes pratiques</Link>
-<Link to="tags">🏷️ 15. Tags et exécution sélective</Link>
+<Link to="collections">🌐 11. Collections</Link>
+<Link to="vault">🔐 12. Ansible Vault</Link>
+<Link to="bonnes-pratiques">🚀 13. Optimisation & Bonnes pratiques</Link>
+<Link to="tags">🏷️ 14. Tags et exécution sélective</Link>
 <br/>
 <Link to="exercices-ansible">🎯 Exercices pratiques</Link>
 <Link to="qcm-ansible">✅ QCM de validation</Link>
