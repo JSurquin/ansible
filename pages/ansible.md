@@ -2490,7 +2490,7 @@ routeAlias: 'bonnes-pratiques'
 
 <a name="bonnes-pratiques" id="bonnes-pratiques"></a>
 
-# Module 14 : Optimisation & Bonnes pratiques
+# Module 14 : Optimisation & Bonnes pratiques (Bonus)
 
 ---
 
@@ -2554,7 +2554,7 @@ routeAlias: 'tags'
 
 <a name="tags" id="tags"></a>
 
-# Module 15 : Tags et exécution sélective
+# Module 15 : Tags et exécution sélective (Bonus)
 
 ---
 

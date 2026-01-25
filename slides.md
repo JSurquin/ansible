@@ -275,8 +275,8 @@ routeAlias: 'sommaire'
 <Link to="collections">🌐 11. Collections</Link>
 <Link to="vault">🔐 12. Ansible Vault</Link>
 <Link to="debugging">🐛 13. Debugging & Troubleshooting</Link>
-<Link to="bonnes-pratiques">🚀 14. Optimisation & Bonnes pratiques</Link>
-<Link to="tags">🏷️ 15. Tags et exécution sélective</Link>
+<Link to="bonnes-pratiques">🚀 14. Optimisation & Bonnes pratiques (Bonus)</Link>
+<Link to="tags">🏷️ 15. Tags et exécution sélective (Bonus)</Link>
 <br/>
 <Link to="exercices-ansible">🎯 Exercices pratiques</Link>
 <Link to="qcm-ansible">✅ QCM de validation</Link>
