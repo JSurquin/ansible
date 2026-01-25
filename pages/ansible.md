@@ -525,7 +525,9 @@ Un **playbook** est un fichier qui décrit les actions à effectuer :
 
 ---
 
-# Premier playbook 🎭
+#### Premier playbook 🎭
+
+<small>
 
 ```yaml
 - name: Configuration serveurs Docker
@@ -588,6 +590,8 @@ Un **playbook** est un fichier qui décrit les actions à effectuer :
         enabled: true
       when: ansible_facts.virtualization_type != "docker"
 ```
+
+</small>
 
 ---
 
