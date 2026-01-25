@@ -281,6 +281,7 @@ routeAlias: 'sommaire'
 <Link to="exercices-ansible">🎯 Exercices pratiques</Link>
 <Link to="qcm-ansible">✅ QCM de validation</Link>
 <Link to="cheatsheet">📝 Cheatsheet - Référence rapide</Link>
+<Link to="github" href="https://github.com/JSurquin/ansible">📝 Github - Le lien de la formation</Link>
 </div>
 
 ---
