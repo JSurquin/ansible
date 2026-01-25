@@ -1,17 +1,17 @@
-# Formation Ansible 2025 avec Slidev
+# Formation Ansible 2026 avec Slidev
 
 ![Ansible Logo](https://docs.ansible.com/ansible/latest/_static/images/logo_invert.png)
 
 ## 🤖 À propos de cette formation
 
-Formation complète sur **Ansible 2025** pour l'automatisation et la gestion d'infrastructure moderne. Cette formation de **2 jours** utilise [Slidev](https://github.com/slidevjs/slidev) pour offrir une expérience d'apprentissage interactive.
+Formation complète sur **Ansible 2026** pour l'automatisation et la gestion d'infrastructure moderne. Cette formation de **2 jours** utilise [Slidev](https://github.com/slidevjs/slidev) pour offrir une expérience d'apprentissage interactive.
 
 ### 🎯 Objectifs pédagogiques
 
 - Maîtriser les fondamentaux d'Ansible (playbooks, inventaires, modules)
 - Automatiser le déploiement d'infrastructure
 - Gérer la configuration de serveurs à grande échelle
-- Appliquer les bonnes pratiques DevOps 2025
+- Appliquer les bonnes pratiques DevOps 2026
 - Intégrer Ansible dans des pipelines CI/CD
 
 ## 📚 Contenu de la formation

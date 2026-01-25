@@ -549,7 +549,7 @@ chmod 755 /host/folder
 
 ---
 
-## 🛡️ Bonnes pratiques 2025
+## 🛡️ Bonnes pratiques 2026
 
 ### Réseaux sécurisés
 

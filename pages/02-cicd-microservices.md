@@ -19,7 +19,7 @@ Le **CI/CD** (Continuous Integration / Continuous Deployment) est devenu l'épin
 
 # Pourquoi le CI/CD ? 🎯
 
-### Pourquoi le CI/CD est-il essentiel en 2025 ?
+### Pourquoi le CI/CD est-il essentiel en 2026 ?
 
 - **Réduction des erreurs** : Détection précoce des bugs et problèmes d'intégration
 - **Déploiements plus fréquents** : Livraison continue de nouvelles fonctionnalités
@@ -28,11 +28,11 @@ Le **CI/CD** (Continuous Integration / Continuous Deployment) est devenu l'épin
 
 ---
 
-# CI/CD & IA en 2025 🤖
+# CI/CD & IA en 2026 🤖
 
 ### L'impact de l'intelligence artificielle sur le CI/CD et la conteneurisation
 
-En 2025, l'**IA** révolutionne la façon dont on met en place des pipelines CI/CD et des environnements Docker. De nombreux outils assistés par l'IA permettent de gagner un temps précieux et d'automatiser des tâches complexes.
+En 2026, l'**IA** révolutionne la façon dont on met en place des pipelines CI/CD et des environnements Docker. De nombreux outils assistés par l'IA permettent de gagner un temps précieux et d'automatiser des tâches complexes.
 
 ---
 
@@ -115,7 +115,7 @@ Pour simplifier Docker, il existe des outils qui génèrent des Dockerfile optim
 
 # En résumé
 
-L'IA et les plateformes modernes transforment le CI/CD et la conteneurisation en 2025 :
+L'IA et les plateformes modernes transforment le CI/CD et la conteneurisation en 2026 :
 - Génération de Dockerfile et de pipelines en quelques secondes
 - Déploiement simplifié sur des plateformes comme Coolify, Netlify, Vercel, etc.
 - Sécurité et optimisation automatisées
@@ -162,7 +162,7 @@ graph LR
 
 ---
 
-# Outils et technologies de pipeline 2025 🔧
+# Outils et technologies de pipeline 2026 🔧
 
 ### Plateformes CI/CD populaires
 
@@ -503,7 +503,7 @@ curl https://mon-api-render-xxx.onrender.com/
 # Réponse attendue :
 {
   "message": "🎉 API déployée sur Render.com !",
-  "timestamp": "2025-01-XX...",
+  "timestamp": "2026-01-XX...",
   "status": "running",
   "platform": "render"
 }

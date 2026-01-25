@@ -691,7 +691,7 @@ echo "✅ Communication réseau testée!"
 ```bash
 # Créer un fichier depuis CentOS
 docker exec centos-legacy bash -c "
-  echo '# Projet DevOps 2025' > /workspace/README.md
+  echo '# Projet DevOps 2026' > /workspace/README.md
   echo 'Ce fichier est partagé entre tous les containers' >> /workspace/README.md
   echo 'Créé depuis CentOS Legacy' >> /workspace/README.md
   date >> /workspace/README.md

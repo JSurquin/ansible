@@ -1,4 +1,4 @@
-# 📚 Exemples Ansible - Formation 2025
+# 📚 Exemples Ansible - Formation 2026
 
 Ce dossier contient **4 exemples progressifs** d'utilisation d'Ansible, du plus simple au plus complexe.
 

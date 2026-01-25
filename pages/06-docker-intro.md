@@ -49,14 +49,14 @@ Ces termes reviendront constamment dans votre utilisation quotidienne.
 
 ---
 
-# Écosystème complet 2025 🌟
+# Écosystème complet 2026 🌟
 
 ### Plateforme moderne
 
 - **Communauté active** : Plus de 10 millions de développeurs dans le monde
 - **Docker Desktop** : Interface graphique et outils de développement
 - **Plus de 6 millions d'images** disponibles sur Docker Hub
-- **85% des nouvelles applications** utilisent Docker ou Podman , son implémentation 100% open source en 2025
+- **85% des nouvelles applications** utilisent Docker ou Podman , son implémentation 100% open source en 2026
 
 Car oui Docker n'est pas à 100% open source, il y a des licences propriétaires.
 C'est une entreprise qui cherche a capitaliser un minimum sur son produit.
@@ -186,7 +186,7 @@ Les containers Docker suivent le principe **stateless** :
 
 # Premier contact avec Docker 🎯
 
-### Installation rapide 2025
+### Installation rapide 2026
 
 ```bash
 # Linux (Ubuntu/Debian)

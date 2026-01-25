@@ -19,7 +19,7 @@ routeAlias: 'sommaire-docker'
 <Link to="des-definitions-avant-tout">🔧 Des définitions avant tout</Link>
 <Link to="virtualisation-vs-conteneurisation">💻 Virtualisation vs conteneurisation</Link>
 <Link to="intro-Docker">🚀 Introduction à Docker</Link>
-<Link to="docker-2024-2025">🌟 Docker 2024-2025 : Les nouveautés</Link>
+<Link to="docker-2024-2026">🌟 Docker 2024-2026 : Les nouveautés</Link>
 <Link to="docker-build-cloud">☁️ Docker Build Cloud</Link>
 <Link to="docker-ai-agent">🤖 Docker AI Agent</Link>
 <Link to="docker-debug">🔍 Docker Debug</Link>

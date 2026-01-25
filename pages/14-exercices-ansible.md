@@ -528,7 +528,7 @@ flowchart LR
 
 - "Environnement: development" ou "production"
 - "Version: 2.0.0"
-- "Déployé le: 2025-01-09 à 14:30:25"
+- "Déployé le: 2026-01-09 à 14:30:25"
 - Des couleurs différentes selon l'environnement
 
 ---

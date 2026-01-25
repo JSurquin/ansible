@@ -134,7 +134,7 @@ CMD ["npm", "start"]
 
 # Instructions essentielles 🔧
 
-### FROM - Images de base recommandées 2025
+### FROM - Images de base recommandées 2026
 
 ```dockerfile
 FROM node:20-alpine          # Node.js optimisé
@@ -405,7 +405,7 @@ HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
 
 ---
 
-# Dockerfile optimal - Template 2025 ✅
+# Dockerfile optimal - Template 2026 ✅
 
 ```dockerfile
 FROM node:20-alpine

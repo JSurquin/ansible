@@ -70,12 +70,12 @@ services:
 
 ---
 
-# Syntaxe Moderne 2025 ⚡
+# Syntaxe Moderne 2026 ⚡
 
 ### Nouvelle syntaxe (recommandée)
 
 ```bash
-# ✅ Syntaxe moderne Docker 2025
+# ✅ Syntaxe moderne Docker 2026
 docker compose up -d
 docker compose down
 docker compose logs -f
@@ -84,7 +84,7 @@ docker compose restart web
 
 ---
 
-# Syntaxe Moderne 2025 (suite) ❌
+# Syntaxe Moderne 2026 (suite) ❌
 
 ### Ancienne syntaxe (dépréciée)
 
@@ -96,7 +96,7 @@ docker-compose down
 
 ---
 
-# Syntaxe Moderne 2025 (conclusion) 📝
+# Syntaxe Moderne 2026 (conclusion) 📝
 
 **Docker intègre maintenant Compose nativement !**
 
@@ -451,7 +451,7 @@ upstream nextjs {
 
 ---
 
-# Bonnes Pratiques 2025 ✅
+# Bonnes Pratiques 2026 ✅
 
 ### Recommandations modernes
 
@@ -549,7 +549,7 @@ docker compose -f docker-compose.prod.yml up -d
 
 ✅ **Orchestration multi-containers** avec un seul fichier
 
-✅ **Syntaxe moderne** Docker Compose 2025
+✅ **Syntaxe moderne** Docker Compose 2026
 
 ✅ **Gestion des environnements** avec profiles et .env
 

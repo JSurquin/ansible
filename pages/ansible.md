@@ -56,11 +56,11 @@ routeAlias: 'installation-setup'
 
 <a name="installation-setup" id="installation-setup"></a>
 
-# Module 2 : Installation et Setup 2025
+# Module 2 : Installation et Setup 2026
 
 ---
 
-# Installation et setup 2025 ⚙️
+# Installation et setup 2026 ⚙️
 
 ### Installation rapide
 

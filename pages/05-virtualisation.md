@@ -112,7 +112,7 @@ graph LR
 
 # L'avenir : Container-First 🌟
 
-### Tendance 2025
+### Tendance 2026
 
 - **85%** des nouvelles applications utilisent des containers
 - **40%** de réduction des coûts d'infrastructure

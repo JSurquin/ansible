@@ -4,7 +4,7 @@ colorSchema: "auto"
 layout: intro
 highlighter: shiki
 # https://sli.dev/custom/highlighters.html
-title: Formation Ansible 2025
+title: Formation Ansible 2026
 # download: true
 #transition: slide-left
 # remoteAssets: false
@@ -21,7 +21,7 @@ themeConfig:
   eventUrl: "https://vuejs.amsterdam/"
 ---
 
-# Ansible 2025
+# Ansible 2026
 
 🤖 Une formation présentée par Andromed.
 
@@ -135,7 +135,7 @@ class apache {
 
 # DISCLAIMER 🐧
 
-### Dans cette formation nous allons voir les commandes principales et les bonnes pratiques d'Ansible en 2025.
+### Dans cette formation nous allons voir les commandes principales et les bonnes pratiques d'Ansible en 2026.
 
 ---
 layout: text-image
@@ -258,7 +258,7 @@ routeAlias: 'sommaire'
 
 <div class="flex flex-col gap-2">
 <Link to="intro-ansible">🚀 1. Introduction à Ansible</Link>
-<Link to="installation-setup">⚙️ 2. Installation et Setup 2025</Link>
+<Link to="installation-setup">⚙️ 2. Installation et Setup 2026</Link>
 <Link to="ci-cd-integration">🔄 3. Intégration CI/CD</Link>
 <Link to="inventaires">📋 4. Inventaires et serveurs</Link>
 <Link to="playbooks">🎭 5. Playbooks</Link>
@@ -310,7 +310,7 @@ layout: two-cols
 - Templates Jinja2
 - Handlers et notifications
 - Ansible Vault
-- Bonnes pratiques 2025
+- Bonnes pratiques 2026
 - Exercices pratiques niveau 3
 - Projet final
 - QCM de validation
