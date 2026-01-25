@@ -112,7 +112,9 @@ class apache {
 
 ---
 
-# Transposition Puppet → Ansible 🔄
+#### Transposition Puppet → Ansible 🔄
+
+<small>
 
 | Puppet | Ansible |
 |--------|---------|
@@ -126,6 +128,8 @@ class apache {
 | Puppet Master | Pas besoin ! |
 
 **Bonne nouvelle** : Les concepts sont les mêmes, seule la syntaxe change ! 🎉
+
+</small>
 
 ---
 
