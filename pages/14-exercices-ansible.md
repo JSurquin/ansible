@@ -7,1043 +7,373 @@ routeAlias: 'exercices-ansible'
 
 # Exercices Ansible 🤖
 
-### 3 niveaux DevOps progressifs
+### 3 niveaux progressifs alignés sur les exemples
 
-Automatisez vos déploiements Docker avec Ansible !
+Mettez en pratique ce que vous avez appris avec Nginx !
+
+---
+
+# 🎯 Vue d'ensemble des exercices
+
+### Progression pédagogique
+
+Les exercices suivent **exactement** la même logique que les exemples :
+
+| Exercice | Basé sur | Concepts pratiqués |
+|----------|----------|-------------------|
+| 🟢 Simple | Exemple 1 | Inventaire + Playbook basique |
+| 🟡 Intermédiaire | Exemple 2 | Variables + Templates Jinja2 |
+| 🔴 Avancé | Exemple 3 + 4 | Rôles + Projet production |
+
+**L'objectif** : Vous allez refaire les exemples vous-même, sans copier-coller !
+
+---
+
+# 📋 Prérequis pour tous les exercices
+
+### Infrastructure de test
+
+```bash
+# 1. Démarrer le lab Docker (si pas déjà fait)
+docker-compose -f docker-compose-lab.yml up -d
+
+# 2. Vérifier que les containers sont up
+docker ps | grep ansible-lab
+
+# 3. Installer Ansible (si pas déjà fait)
+pip3 install ansible
+
+# 4. Créer votre dossier de travail
+mkdir -p exercices-ansible
+cd exercices-ansible
+```
+
+**💡 Rappel** : Les containers Docker simulent des serveurs Linux réels.
 
 ---
 
 ## 🟢 Exercice Niveau Simple
 
-### Installation Docker avec Ansible
+### Mission : Reproduire l'exemple 1 par vous-même
 
-**Objectif** : Utiliser Ansible pour installer Docker localement
+**Objectif** : Créer un playbook qui installe et configure Nginx sur un serveur web
 
-**Consignes** :
-1. Créer un inventaire local
-2. Playbook d'installation Docker
-3. Vérifier l'installation
-4. Préparer l'environnement pour les containers
+**Ce que vous devez créer** :
+1. Un fichier `inventory.yml` avec un serveur web
+2. Un playbook `install-nginx.yml`
+3. Installer Nginx
+4. Démarrer le service
+5. Afficher un message de confirmation
 
 ---
 
-## 🟢 Correction Niveau Simple - Inventaire
+## 🟢 Consignes détaillées
 
-```bash
-# 1. Créer le projet Ansible
-mkdir ansible-docker
-cd ansible-docker
+### Étape 1 : Créer l'inventaire
 
-# 2. Inventaire local
+Créez `inventory.yml` avec :
+- Un serveur nommé `web01`
+- `ansible_host: ansible-lab-web01`
+- `ansible_connection: docker`
+- `ansible_user: root`
+
+### Étape 2 : Créer le playbook
+
+Créez `install-nginx.yml` avec :
+- Cible : `hosts: all`
+- `become: true`
+- Variables : `nginx_port: 80` et `server_name: web01`
+
+---
+
+## 🟢 Consignes détaillées (suite)
+
+### Étape 3 : Les tâches à créer
+
+Votre playbook doit contenir ces tâches :
+1. Mettre à jour le cache APT
+2. Installer le package nginx
+3. Démarrer et activer le service nginx
+4. Afficher un message avec les infos du serveur
+
+**⏱️ Temps estimé** : 15-20 minutes
+
+**🎯 Test** : `ansible-playbook -i inventory.yml install-nginx.yml`
+
+---
+
+## 🟢 Correction - Inventaire
+
+```yaml
+# inventory.yml
 all:
+  vars:
+    ansible_connection: docker
+    ansible_user: root
+    ansible_python_interpreter: /usr/bin/python3
+
   hosts:
-    localhost:
-      ansible_connection: local
-      ansible_python_interpreter: /usr/bin/python3
-  vars:
-    ansible_user: "{{ ansible_env.USER }}"
+    web01:
+      ansible_host: ansible-lab-web01
 ```
 
 ---
 
-## 🟢 Correction Niveau Simple - Playbook
+## 🟢 Correction - Playbook
 
 ```yaml
-- name: Installation Docker
-  hosts: localhost
+# install-nginx.yml
+---
+- name: Installation et configuration Nginx
+  hosts: all
   become: true
+  
   vars:
-    docker_packages:
-      - docker.io
-      - docker-compose-plugin
-      - python3-docker
-
+    nginx_port: 80
+    server_name: web01
+  
   tasks:
-    - name: Installation Docker
+    - name: Mettre à jour le cache APT
       apt:
-        name:
-          - docker.io
+        update_cache: yes
+        cache_valid_time: 3600
+    
+    - name: Installer Nginx
+      apt:
+        name: nginx
         state: present
-        update_cache: true
-
-    - name: Demarrage et activation Docker
-      systemd:
-        name: docker
-        state: started
-        enabled: true
-      when: ansible_facts.virtualization_type != "docker"
 ```
 
 ---
 
-## 🟢 Correction Niveau Simple - Exécution
-
-```bash
-# 5. Exécuter l'installation
-ansible-playbook -i inventory.yml install-docker.yml
-```
-
-**✅ Résultat** : Docker installé et configuré automatiquement
-
-Vous pouvez vérifier dans votre container avec un simple `docker ps` ou tout autre commande docker.
-
----
-
-## 🟡 Exercice Niveau Intermédiaire - Étape 1
-
-### Déployer un container simple avec Ansible
-
-**Objectif** : Lancer votre premier container avec Ansible (sans rôles)
-
-**Consignes** :
-1. Utiliser le module `docker_container` d'Ansible
-2. Déployer un container nginx simple
-3. Le rendre accessible sur le port 8080
-4. Vérifier qu'il fonctionne
-
----
-
-## 🟡 Correction Étape 1 - Playbook simple
+## 🟢 Correction - Playbook (suite)
 
 ```yaml
-# deploy-container.yml
----
-- name: Déploiement container simple
-  hosts: localhost
-  vars:
-    container_name: "mon-nginx"
-    container_port: 8080
-
-  tasks:
-    - name: Arrêter container existant (si présent)
-      community.docker.docker_container:
-        name: "{{ container_name }}"
-        state: absent
-      ignore_errors: true
-
-    - name: Lancer container nginx
-      community.docker.docker_container:
-        name: "{{ container_name }}"
-        image: nginx:alpine
-        ports:
-          - "{{ container_port }}:80"
+    - name: Démarrer et activer Nginx
+      service:
+        name: nginx
         state: started
-        restart_policy: always
-
-    - name: Vérifier que le container fonctionne
-      uri:
-        url: "http://localhost:{{ container_port }}"
-        method: GET
-        status_code: 200
-      retries: 3
-      delay: 5
-
-    - name: Afficher l'URL d'accès
-      debug:
-        msg: "✅ Container accessible sur http://localhost:{{ container_port }}"
-```
-
----
-
-## 🟡 Correction Étape 1 - Exécution
-
-```bash
-# Installation du module Docker pour Ansible
-ansible-galaxy collection install community.docker
-
-# Exécution du playbook
-ansible-playbook -i inventory.yml deploy-container.yml
-
-# Test manuel
-curl http://localhost:8080
-```
-
-**✅ Résultat** : Container nginx déployé automatiquement avec Ansible !
-
----
-
-## 🟡 Exercice Niveau Intermédiaire - Étape 2
-
-### Utiliser des variables et templates
-
-**Objectif** : Personnaliser le contenu avec des variables Ansible
-
-**Consignes** :
-1. Créer un template HTML personnalisé
-2. Utiliser des variables pour le personnaliser
-3. Monter ce fichier dans le container
-4. Tester avec différents environnements
-
----
-
-## 🟡 Correction Étape 2 - Template HTML
-
-```html
-<!-- templates/index.html.j2 -->
-<!DOCTYPE html>
-<html>
-<head>
-    <title>{{ app_title | default('Mon App Ansible') }}</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 50px;
-            background-color: {{ bg_color | default('#f0f8ff') }};
-        }
-        .info-box {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            max-width: 500px;
-            margin: 0 auto;
-        }
-    </style>
-</head>
-<body>
-    <div class="info-box">
-        <h1>🚀 {{ app_title | default('Application Ansible') }}</h1>
-        <p><strong>Environnement:</strong> {{ environment | default('development') }}</p>
-        <p><strong>Version:</strong> {{ app_version | default('1.0.0') }}</p>
-        <p><strong>Déployé le:</strong> {{ ansible_date_time.date }} à {{ ansible_date_time.time }}</p>
-        <hr>
-        <p>Automatisé avec Ansible + Docker 🐳</p>
-    </div>
-</body>
-</html>
-```
-
----
-
-## 🟡 Correction Étape 2 - Playbook avec template
-
-```yaml
-# deploy-with-template.yml
----
-- name: Déploiement avec template personnalisé
-  hosts: localhost
-  vars:
-    app_title: "Ma Super App"
-    app_version: "2.0.0"
-    environment: "{{ env | default('development') }}"
-    container_name: "webapp-{{ environment }}"
-    container_port: "{{ port | default(8080) }}"
+        enabled: yes
     
-    # Couleurs par environnement
-    env_colors:
-      development: "#e3f2fd"
-      staging: "#fff3e0"
-      production: "#e8f5e8"
-    
-    bg_color: "{{ env_colors[environment] | default('#f0f8ff') }}"
-
-  tasks:
-    - name: Créer le répertoire temporaire
-      file:
-        path: /tmp/webapp
-        state: directory
-
-    - name: Générer la page HTML depuis le template
-      template:
-        src: index.html.j2
-        dest: /tmp/webapp/index.html
-
-    - name: Arrêter container existant
-      community.docker.docker_container:
-        name: "{{ container_name }}"
-        state: absent
-      ignore_errors: true
-
-    - name: Lancer container avec notre page personnalisée
-      community.docker.docker_container:
-        name: "{{ container_name }}"
-        image: nginx:alpine
-        ports:
-          - "{{ container_port }}:80"
-        volumes:
-          - /tmp/webapp/index.html:/usr/share/nginx/html/index.html:ro
-        state: started
-        restart_policy: always
-
-    - name: Tester l'application
-      uri:
-        url: "http://localhost:{{ container_port }}"
-        return_content: true
-      register: app_response
-
-    - name: Afficher le résultat
+    - name: Afficher les informations
       debug:
         msg: |
-          ✅ Application {{ app_title }} déployée !
-          🌐 URL: http://localhost:{{ container_port }}
-          🏷️ Environnement: {{ environment }}
-          📱 Version: {{ app_version }}
+          ✅ Nginx installé avec succès !
+          🌐 Serveur: {{ server_name }}
+          📍 Port: {{ nginx_port }}
+          🔗 Container: {{ ansible_host }}
 ```
 
 ---
 
-## 🟡 Correction Étape 2 - Test multi-environnements
+## 🟢 Test de l'exercice
 
 ```bash
-# Test en développement
-ansible-playbook -i inventory.yml deploy-with-template.yml
+# Exécuter le playbook
+ansible-playbook -i inventory.yml install-nginx.yml
 
-# Test en staging (port différent)
-ansible-playbook -i inventory.yml deploy-with-template.yml \
-  -e env=staging -e port=8081
+# Vérifier que Nginx fonctionne
+docker exec ansible-lab-web01 systemctl status nginx
 
-# Test en production (encore un autre port)
-ansible-playbook -i inventory.yml deploy-with-template.yml \
-  -e env=production -e port=8082
-
-# Vérifier les 3 environnements
-curl http://localhost:8080  # dev
-curl http://localhost:8081  # staging  
-curl http://localhost:8082  # prod
+# Tester la page par défaut
+docker exec ansible-lab-web01 curl localhost
 ```
 
-**✅ Résultat** : 3 environnements différents avec des couleurs et configs personnalisées !
+**✅ Résultat attendu** : Nginx installé et fonctionnel !
 
 ---
 
-## 🟡 Exercice Niveau Intermédiaire - Étape 3
+## 🟡 Exercice Niveau Intermédiaire
 
-### Docker Compose simple avec Ansible
+### Mission : Variables + Templates (comme l'exemple 2)
 
-**Objectif** : Déployer un docker-compose.yml basique (app + base de données)
+**Objectif** : Déployer Nginx avec configuration personnalisée sur plusieurs serveurs
 
-**Consignes** :
-1. Créer un template docker-compose.yml
-2. Déployer une app web + base de données Redis
-3. Utiliser des variables pour les ports et mots de passe
-4. Vérifier la connectivité entre les services
+**Ce que vous devez créer** :
+1. Inventaire avec 3 serveurs web (web01, web02, web03)
+2. Fichier de variables `group_vars/all.yml`
+3. Template `nginx.conf.j2`
+4. Template `index.html.j2` personnalisé
+5. Playbook avec handlers
 
 ---
 
-## 🟡 Correction Étape 3 - Template Docker Compose
+## 🟡 Consignes détaillées
 
-```yaml
-# templates/docker-compose.yml.j2
-version: '3.8'
+### Étape 1 : Structure du projet
 
-services:
-  webapp:
-    image: nginx:alpine
-    container_name: {{ stack_name }}-web
-    ports:
-      - "{{ web_port }}:80"
-    volumes:
-      - ./html:/usr/share/nginx/html:ro
-    depends_on:
-      - redis
-    networks:
-      - app-network
-
-  redis:
-    image: redis:alpine
-    container_name: {{ stack_name }}-redis
-    ports:
-      - "{{ redis_port }}:6379"
-    volumes:
-      - redis_data:/data
-    networks:
-      - app-network
-
-volumes:
-  redis_data:
-
-networks:
-  app-network:
-    driver: bridge
+Créez cette structure :
+```
+exercice-intermediate/
+├── inventory.yml
+├── group_vars/
+│   └── all.yml
+├── templates/
+│   ├── nginx.conf.j2
+│   └── index.html.j2
+└── deploy.yml
 ```
 
 ---
 
-## 🟡 Correction Étape 3 - Playbook Docker Compose
+## 🟡 Étape 2 : Inventaire multi-serveurs
+
+Créez un inventaire avec :
+- Un groupe `webservers`
+- 3 serveurs : web01, web02, web03
+- Tous pointent vers `ansible-lab-web01`, `ansible-lab-web02`, `ansible-lab-web03`
+
+### Étape 3 : Variables
+
+Dans `group_vars/all.yml`, définissez :
+- `app_name`: Votre nom d'application
+- `app_version`: "1.0.0"
+- `app_environment`: "development"
+- `nginx_config` avec port, worker_connections, client_max_body_size
+
+---
+
+## 🟡 Étape 4 : Templates à créer
+
+### Template nginx.conf.j2
+
+Doit contenir :
+- Nombre de workers (variable)
+- Configuration HTTP de base
+- Virtual host avec port variable
+- Location / qui sert /var/www/html
+- Location /health pour health check
+
+**💡 Astuce** : Inspirez-vous de l'exemple 2 !
+
+---
+
+## 🟡 Étape 5 : Template HTML
+
+### Template index.html.j2
+
+Créez une page HTML personnalisée avec :
+- Titre : `{{ app_name }}`
+- Affichage de la version
+- Affichage de l'environnement
+- Affichage du nom du serveur (inventory_hostname)
+- Couleur de fond selon l'environnement
+
+**Variables de couleur** :
+- development: "#e3f2fd"
+- staging: "#fff3e0"
+- production: "#e8f5e8"
+
+---
+
+## 🟡 Étape 6 : Playbook avec handlers
+
+Votre playbook `deploy.yml` doit :
+1. Installer Nginx
+2. Créer le répertoire web
+3. Générer nginx.conf depuis le template
+4. Générer index.html depuis le template
+5. Démarrer Nginx
+6. Notifier un handler "Redémarrer Nginx" si config change
+
+**⏱️ Temps estimé** : 30-40 minutes
+
+---
+
+## 🟡 Correction - Inventaire
 
 ```yaml
-# deploy-compose.yml
----
-- name: Déploiement Docker Compose simple
-  hosts: localhost
+# inventory.yml
+all:
   vars:
-    stack_name: "myapp"
-    web_port: 9000
-    redis_port: 6379
-    app_directory: "/tmp/{{ stack_name }}"
+    ansible_connection: docker
+    ansible_user: root
+    ansible_python_interpreter: /usr/bin/python3
 
-  tasks:
-    - name: Créer le répertoire de l'application
-      file:
-        path: "{{ app_directory }}/html"
-        state: directory
-        recurse: true
-
-    - name: Générer docker-compose.yml
-      template:
-        src: docker-compose.yml.j2
-        dest: "{{ app_directory }}/docker-compose.yml"
-
-    - name: Créer une page web de test
-      copy:
-        content: |
-          <!DOCTYPE html>
-          <html>
-          <head><title>App avec Redis</title></head>
-          <body>
-            <h1>🚀 Application avec Redis</h1>
-            <p>Stack: {{ stack_name }}</p>
-            <p>Web: localhost:{{ web_port }}</p>
-            <p>Redis: localhost:{{ redis_port }}</p>
-            <p>Déployé avec Docker Compose + Ansible</p>
-          </body>
-          </html>
-        dest: "{{ app_directory }}/html/index.html"
-
-    - name: Démarrer la stack Docker Compose
-      community.docker.docker_compose:
-        project_src: "{{ app_directory }}"
-        state: present
-
-    - name: Attendre que les services démarrent
-      wait_for:
-        port: "{{ web_port }}"
-        delay: 5
-        timeout: 30
-
-    - name: Tester l'application web
-      uri:
-        url: "http://localhost:{{ web_port }}"
-        status_code: 200
-
-    - name: Tester la connexion Redis (optionnel)
-      command: docker exec {{ stack_name }}-redis redis-cli ping
-      register: redis_test
-      ignore_errors: true
-
-    - name: Afficher les résultats
-      debug:
-        msg: |
-          ✅ Stack Docker Compose déployée !
-          🌐 Web: http://localhost:{{ web_port }}
-          🔴 Redis: localhost:{{ redis_port }}
-          ❤️ Redis status: {{ redis_test.stdout | default('N/A') }}
+  children:
+    webservers:
+      hosts:
+        web01:
+          ansible_host: ansible-lab-web01
+        web02:
+          ansible_host: ansible-lab-web02
+        web03:
+          ansible_host: ansible-lab-web03
 ```
 
 ---
 
-## 🟡 Correction Étape 3 - Exécution et gestion
-
-```bash
-# Déployer la stack
-ansible-playbook -i inventory.yml deploy-compose.yml
-
-# Vérifier les services
-docker ps
-curl http://localhost:9000
-
-# Script pour arrêter la stack
-# stop-stack.yml
----
-- name: Arrêter la stack
-  hosts: localhost
-  vars:
-    app_directory: "/tmp/myapp"
-  tasks:
-    - name: Arrêter Docker Compose
-      community.docker.docker_compose:
-        project_src: "{{ app_directory }}"
-        state: absent
-
-# Utilisation
-ansible-playbook -i inventory.yml stop-stack.yml
-```
-
-**✅ Résultat** : Stack web + Redis déployée avec Docker Compose et Ansible !
-
----
-
-## 🟡 Exercice Niveau Intermédiaire Avancé
-
-### Déploiement Dockerfile avec Ansible
-
-**Objectif** : Utiliser Ansible pour déployer l'image créée dans les exercices Dockerfile
-
-**Consignes** :
-1. Créer un rôle Ansible pour le déploiement
-2. Copier et builder un Dockerfile
-3. Lancer le container avec configuration
-4. Gérer le cycle de vie (start/stop/update)
-
----
-
-## 🟡 Correction Niveau Intermédiaire - Structure
-
-```bash
-# 1. Créer la structure de rôle
-mkdir -p roles/webapp/{tasks,files,templates,vars,handlers}
-
-# 2. Copier le Dockerfile de l'exercice précédent
-mkdir -p roles/webapp/files/app
-
-FROM nginx:alpine
-
-# Copier notre page
-COPY index.html /usr/share/nginx/html/
-
-# Healthcheck
-HEALTHCHECK --interval=30s --timeout=3s \
-  CMD wget --no-verbose --tries=1 --spider http://localhost/ || exit 1
-
-EXPOSE 80
-
-```
-
----
-
-## 🟡 Niveau Intermédiaire - Template
-
-```mermaid
-flowchart LR
-    A[Template index.html.j2] --> B[Ansible génère index.html avec variables]
-    B --> C[Copie dans /tmp/webapp-container/]
-    D[Dockerfile copié] --> C
-    C --> E[docker build utilise index.html généré]
-    E --> F[Image Docker avec contenu dynamique]
-    F --> G[Container nginx sert le HTML personnalisé]
-
-    style A fill:#9c27b0,stroke:#7b1fa2,stroke-width:3px,color:#fff
-    style B fill:#673ab7,stroke:#512da8,stroke-width:3px,color:#fff
-    style C fill:#ff9800,stroke:#f57c00,stroke-width:3px,color:#fff
-    style D fill:#3f51b5,stroke:#303f9f,stroke-width:3px,color:#fff
-    style E fill:#00bcd4,stroke:#0097a7,stroke-width:3px,color:#fff
-    style F fill:#009688,stroke:#00796b,stroke-width:3px,color:#fff
-    style G fill:#4caf50,stroke:#388e3c,stroke-width:3px,color:#fff
-```
-
-<br/>
-
-### Au lieu d'avoir une page web statique, vous avez une page qui affiche automatiquement :
-
-- "Environnement: development" ou "production"
-- "Version: 2.0.0"
-- "Déployé le: 2026-01-09 à 14:30:25"
-- Des couleurs différentes selon l'environnement
-
----
-
-## 🟡 Correction Niveau Intermédiaire - Template
-
-```bash
-# 3. Template de page web avec variables Ansible
-
-<!DOCTYPE html>
-<html>
-<head>
-    <title>{{ app_name | default('WebApp Ansible') }}</title>
-    <style>
-        body {
-            font-family: Arial;
-            text-align: center;
-            padding: 50px;
-            background: {{ bg_color | default('#f0f8ff') }};
-        }
-        .container {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>🤖 {{ app_name | default('WebApp déployée par Ansible') }}</h1>
-        <p>Environnement: {{ environment | default('development') }}</p>
-        <p>Version: {{ app_version | default('1.0.0') }}</p>
-        <p>Déployé le: {{ ansible_date_time.date }} à {{ ansible_date_time.time }}</p>
-        <hr>
-        <small>Automatisé avec Ansible 🚀</small>
-    </div>
-</body>
-</html>
-
-```
-
----
-
-## 🟡 Correction Niveau Intermédiaire - Variables
+## 🟡 Correction - Variables
 
 ```yaml
-# 4. Variables du rôle
+# group_vars/all.yml
+---
+app_name: "Mon Application Web"
+app_version: "1.0.0"
+app_environment: "development"
 
-app_name: "Ma WebApp Ansible"
-app_version: "2.0.0"
-app_port: 8080
-docker_image: "webapp-ansible"
-docker_container: "webapp-container"
-environment: "{{ env | default('development') }}"
+nginx_config:
+  port: 80
+  worker_connections: 1024
+  client_max_body_size: "10m"
 
-# Configuration des couleurs par environnement
+company:
+  name: "Andromed"
+  url: "https://www.andromed.fr"
+
 env_colors:
   development: "#e3f2fd"
   staging: "#fff3e0"
   production: "#e8f5e8"
-
-bg_color: "{{ env_colors[environment] | default('#f0f8ff') }}"
-
 ```
 
 ---
 
-## 🟡 Correction Niveau Intermédiaire - Tâches
-
-```yaml
-# 5. Tâches principales du rôle
-
----
-- name: Créer le répertoire de travail
-  file:
-    path: "/tmp/{{ docker_container }}"
-    state: directory
-    mode: '0755'
-
-- name: Copier le Dockerfile
-  copy:
-    src: "app/"
-    dest: "/tmp/{{ docker_container }}/"
-    mode: '0644'
-
-- name: Générer la page HTML depuis le template
-  template:
-    src: index.html.j2
-    dest: "/tmp/{{ docker_container }}/index.html"
-    mode: '0644'
-  notify: Rebuild image
-
-- name: Construire l'image Docker
-  docker_image:
-    name: "{{ docker_image }}"
-    tag: "{{ app_version }}"
-    build:
-      path: "/tmp/{{ docker_container }}"
-    source: build
-    state: present
-
-- name: Arrêter le container existant (si présent)
-  docker_container:
-    name: "{{ docker_container }}"
-    state: absent
-  ignore_errors: true
-
-- name: Lancer le nouveau container
-  docker_container:
-    name: "{{ docker_container }}"
-    image: "{{ docker_image }}:{{ app_version }}"
-    ports:
-      - "{{ app_port }}:80"
-    state: started
-    restart_policy: always
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "http://localhost/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-  notify: Container deployed
-
-```
-
----
-
-## 🟡 Correction Niveau Intermédiaire - Handlers
-
-```yaml
-# 6. Handlers pour les notifications
-
----
-- name: Rebuild image
-  debug:
-    msg: "Image sera reconstruite avec les nouveaux fichiers"
-
-- name: Container deployed
-  debug:
-    msg: "Container {{ docker_container }} déployé sur le port {{ app_port }}"
-
-- name: Display access info
-  debug:
-    msg: "Application accessible sur http://localhost:{{ app_port }}"
-
-```
-
----
-
-## 🟡 Correction Niveau Intermédiaire - Playbook
-
-```yaml
-# 7. Playbook principal
-
----
-- name: Déploiement WebApp avec Dockerfile
-  hosts: localhost
-  vars:
-    env: "{{ target_env | default('development') }}"
-
-  tasks:
-    - name: Déployer l'application web
-      include_role:
-        name: webapp
-      notify: Display access info
-
-  handlers:
-    - name: Display access info
-      debug:
-        msg: |
-          ✅ Déploiement terminé !
-          🌐 Application: http://localhost:{{ app_port }}
-          🏷️ Version: {{ app_version }}
-          🔧 Environnement: {{ environment }}
-
-```
-
----
-
-## 🟡 Correction Niveau Intermédiaire - Tests
-
-```bash
-# 8. Scripts de déploiement par environnement
-
-#!/bin/bash
-
-case "$1" in
-  dev)
-    echo "🚀 Déploiement en développement..."
-    ansible-playbook -i inventory.yml deploy-webapp.yml -e target_env=development
-    ;;
-  staging)
-    echo "🚀 Déploiement en staging..."
-    ansible-playbook -i inventory.yml deploy-webapp.yml -e target_env=staging -e app_port=8081
-    ;;
-  prod)
-    echo "🚀 Déploiement en production..."
-    ansible-playbook -i inventory.yml deploy-webapp.yml -e target_env=production -e app_port=80
-    ;;
-  *)
-    echo "Usage: $0 {dev|staging|prod}"
-    exit 1
-    ;;
-esac
-
-echo "✅ Déploiement terminé !"
-
-
-chmod +x deploy.sh
-
-# Test de déploiement
-./deploy.sh dev
-```
-
-**✅ Résultat** : Application web déployée avec Ansible et Dockerfile
-
----
-
-## 🔴 Exercice Niveau Avancé
-
-### Evolution vers une Stack Production
-
-**Objectif** : Faire évoluer notre webapp simple vers une vraie stack production
-
-**Le problème** : Notre webapp du niveau intermédiaire est trop simple pour la production :
-- Pas de base de données
-- Pas de proxy/load balancer
-- Pas de monitoring
-- Configuration manuelle
-
-**L'objectif** : Créer une stack complète avec Ansible !
-
----
-
-## 🔴 Ce qu'on va construire
-
-### Architecture cible
-
-```mermaid
-flowchart LR
-    U[👤 Utilisateur] --> N[🔄 Nginx Proxy]
-    N --> A1[🐳 WebApp 1]
-    N --> A2[🐳 WebApp 2]
-    A1 --> D[🗄️ MySQL Database]
-    A2 --> D
-    
-    subgraph "📊 Monitoring"
-        M[📈 Health Checks]
-        B[💾 Backups auto]
-    end
-    
-    D --> M
-    D --> B
-
-    style U fill:#9c27b0,stroke:#7b1fa2,stroke-width:3px,color:#fff
-    style N fill:#00bcd4,stroke:#0097a7,stroke-width:3px,color:#fff
-    style A1 fill:#2196f3,stroke:#1976d2,stroke-width:3px,color:#fff
-    style A2 fill:#42a5f5,stroke:#1976d2,stroke-width:3px,color:#fff
-    style D fill:#ff9800,stroke:#f57c00,stroke-width:3px,color:#fff
-    style M fill:#4caf50,stroke:#388e3c,stroke-width:2px,color:#fff
-    style B fill:#673ab7,stroke:#512da8,stroke-width:2px,color:#fff
-```
-
-**🎯 Stack finale** : Nginx + 2 WebApps + MySQL + Monitoring/Backup
-
----
-
-### 🔴 Étape 1 - Structure du rôle
-
-**D'abord, on organise notre nouveau rôle pour la stack :**
-
-```bash
-# 1. Créer le rôle pour la stack
-mkdir -p roles/docker-stack/{tasks,files,templates,vars,handlers,meta}
-
-# 2. Métadonnées du rôle (dépendance du rôle webapp)
-
----
-dependencies:
-  - role: webapp
-galaxy_info:
-  author: DevOps Team
-  description: Stack Docker Compose production avec Nginx + WebApp + MySQL
-  min_ansible_version: 2.9
-```
-
-**💡 Logic** : Notre nouvelle stack utilise le rôle `webapp` qu'on a créé avant !
-
----
-
-### 🔴 Étape 2 - Variables de base
-
-**Configuration de base de notre stack :**
-
-```yaml
-# 3. Variables principales
-
-# Configuration de la stack
-stack_name: "production-stack"
-stack_directory: "/opt/{{ stack_name }}"
-
-# Configuration application
-app_port: 80
-app_image: "webapp-ansible"  # L'image qu'on a créée avant
-app_version: "latest"
-```
-
----
-
-### 🔴 Étape 3 - Variables base de données
-
-**Configuration MySQL sécurisée :**
-
-```yaml
-# Ajouter à vars/main.yml
-
-
-# Configuration base de données
-mysql_root_password: "{{ vault_mysql_root_password | default('production123') }}"
-mysql_database: "webapp"
-mysql_user: "app_user"
-mysql_password: "{{ vault_mysql_password | default('apppass123') }}"
-```
-
----
-
-### 🔴 Étape 4 - Variables environnements
-
-**Configuration par environnement (dev/staging/prod) :**
-
-```yaml
-# Ajouter à vars/main.yml
-
-
-# Environnements et ressources
-environments:
-  production:
-    replicas: 2
-    memory_limit: "512m"
-    cpu_limit: "0.5"
-  staging:
-    replicas: 1
-    memory_limit: "256m"
-    cpu_limit: "0.25"
-
-# Configuration monitoring
-monitoring_enabled: true
-backup_enabled: true
-backup_schedule: "0 2 * * *"  # Tous les jours à 2h
-```
-
----
-
-### 🔴 Étape 5 - Docker Compose : Base
-
-**Création du template docker-compose principal :**
-
-```yaml
-# 4. Template docker-compose.yml - Base
-
-version: '3.8'
-
-services:
-  proxy:
-    image: nginx:alpine
-    container_name: {{ stack_name }}-proxy
-    ports:
-      - "{{ app_port }}:80"
-    volumes:
-      - ./nginx-proxy/nginx.conf:/etc/nginx/nginx.conf
-    depends_on:
-      - app
-    networks:
-      - frontend
-    restart: unless-stopped
-```
-
----
-
-### 🔴 Étape 6 - Docker Compose : Application
-
-**Service application dans le docker-compose :**
-
-```yaml
-# Continuer le template docker-compose.yml
-
-
-  app:
-    image: {{ app_image }}:{{ app_version }}
-    container_name: {{ stack_name }}-app
-    networks:
-      - frontend
-      - backend
-    depends_on:
-      - database
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: {{ environments[target_env].memory_limit }}
-          cpus: '{{ environments[target_env].cpu_limit }}'
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "http://localhost/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-```
-
----
-
-### 🔴 Étape 7 - Docker Compose : Base de données
-
-**Service MySQL dans le docker-compose :**
-
-```yaml
-# Continuer le template docker-compose.yml
-
-
-  database:
-    image: mysql:8.0
-    container_name: {{ stack_name }}-db
-    environment:
-      MYSQL_ROOT_PASSWORD: {{ mysql_root_password }}
-      MYSQL_DATABASE: {{ mysql_database }}
-      MYSQL_USER: {{ mysql_user }}
-      MYSQL_PASSWORD: {{ mysql_password }}
-    volumes:
-      - db_data:/var/lib/mysql
-      - ./backups:/backups
-    networks:
-      - backend
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-```
-
----
-
-### 🔴 Étape 8 - Docker Compose : Réseaux
-
-**Volumes et réseaux du docker-compose :**
-
-```yaml
-# Finir le template docker-compose.yml
-
-
-volumes:
-  db_data:
-
-networks:
-  frontend:
-    driver: bridge
-  backend:
-    driver: bridge
-```
-
----
-
-### 🔴 Étape 9 - Configuration Nginx : Base
-
-**Template nginx pour le proxy :**
-
-```bash
-# 5. Template nginx proxy - Configuration de base
+## 🟡 Correction - Template nginx.conf.j2
+
+```nginx
+# templates/nginx.conf.j2
+user www-data;
+worker_processes {{ ansible_processor_vcpus | default(2) }};
+pid /run/nginx.pid;
 
 events {
-    worker_connections 1024;
+    worker_connections {{ nginx_config.worker_connections }};
 }
 
 http {
-    upstream app {
-        server app:80;
-    }
+    sendfile on;
+    tcp_nopush on;
+    keepalive_timeout 65;
+    client_max_body_size {{ nginx_config.client_max_body_size }};
 
-    # Logs
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+
     access_log /var/log/nginx/access.log;
     error_log /var/log/nginx/error.log;
 ```
 
 ---
 
-### 🔴 Étape 10 - Configuration Nginx : Virtual Host
+## 🟡 Correction - nginx.conf.j2 (suite)
 
-**Configuration du serveur web :**
-
-```bash
-# Continuer le template nginx
-# chemin : roles/docker-stack/templates/nginx.conf.j2
-
+```nginx
     server {
-        listen 80;
-        server_name {{ ansible_fqdn | default('localhost') }};
+        listen {{ nginx_config.port }};
+        server_name {{ inventory_hostname }};
 
-        # Health check endpoint
-        location /health {
-            access_log off;
-            return 200 "healthy\n";
-            add_header Content-Type text/plain;
+        root /var/www/html;
+        index index.html;
+
+        location / {
+            try_files $uri $uri/ =404;
         }
 
-        # Application proxy
-        location / {
-            proxy_pass http://app;
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-
-            # Timeouts
-            proxy_connect_timeout 30s;
-            proxy_send_timeout 30s;
-            proxy_read_timeout 30s;
+        location /health {
+            access_log off;
+            return 200 "OK";
+            add_header Content-Type text/plain;
         }
     }
 }
@@ -1051,360 +381,817 @@ http {
 
 ---
 
-### 🔴 Étape 11 - Tâches : Préparation
+## 🟡 Correction - Template index.html.j2
 
-**Tâches de préparation des répertoires :**
+```html
+<!-- templates/index.html.j2 -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ app_name }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+            background-color: {{ env_colors[app_environment] }};
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+```
+
+---
+
+## 🟡 Correction - index.html.j2 (suite)
+
+```html
+        h1 { color: #2196f3; }
+        .info { margin: 20px 0; }
+        .label { font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 {{ app_name }}</h1>
+        <div class="info">
+            <p><span class="label">Serveur:</span> {{ inventory_hostname }}</p>
+            <p><span class="label">Version:</span> {{ app_version }}</p>
+            <p><span class="label">Environnement:</span> {{ app_environment }}</p>
+            <p><span class="label">Date:</span> {{ ansible_date_time.date }}</p>
+        </div>
+        <hr>
+        <small>Déployé avec Ansible + {{ company.name }}</small>
+    </div>
+</body>
+</html>
+```
+
+---
+
+## 🟡 Correction - Playbook deploy.yml
 
 ```yaml
-# 6. Tâches de déploiement - Partie 1 : Préparation
-# chemin : roles/docker-stack/tasks/main.yml
+# deploy.yml
 ---
-- name: Créer le répertoire de la stack
-  file:
-    path: "{{ stack_directory }}"
-    state: directory
-    mode: '0755'
-    owner: "{{ ansible_user }}"
-    group: "{{ ansible_user }}"
-
-- name: Créer les sous-répertoires
-  file:
-    path: "{{ stack_directory }}/{{ item }}"
-    state: directory
-    mode: '0755'
-  loop:
-    - nginx-proxy
-    - backups
-    - scripts
-```
-
----
-
-### 🔴 Étape 12 - Tâches : Génération des fichiers
-
-**Génération des templates :**
-
-```yaml
-# Continuer tasks/main.yml - Partie 2 : Templates
-# chemin : roles/docker-stack/tasks/main.yml
-
-- name: Générer docker-compose.yml
-  template:
-    src: docker-compose.yml.j2
-    dest: "{{ stack_directory }}/docker-compose.yml"
-    mode: '0644'
-  notify:
-    - Restart stack
-
-- name: Générer configuration nginx
-  template:
-    src: nginx.conf.j2
-    dest: "{{ stack_directory }}/nginx-proxy/nginx.conf"
-    mode: '0644'
-  notify:
-    - Restart proxy
-
-- name: Générer script de backup
-  template:
-    src: backup.sh.j2
-    dest: "{{ stack_directory }}/scripts/backup.sh"
-    mode: '0755'
-
-- name: Générer script de monitoring
-  template:
-    src: monitor.sh.j2
-    dest: "{{ stack_directory }}/scripts/monitor.sh"
-    mode: '0755'
-```
-
----
-
-### 🔴 Étape 13 - Tâches : Déploiement
-
-**Démarrage de la stack et vérifications :**
-
-```yaml
-# Continuer tasks/main.yml - Partie 3 : Déploiement
-# chemin : roles/docker-stack/tasks/main.yml
-
-- name: Démarrer la stack Docker Compose
-  docker_compose:
-    project_src: "{{ stack_directory }}"
-    state: present
-    restarted: "{{ force_restart | default(false) }}"
-  register: stack_result
-
-- name: Configurer la crontab pour les backups
-  cron:
-    name: "Backup {{ stack_name }}"
-    minute: "0"
-    hour: "2"
-    job: "{{ stack_directory }}/scripts/backup.sh"
-    user: "{{ ansible_user }}"
-  when: backup_enabled
-
-- name: Attendre que les services soient prêts
-  wait_for:
-    host: localhost
-    port: "{{ app_port }}"
-    delay: 10
-    timeout: 60
-
-- name: Vérifier la santé de la stack
-  uri:
-    url: "http://localhost:{{ app_port }}/health"
-    method: GET
-    status_code: 200
-  register: health_check
-  retries: 3
-  delay: 5
-```
-
----
-
-### 🔴 Étape 14 - Script de backup
-
-**Script automatisé de sauvegarde :**
-
-```bash
-# 7. Template script de backup
-# chemin : roles/docker-stack/templates/backup.sh.j2
-#!/bin/bash
-
-BACKUP_DIR="{{ stack_directory }}/backups"
-DATE=$(date +%Y%m%d_%H%M%S)
-STACK_NAME="{{ stack_name }}"
-
-echo "💾 Backup de la stack $STACK_NAME - $DATE"
-
-# Backup base de données
-docker compose -f {{ stack_directory }}/docker-compose.yml exec -T database \
-    mysqldump -u root -p{{ mysql_root_password }} {{ mysql_database }} \
-    > "$BACKUP_DIR/db_backup_$DATE.sql"
-```
-
----
-
-### 🔴 Étape 15 - Script de backup (suite)
-
-**Sauvegarde config et nettoyage :**
-
-```bash
-# Continuer le script de backup
-# chemin : roles/docker-stack/templates/backup.sh.j2
-
-# Backup configuration
-tar -czf "$BACKUP_DIR/config_backup_$DATE.tar.gz" \
-    -C {{ stack_directory }} \
-    docker-compose.yml nginx-proxy/ scripts/
-
-# Nettoyage des anciens backups (garder 7 jours)
-find "$BACKUP_DIR" -name "*backup_*.sql" -mtime +7 -delete
-find "$BACKUP_DIR" -name "*backup_*.tar.gz" -mtime +7 -delete
-
-echo "✅ Backup terminé dans $BACKUP_DIR"
-ls -la "$BACKUP_DIR"/*$DATE*
-```
-
----
-
-### 🔴 Étape 16 - Script de monitoring
-
-**Script de surveillance de la stack :**
-
-```bash
-# 8. Template script de monitoring
-# chemin : roles/docker-stack/templates/monitor.sh.j2
-#!/bin/bash
-
-echo "📊 Monitoring de la stack {{ stack_name }}"
-echo "========================================="
-
-# Status des containers
-docker compose -f {{ stack_directory }}/docker-compose.yml ps
-
-echo ""
-echo "🏥 Health checks:"
-docker compose -f {{ stack_directory }}/docker-compose.yml ps --format "table {{.Name}}\t{{.Status}}"
-
-echo ""
-echo "📈 Utilisation des ressources:"
-docker stats --no-stream --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}"
-
-echo ""
-echo "🌐 Test de connectivité:"
-curl -s -o /dev/null -w "Status: %{http_code} | Time: %{time_total}s\n" \
-    http://localhost:{{ app_port }}/health
-
-echo ""
-echo "💾 Derniers backups:"
-ls -la {{ stack_directory }}/backups/ | tail -5
-```
-
----
-
-### 🔴 Étape 17 - Handlers
-
-**Gestionnaires de redémarrage :**
-
-```yaml
-# 9. Handlers pour les redémarrages
-# chemin : roles/docker-stack/handlers/main.yml
----
-- name: Restart stack
-  docker_compose:
-    project_src: "{{ stack_directory }}"
-    restarted: true
-
-- name: Restart proxy
-  docker_compose:
-    project_src: "{{ stack_directory }}"
-    services:
-      - proxy
-    restarted: true
-```
-
----
-
-### 🔴 Étape 18 - Playbook principal
-
-**Orchestration complète :**
-
-```yaml
-# 10. Playbook principal
-# chemin : deploy-stack.yml
----
-- name: Déploiement Stack Docker Compose Production
-  hosts: localhost
-  vars:
-    target_env: "{{ env | default('production') }}"
-    force_restart: "{{ restart | default(false) }}"
-
-  pre_tasks:
-    - name: Vérifier les prérequis
-      assert:
-        that:
-          - target_env in ['production', 'staging']
-        fail_msg: "Environnement doit être 'production' ou 'staging'"
-
+- name: Déploiement avec variables et templates
+  hosts: webservers
+  become: true
+  
   tasks:
-    - name: Construire l'image de l'application
-      include_role:
-        name: webapp
-
-    - name: Déployer la stack complète
-      include_role:
-        name: docker-stack
+    - name: Installer Nginx
+      apt:
+        name: nginx
+        state: present
+        update_cache: yes
+    
+    - name: Créer le répertoire web
+      file:
+        path: /var/www/html
+        state: directory
+        owner: www-data
+        group: www-data
+        mode: '0755'
 ```
 
 ---
 
-### 🔴 Étape 19 - Playbook (suite)
-
-**Informations de déploiement :**
+## 🟡 Correction - deploy.yml (suite)
 
 ```yaml
-# Continuer le playbook principal
-# chemin : deploy-stack.yml
+    - name: Configurer Nginx avec template
+      template:
+        src: templates/nginx.conf.j2
+        dest: /etc/nginx/nginx.conf
+        owner: root
+        group: root
+        mode: '0644'
+        backup: yes
+      notify: Redémarrer Nginx
+    
+    - name: Déployer la page HTML personnalisée
+      template:
+        src: templates/index.html.j2
+        dest: /var/www/html/index.html
+        owner: www-data
+        group: www-data
+        mode: '0644'
+```
 
-  post_tasks:
-    - name: Afficher les informations de déploiement
+---
+
+## 🟡 Correction - deploy.yml (fin)
+
+```yaml
+    - name: Démarrer Nginx
+      service:
+        name: nginx
+        state: started
+        enabled: yes
+    
+    - name: Afficher les informations
       debug:
         msg: |
-          ✅ Stack {{ stack_name }} déployée en {{ target_env }} !
-          🌐 Application: http://localhost:{{ app_port }}
-          🏥 Health: http://localhost:{{ app_port }}/health
-          🛠️ Monitoring: {{ stack_directory }}/scripts/monitor.sh
-          💾 Backup: {{ stack_directory }}/scripts/backup.sh
+          ✅ Déploiement terminé pour {{ inventory_hostname }}
+          🌐 Application: {{ app_name }} v{{ app_version }}
+          🏷️ Environnement: {{ app_environment }}
+  
+  handlers:
+    - name: Redémarrer Nginx
+      service:
+        name: nginx
+        state: restarted
 ```
 
 ---
 
-### 🔴 Étape 20 - Script de déploiement
-
-**Script d'orchestration finale :**
+## 🟡 Test de l'exercice
 
 ```bash
-# 11. Script de déploiement avancé
-# chemin : deploy-production.sh
-#!/bin/bash
+# Exécuter le playbook sur tous les serveurs
+ansible-playbook -i inventory.yml deploy.yml
 
-echo "🚀 Déploiement de la stack de production..."
+# Vérifier sur chaque serveur
+docker exec ansible-lab-web01 curl localhost
+docker exec ansible-lab-web02 curl localhost
+docker exec ansible-lab-web03 curl localhost
 
-case "$1" in
-  deploy)
-    ansible-playbook -i inventory.yml deploy-stack.yml -e env=production
-    ;;
-  update)
-    ansible-playbook -i inventory.yml deploy-stack.yml -e env=production -e restart=true
-    ;;
-  staging)
-    ansible-playbook -i inventory.yml deploy-stack.yml -e env=staging -e app_port=8080
-    ;;
-  monitor)
-    /opt/production-stack/scripts/monitor.sh
-    ;;
-  backup)
-    /opt/production-stack/scripts/backup.sh
-    ;;
-  *)
-    echo "Usage: $0 {deploy|update|staging|monitor|backup}"
-    exit 1
-    ;;
-esac
+# Tester le health check
+docker exec ansible-lab-web01 curl localhost/health
 
-chmod +x deploy-production.sh
+# Test avec autre environnement
+ansible-playbook -i inventory.yml deploy.yml -e app_environment=production
+```
+
+**✅ Résultat attendu** : 3 serveurs Nginx avec pages personnalisées !
+
+---
+
+## 🔴 Exercice Niveau Avancé
+
+### Mission : Créer un rôle Nginx réutilisable
+
+**Objectif** : Reproduire l'exemple 3 - Organisation professionnelle avec rôles
+
+**Ce que vous devez créer** :
+1. Structure de rôle complète pour Nginx
+2. Variables par défaut
+3. Templates modulaires
+4. Handlers
+5. Métadonnées
+6. Support multi-vhosts
+
+---
+
+## 🔴 Étape 1 : Structure du projet
+
+Créez cette structure complète :
+```
+exercice-avance/
+├── inventory.yml
+├── site.yml
+├── group_vars/
+│   └── all.yml
+└── roles/
+    └── nginx/
+        ├── tasks/
+        │   └── main.yml
+        ├── handlers/
+        │   └── main.yml
+        ├── templates/
+        │   ├── nginx.conf.j2
+        │   └── vhost.conf.j2
+        ├── defaults/
+        │   └── main.yml
+        └── meta/
+            └── main.yml
 ```
 
 ---
 
-### 🔴 Étape 21 - Test final
+## 🔴 Étape 2 : Defaults du rôle
 
-**Déploiement et vérification :**
+Dans `roles/nginx/defaults/main.yml`, définissez :
+- `nginx_user: www-data`
+- `nginx_worker_processes: auto`
+- `nginx_conf_path: /etc/nginx/nginx.conf`
+- `nginx_vhost_path: /etc/nginx/sites-available`
+- `nginx_vhost_enabled_path: /etc/nginx/sites-enabled`
+- `nginx_remove_default_vhost: true`
+- `nginx_service_state: started`
+- `nginx_service_enabled: true`
+- `nginx_vhosts: []` (liste vide par défaut)
+
+---
+
+## 🔴 Étape 3 : Tâches du rôle
+
+Dans `roles/nginx/tasks/main.yml`, créez les tâches :
+1. Mettre à jour le cache APT
+2. Installer Nginx
+3. Créer les répertoires nécessaires (boucle)
+4. Générer nginx.conf depuis template
+5. Supprimer le vhost par défaut (si `nginx_remove_default_vhost`)
+6. Configurer les virtual hosts (boucle sur `nginx_vhosts`)
+7. Activer les virtual hosts (liens symboliques)
+8. Créer les répertoires web pour chaque vhost
+9. Démarrer et activer Nginx
+
+**💡 Utilisez les tags** : packages, config, vhosts, service
+
+---
+
+## 🔴 Étape 4 : Handlers
+
+Dans `roles/nginx/handlers/main.yml` :
+- Handler "Recharger Nginx" : `state: reloaded`
+- Handler "Redémarrer Nginx" : `state: restarted`
+
+### Étape 5 : Métadonnées
+
+Dans `roles/nginx/meta/main.yml` :
+- Informations Galaxy (author, description)
+- Versions minimales (ansible_version: 2.9)
+- Plateformes supportées (Ubuntu 20.04, 22.04)
+
+---
+
+## 🔴 Étape 6 : Templates
+
+### Template nginx.conf.j2
+Configuration globale de Nginx (similaire à l'intermédiaire)
+
+### Template vhost.conf.j2
+Configuration d'un virtual host :
+```nginx
+server {
+    listen {{ item.port | default(80) }};
+    server_name {{ item.server_name }};
+    root {{ item.root }};
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}
+```
+
+---
+
+## 🔴 Étape 7 : Playbook principal
+
+Dans `site.yml` :
+```yaml
+---
+- name: Déploiement avec rôles
+  hosts: webservers
+  become: true
+  
+  vars:
+    nginx_vhosts:
+      - server_name: "{{ inventory_hostname }}"
+        root: "/var/www/html"
+        port: 80
+  
+  roles:
+    - role: nginx
+      tags: ['nginx', 'webserver']
+```
+
+**⏱️ Temps estimé** : 45-60 minutes
+
+---
+
+## 🔴 Correction - defaults/main.yml
+
+```yaml
+# roles/nginx/defaults/main.yml
+---
+# Configuration utilisateur et processus
+nginx_user: www-data
+nginx_worker_processes: auto
+
+# Chemins de configuration
+nginx_conf_path: /etc/nginx/nginx.conf
+nginx_vhost_path: /etc/nginx/sites-available
+nginx_vhost_enabled_path: /etc/nginx/sites-enabled
+
+# Options de configuration
+nginx_remove_default_vhost: true
+nginx_worker_connections: 1024
+nginx_client_max_body_size: "10m"
+
+# Configuration du service
+nginx_service_state: started
+nginx_service_enabled: true
+
+# Virtual hosts (vide par défaut)
+nginx_vhosts: []
+```
+
+---
+
+## 🔴 Correction - tasks/main.yml (partie 1)
+
+```yaml
+# roles/nginx/tasks/main.yml
+---
+- name: Mettre à jour le cache APT
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+  tags: ['packages']
+
+- name: Installer Nginx
+  apt:
+    name: nginx
+    state: present
+  tags: ['packages']
+
+- name: Créer les répertoires nécessaires
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ nginx_user }}"
+    group: "{{ nginx_user }}"
+    mode: '0755'
+  loop:
+    - "{{ nginx_vhost_path }}"
+    - "{{ nginx_vhost_enabled_path }}"
+  tags: ['config']
+```
+
+---
+
+## 🔴 Correction - tasks/main.yml (partie 2)
+
+```yaml
+- name: Configurer Nginx (nginx.conf)
+  template:
+    src: nginx.conf.j2
+    dest: "{{ nginx_conf_path }}"
+    owner: root
+    group: root
+    mode: '0644'
+    validate: 'nginx -t -c %s'
+  notify: Recharger Nginx
+  tags: ['config']
+
+- name: Supprimer le vhost par défaut
+  file:
+    path: "{{ nginx_vhost_enabled_path }}/default"
+    state: absent
+  when: nginx_remove_default_vhost
+  notify: Recharger Nginx
+  tags: ['config']
+```
+
+---
+
+## 🔴 Correction - tasks/main.yml (partie 3)
+
+```yaml
+- name: Configurer les virtual hosts
+  template:
+    src: vhost.conf.j2
+    dest: "{{ nginx_vhost_path }}/{{ item.server_name }}.conf"
+    owner: root
+    group: root
+    mode: '0644'
+  loop: "{{ nginx_vhosts }}"
+  when: nginx_vhosts | length > 0
+  notify: Recharger Nginx
+  tags: ['config', 'vhosts']
+
+- name: Activer les virtual hosts
+  file:
+    src: "{{ nginx_vhost_path }}/{{ item.server_name }}.conf"
+    dest: "{{ nginx_vhost_enabled_path }}/{{ item.server_name }}.conf"
+    state: link
+  loop: "{{ nginx_vhosts }}"
+  when: nginx_vhosts | length > 0
+  notify: Recharger Nginx
+  tags: ['config', 'vhosts']
+```
+
+---
+
+## 🔴 Correction - tasks/main.yml (partie 4)
+
+```yaml
+- name: Créer les répertoires web
+  file:
+    path: "{{ item.root }}"
+    state: directory
+    owner: "{{ nginx_user }}"
+    group: "{{ nginx_user }}"
+    mode: '0755'
+  loop: "{{ nginx_vhosts }}"
+  when: nginx_vhosts | length > 0
+  tags: ['config']
+
+- name: Démarrer et activer Nginx
+  service:
+    name: nginx
+    state: "{{ nginx_service_state }}"
+    enabled: "{{ nginx_service_enabled }}"
+  tags: ['service']
+```
+
+---
+
+## 🔴 Correction - handlers/main.yml
+
+```yaml
+# roles/nginx/handlers/main.yml
+---
+- name: Recharger Nginx
+  service:
+    name: nginx
+    state: reloaded
+
+- name: Redémarrer Nginx
+  service:
+    name: nginx
+    state: restarted
+```
+
+---
+
+## 🔴 Correction - meta/main.yml
+
+```yaml
+# roles/nginx/meta/main.yml
+---
+dependencies: []
+
+galaxy_info:
+  author: "Votre Nom"
+  description: "Rôle Ansible pour installer et configurer Nginx"
+  company: "Andromed"
+  license: "MIT"
+  min_ansible_version: 2.9
+  
+  platforms:
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+  
+  galaxy_tags:
+    - nginx
+    - webserver
+    - web
+```
+
+---
+
+## 🔴 Correction - templates/nginx.conf.j2
+
+```nginx
+# roles/nginx/templates/nginx.conf.j2
+user {{ nginx_user }};
+worker_processes {{ nginx_worker_processes }};
+pid /run/nginx.pid;
+
+events {
+    worker_connections {{ nginx_worker_connections }};
+}
+
+http {
+    sendfile on;
+    tcp_nopush on;
+    tcp_nodelay on;
+    keepalive_timeout 65;
+    types_hash_max_size 2048;
+    client_max_body_size {{ nginx_client_max_body_size }};
+
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+```
+
+---
+
+## 🔴 Correction - nginx.conf.j2 (suite)
+
+```nginx
+    access_log /var/log/nginx/access.log;
+    error_log /var/log/nginx/error.log;
+
+    gzip on;
+    gzip_disable "msie6";
+
+    # Inclure tous les virtual hosts activés
+    include {{ nginx_vhost_enabled_path }}/*;
+}
+```
+
+---
+
+## 🔴 Correction - templates/vhost.conf.j2
+
+```nginx
+# roles/nginx/templates/vhost.conf.j2
+server {
+    listen {{ item.port | default(80) }};
+    server_name {{ item.server_name }};
+
+    root {{ item.root }};
+    index index.html index.htm;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+
+    # Health check
+    location /health {
+        access_log off;
+        return 200 "OK - {{ item.server_name }}";
+        add_header Content-Type text/plain;
+    }
+}
+```
+
+---
+
+## 🔴 Test de l'exercice
 
 ```bash
-# Déploiement final
-echo "🎯 Lancement du déploiement production..."
-./deploy-production.sh deploy
+# Exécuter le playbook complet
+ansible-playbook -i inventory.yml site.yml
 
-echo "✅ Stack complète déployée avec Ansible !"
+# Exécuter seulement certains tags
+ansible-playbook -i inventory.yml site.yml --tags "packages,config"
 
-# Tests post-déploiement
-echo "🧪 Tests de la stack..."
-curl http://localhost/health
-docker compose -f /opt/production-stack/docker-compose.yml ps
+# Vérifier la configuration Nginx
+ansible webservers -i inventory.yml -m shell -a "nginx -t"
+
+# Tester les vhosts
+docker exec ansible-lab-web01 curl localhost
+docker exec ansible-lab-web01 curl localhost/health
+
+# Lister les tasks du rôle
+ansible-playbook -i inventory.yml site.yml --list-tasks
 ```
 
-**✅ Résultat** : Stack production complète avec Nginx + WebApp + MySQL + Monitoring/Backup !
+**✅ Résultat attendu** : Rôle Nginx professionnel et réutilisable !
 
 ---
 
-### Récapitulatif Exercices Ansible 📋
+## 🔴 Bonus : Projet Production Multi-Environnements
+
+### Mission ultime : Reproduire l'exemple 4
+
+**Objectif** : Structure production complète avec staging et production
+
+**Structure à créer** :
+```
+projet-production/
+├── ansible.cfg
+├── site.yml
+├── inventories/
+│   ├── staging/hosts.yml
+│   └── production/hosts.yml
+├── group_vars/
+│   ├── all.yml
+│   ├── staging.yml
+│   └── production.yml
+├── roles/
+│   └── nginx/  (le rôle créé avant)
+└── secrets.yml (avec Vault)
+```
+
+---
+
+## 🔴 Bonus - ansible.cfg
+
+```ini
+# ansible.cfg
+[defaults]
+inventory = inventories/staging/hosts.yml
+roles_path = ./roles
+host_key_checking = False
+retry_files_enabled = False
+callback_whitelist = timer, profile_tasks
+stdout_callback = yaml
+log_path = ./ansible.log
+
+[ssh_connection]
+pipelining = True
+```
+
+---
+
+## 🔴 Bonus - Inventaires
+
+```yaml
+# inventories/staging/hosts.yml
+all:
+  vars:
+    ansible_connection: docker
+    ansible_user: root
+    environment: staging
+  
+  children:
+    webservers:
+      hosts:
+        web01:
+          ansible_host: ansible-lab-web01
+```
+
+```yaml
+# inventories/production/hosts.yml
+all:
+  vars:
+    ansible_connection: docker
+    ansible_user: root
+    environment: production
+  
+  children:
+    webservers:
+      hosts:
+        web01: {ansible_host: ansible-lab-web01}
+        web02: {ansible_host: ansible-lab-web02}
+        web03: {ansible_host: ansible-lab-web03}
+```
+
+---
+
+## 🔴 Bonus - Variables par environnement
+
+```yaml
+# group_vars/staging.yml
+---
+app_environment: staging
+nginx_worker_processes: 2
+nginx_worker_connections: 512
+
+nginx_vhosts:
+  - server_name: staging.monapp.local
+    root: /var/www/staging
+    port: 80
+```
+
+```yaml
+# group_vars/production.yml
+---
+app_environment: production
+nginx_worker_processes: 4
+nginx_worker_connections: 2048
+
+nginx_vhosts:
+  - server_name: www.monapp.com
+    root: /var/www/production
+    port: 80
+```
+
+---
+
+## 🔴 Bonus - Utilisation de Vault
+
+```bash
+# Créer le fichier de secrets
+ansible-vault create secrets.yml
+
+# Contenu du secrets.yml
+vault_ssl_cert_password: "mon_super_secret"
+vault_admin_password: "password_admin_securise"
+
+# Utiliser dans un playbook
+ansible-playbook -i inventories/production site.yml --ask-vault-pass
+
+# Éditer les secrets
+ansible-vault edit secrets.yml
+
+# Chiffrer un fichier existant
+ansible-vault encrypt secrets.yml
+```
+
+---
+
+## 🔴 Test du projet production
+
+```bash
+# Déploiement staging
+ansible-playbook -i inventories/staging site.yml
+
+# Déploiement production
+ansible-playbook -i inventories/production site.yml
+
+# Déploiement production avec Vault
+ansible-playbook -i inventories/production site.yml --ask-vault-pass
+
+# Dry-run avant déploiement
+ansible-playbook -i inventories/production site.yml --check --diff
+
+# Déploiement avec tags
+ansible-playbook -i inventories/production site.yml --tags "config"
+```
+
+---
+
+## 📊 Récapitulatif des exercices
 
 ### Compétences acquises
 
 **🟢 Niveau Simple** :
-- Inventaires Ansible
-- Playbooks d'installation
-- Modules de base
-- Vérification automatique
+- ✅ Créer un inventaire Ansible
+- ✅ Écrire un playbook de base
+- ✅ Utiliser les modules apt et service
+- ✅ Déployer sur un serveur
 
 **🟡 Niveau Intermédiaire** :
-- Rôles Ansible
-- Templates Jinja2
-- Variables et handlers
-- Intégration Docker
+- ✅ Organiser les variables dans group_vars
+- ✅ Créer des templates Jinja2
+- ✅ Déployer sur plusieurs serveurs
+- ✅ Utiliser les handlers
 
 ---
 
-### Récapitulatif Ansible (suite) 📋
+## 📊 Récapitulatif (suite)
 
 **🔴 Niveau Avancé** :
-- Déploiement Docker Compose
-- Gestion de configuration
-- Scripts de maintenance
-- Monitoring automatisé
+- ✅ Créer un rôle Ansible complet
+- ✅ Structure professionnelle
+- ✅ Variables par défaut et métadonnées
+- ✅ Templates modulaires
+- ✅ Tags pour exécution sélective
 
-### 🚀 **Formation Ansible complète !**
+**🔴 Bonus Production** :
+- ✅ Multi-environnements (staging/prod)
+- ✅ Configuration centralisée (ansible.cfg)
+- ✅ Ansible Vault pour les secrets
+- ✅ Organisation projet professionnel
 
-Vous maîtrisez maintenant l'automatisation complète avec Docker et Ansible !
+---
+
+## 🎯 Comparaison : Exemples vs Exercices
+
+### Vous avez reproduit tous les exemples !
+
+| Exemple | Exercice | Concepts |
+|---------|----------|----------|
+| 01-simple-playbook | 🟢 Simple | Playbook basique |
+| 02-variables-templates | 🟡 Intermédiaire | Variables + Templates |
+| 03-avec-roles | 🔴 Avancé | Rôles |
+| 04-projet-production | 🔴 Bonus | Multi-env + Vault |
+
+**💪 Bravo !** Vous maîtrisez maintenant Ansible de A à Z !
+
+---
+
+## 💡 Points clés à retenir
+
+### Les fondamentaux
+
+✅ **Inventaire** : Liste des serveurs à gérer
+✅ **Playbook** : Ensemble de tâches à exécuter
+✅ **Variables** : Personnalisation des déploiements
+✅ **Templates** : Génération de fichiers dynamiques
+✅ **Handlers** : Actions déclenchées par changements
+✅ **Rôles** : Organisation modulaire et réutilisable
+✅ **Tags** : Exécution sélective
+✅ **Vault** : Chiffrement des secrets
+
+---
+
+## 🚀 Aller plus loin
+
+### Prochaines étapes
+
+**Améliorer vos rôles** :
+- Ajouter des tests avec Molecule
+- Publier sur Ansible Galaxy
+- Ajouter le support SSL/TLS
+- Gérer les certificats Let's Encrypt
+
+**Intégrer dans CI/CD** :
+- GitHub Actions + Ansible
+- GitLab CI + Ansible
+- Jenkins + Ansible
+
+**Explorer** :
+- AWX / Ansible Tower
+- Ansible Operator pour Kubernetes
+- Collections avancées (AWS, Azure, GCP)
+
+---
+
+## 🎉 Félicitations !
+
+### Vous avez terminé les exercices Ansible !
+
+Vous savez maintenant :
+- 📋 Gérer un inventaire de serveurs
+- 🎭 Écrire des playbooks efficaces
+- 🔧 Utiliser variables et templates
+- 📦 Créer des rôles réutilisables
+- 🔐 Sécuriser vos secrets avec Vault
+- 🚀 Organiser un projet production
+
+**Prêt pour le QCM final ?** ✅
