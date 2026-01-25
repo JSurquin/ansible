@@ -1,28 +1,28 @@
----
+--- # Début du document YAML
 # Métadonnées du rôle nginx
-galaxy_info:
-  author: "Votre nom"
-  description: "Installation et configuration de Nginx"
-  company: "Andromed"
+galaxy_info: # Informations pour Ansible Galaxy
+  author: "Votre nom" # Auteur du rôle
+  description: "Installation et configuration de Nginx" # Description courte du rôle
+  company: "Andromed" # Nom de l'entreprise/organisation
   
-  license: "MIT"
+  license: "MIT" # Licence du rôle (open source)
   
-  min_ansible_version: "2.9"
+  min_ansible_version: "2.9" # Version minimale d'Ansible requise
   
-  platforms:
-    - name: Ubuntu
-      versions:
-        - focal
-        - jammy
-    - name: Debian
-      versions:
-        - bullseye
-        - bookworm
+  platforms: # Liste des plateformes supportées
+    - name: Ubuntu # Système d'exploitation : Ubuntu
+      versions: # Versions d'Ubuntu supportées
+        - focal # Ubuntu 20.04 LTS
+        - jammy # Ubuntu 22.04 LTS
+    - name: Debian # Système d'exploitation : Debian
+      versions: # Versions de Debian supportées
+        - bullseye # Debian 11
+        - bookworm # Debian 12
   
-  galaxy_tags:
-    - nginx
-    - webserver
-    - web
+  galaxy_tags: # Tags pour la recherche sur Ansible Galaxy
+    - nginx # Tag principal
+    - webserver # Serveur web
+    - web # Catégorie web
 
 # Dépendances (autres rôles requis)
-dependencies: []
+dependencies: [] # Liste vide : ce rôle n'a pas de dépendances

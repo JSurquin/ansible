@@ -1,37 +1,37 @@
----
+--- # Début du document YAML
 # Playbook de déploiement application uniquement
 
-- name: Déploiement application
-  hosts: appservers
+- name: Déploiement application # Nom du play de déploiement
+  hosts: appservers # Cibler uniquement les serveurs d'application
   
-  pre_tasks:
-    - name: Vérifier la version à déployer
-      assert:
-        that:
-          - app_version is defined
-          - app_version != ""
-        fail_msg: "La version de l'application doit être définie"
+  pre_tasks: # Tâches à exécuter AVANT les rôles
+    - name: Vérifier la version à déployer # Validation de la version
+      assert: # Module pour vérifier des conditions
+        that: # Liste des conditions à vérifier
+          - app_version is defined # La variable app_version doit exister
+          - app_version != "" # La variable app_version ne doit pas être vide
+        fail_msg: "La version de l'application doit être définie" # Message si échec
     
-    - name: Afficher les informations de déploiement
-      debug:
-        msg: |
+    - name: Afficher les informations de déploiement # Affichage des infos
+      debug: # Module pour afficher des messages
+        msg: | # Message multiligne
           🚀 Déploiement de {{ app_name }}
           🏷️ Version: {{ app_version }}
           🌍 Environnement: {{ app_environment }}
           📍 Serveurs: {{ ansible_play_hosts | join(', ') }}
   
-  roles:
-    - role: app
+  roles: # Liste des rôles à appliquer
+    - role: app # Rôle de déploiement de l'application
   
-  post_tasks:
-    - name: Vérifier que l'application répond
-      uri:
-        url: "http://localhost:{{ app_port }}/health"
-        status_code: 200
-      register: health_check
-      retries: 5
-      delay: 3
+  post_tasks: # Tâches à exécuter APRÈS les rôles
+    - name: Vérifier que l'application répond # Test de santé de l'application
+      uri: # Module pour tester les endpoints HTTP
+        url: "http://localhost:{{ app_port }}/health" # URL du health check
+        status_code: 200 # Code HTTP attendu : 200 OK
+      register: health_check # Sauvegarder le résultat dans une variable
+      retries: 5 # Nombre de tentatives en cas d'échec
+      delay: 3 # Délai en secondes entre chaque tentative
     
-    - name: Confirmer le déploiement
-      debug:
-        msg: "✅ Application déployée et fonctionnelle sur {{ inventory_hostname }}"
+    - name: Confirmer le déploiement # Confirmation finale
+      debug: # Module pour afficher un message
+        msg: "✅ Application déployée et fonctionnelle sur {{ inventory_hostname }}" # Message de succès

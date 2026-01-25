@@ -1,32 +1,32 @@
----
+--- # Début du document YAML
 # Playbook utilisant des rôles
-- name: Déploiement avec rôles
-  hosts: webservers
-  become: true
+- name: Déploiement avec rôles # Nom descriptif du playbook
+  hosts: webservers # Exécuter sur tous les serveurs du groupe webservers
+  become: true # Utiliser les privilèges sudo pour l'exécution
   
-  vars:
+  vars: # Section des variables locales au playbook
     # Variables spécifiques à ce déploiement
-    nginx_vhosts:
-      - server_name: "{{ inventory_hostname }}"
-        root: "/var/www/html"
-        port: 80
+    nginx_vhosts: # Liste des virtual hosts à configurer
+      - server_name: "{{ inventory_hostname }}" # Nom du serveur (dynamique depuis l'inventaire)
+        root: "/var/www/html" # Répertoire racine du site web
+        port: 80 # Port d'écoute HTTP standard
   
-  roles:
+  roles: # Liste des rôles à appliquer
     # Utilisation du rôle nginx
-    - role: nginx
-      tags: ['nginx', 'webserver']
+    - role: nginx # Nom du rôle à exécuter
+      tags: ['nginx', 'webserver'] # Tags pour exécution sélective
 
-  post_tasks:
+  post_tasks: # Tâches exécutées après l'application de tous les rôles
     # Tâches exécutées après tous les rôles
-    - name: Vérifier que Nginx répond
-      uri:
-        url: "http://localhost"
-        status_code: 200
-      register: nginx_check
-      retries: 3
-      delay: 2
+    - name: Vérifier que Nginx répond # Description de la tâche de vérification
+      uri: # Module pour tester les endpoints HTTP
+        url: "http://localhost" # URL à tester
+        status_code: 200 # Code de retour HTTP attendu
+      register: nginx_check # Sauvegarder le résultat dans une variable
+      retries: 3 # Nombre de tentatives en cas d'échec
+      delay: 2 # Délai en secondes entre chaque tentative
     
-    - name: Afficher le résultat
-      debug:
-        msg: "✅ Nginx fonctionne correctement sur {{ inventory_hostname }}"
-      when: nginx_check is success
+    - name: Afficher le résultat # Description de la tâche d'affichage
+      debug: # Module pour afficher des messages de debug
+        msg: "✅ Nginx fonctionne correctement sur {{ inventory_hostname }}" # Message de succès avec nom du serveur
+      when: nginx_check is success # Condition : n'afficher que si le test a réussi

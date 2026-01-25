@@ -1,85 +1,85 @@
----
+--- # Début du document YAML
 # Tâches principales du rôle nginx
 
-- name: Mettre à jour le cache APT
-  apt:
-    update_cache: yes
-    cache_valid_time: 3600
-  tags: ['packages']
+- name: Mettre à jour le cache APT # Description de la tâche
+  apt: # Module de gestion des packages Debian/Ubuntu
+    update_cache: yes # Rafraîchir la liste des packages disponibles
+    cache_valid_time: 3600 # Durée de validité du cache en secondes (1h)
+  tags: ['packages'] # Tag pour exécution sélective
 
-- name: Installer Nginx
-  apt:
-    name: nginx
-    state: present
-  tags: ['packages']
+- name: Installer Nginx # Description de la tâche d'installation
+  apt: # Module de gestion des packages
+    name: nginx # Nom du package à installer
+    state: present # S'assurer que le package est installé
+  tags: ['packages'] # Tag pour exécution sélective
 
-- name: Créer les répertoires nécessaires
-  file:
-    path: "{{ item }}"
-    state: directory
-    owner: "{{ nginx_user }}"
-    group: "{{ nginx_user }}"
-    mode: '0755'
-  loop:
-    - "{{ nginx_vhost_path }}"
-    - "{{ nginx_vhost_enabled_path }}"
-  tags: ['config']
+- name: Créer les répertoires nécessaires # Description de la tâche de création
+  file: # Module de gestion des fichiers et répertoires
+    path: "{{ item }}" # Chemin du répertoire (variable de boucle)
+    state: directory # Type : répertoire
+    owner: "{{ nginx_user }}" # Propriétaire du répertoire
+    group: "{{ nginx_user }}" # Groupe propriétaire du répertoire
+    mode: '0755' # Permissions : rwxr-xr-x
+  loop: # Boucle sur les éléments de la liste
+    - "{{ nginx_vhost_path }}" # Répertoire des configurations disponibles
+    - "{{ nginx_vhost_enabled_path }}" # Répertoire des configurations actives
+  tags: ['config'] # Tag pour exécution sélective
 
-- name: Configurer Nginx (nginx.conf)
-  template:
-    src: nginx.conf.j2
-    dest: "{{ nginx_conf_path }}"
-    owner: root
-    group: root
-    mode: '0644'
-    validate: 'nginx -t -c %s'
-  notify: Recharger Nginx
-  tags: ['config']
+- name: Configurer Nginx (nginx.conf) # Description de la configuration principale
+  template: # Module pour générer des fichiers depuis des templates
+    src: nginx.conf.j2 # Fichier template source (Jinja2)
+    dest: "{{ nginx_conf_path }}" # Destination du fichier généré
+    owner: root # Propriétaire du fichier
+    group: root # Groupe propriétaire du fichier
+    mode: '0644' # Permissions : rw-r--r--
+    validate: 'nginx -t -c %s' # Commande de validation avant application
+  notify: Recharger Nginx # Déclencher le handler de rechargement
+  tags: ['config'] # Tag pour exécution sélective
 
-- name: Supprimer le vhost par défaut
-  file:
-    path: "{{ nginx_vhost_enabled_path }}/default"
-    state: absent
-  when: nginx_remove_default_vhost
-  notify: Recharger Nginx
-  tags: ['config']
+- name: Supprimer le vhost par défaut # Description de la suppression
+  file: # Module de gestion des fichiers
+    path: "{{ nginx_vhost_enabled_path }}/default" # Chemin du vhost par défaut
+    state: absent # Supprimer le fichier
+  when: nginx_remove_default_vhost # Condition : si la variable est true
+  notify: Recharger Nginx # Déclencher le handler de rechargement
+  tags: ['config'] # Tag pour exécution sélective
 
-- name: Configurer les virtual hosts
-  template:
-    src: vhost.conf.j2
-    dest: "{{ nginx_vhost_path }}/{{ item.server_name }}.conf"
-    owner: root
-    group: root
-    mode: '0644'
-  loop: "{{ nginx_vhosts }}"
-  when: nginx_vhosts | length > 0
-  notify: Recharger Nginx
-  tags: ['config', 'vhosts']
+- name: Configurer les virtual hosts # Description de la configuration des vhosts
+  template: # Module pour générer des fichiers depuis des templates
+    src: vhost.conf.j2 # Fichier template source
+    dest: "{{ nginx_vhost_path }}/{{ item.server_name }}.conf" # Destination avec nom dynamique
+    owner: root # Propriétaire du fichier
+    group: root # Groupe propriétaire
+    mode: '0644' # Permissions : rw-r--r--
+  loop: "{{ nginx_vhosts }}" # Boucle sur la liste des vhosts
+  when: nginx_vhosts | length > 0 # Condition : si la liste n'est pas vide
+  notify: Recharger Nginx # Déclencher le handler de rechargement
+  tags: ['config', 'vhosts'] # Tags pour exécution sélective
 
-- name: Activer les virtual hosts
-  file:
-    src: "{{ nginx_vhost_path }}/{{ item.server_name }}.conf"
-    dest: "{{ nginx_vhost_enabled_path }}/{{ item.server_name }}.conf"
-    state: link
-  loop: "{{ nginx_vhosts }}"
-  when: nginx_vhosts | length > 0
-  notify: Recharger Nginx
-  tags: ['config', 'vhosts']
+- name: Activer les virtual hosts # Description de l'activation
+  file: # Module de gestion des fichiers
+    src: "{{ nginx_vhost_path }}/{{ item.server_name }}.conf" # Source du lien symbolique
+    dest: "{{ nginx_vhost_enabled_path }}/{{ item.server_name }}.conf" # Destination du lien
+    state: link # Type : lien symbolique
+  loop: "{{ nginx_vhosts }}" # Boucle sur la liste des vhosts
+  when: nginx_vhosts | length > 0 # Condition : si la liste n'est pas vide
+  notify: Recharger Nginx # Déclencher le handler de rechargement
+  tags: ['config', 'vhosts'] # Tags pour exécution sélective
 
-- name: Créer les répertoires web
-  file:
-    path: "{{ item.root }}"
-    state: directory
-    owner: "{{ nginx_user }}"
-    group: "{{ nginx_user }}"
-    mode: '0755'
-  loop: "{{ nginx_vhosts }}"
-  when: nginx_vhosts | length > 0
-  tags: ['config']
+- name: Créer les répertoires web # Description de la création des répertoires
+  file: # Module de gestion des fichiers
+    path: "{{ item.root }}" # Chemin du répertoire racine du site
+    state: directory # Type : répertoire
+    owner: "{{ nginx_user }}" # Propriétaire du répertoire
+    group: "{{ nginx_user }}" # Groupe propriétaire
+    mode: '0755' # Permissions : rwxr-xr-x
+  loop: "{{ nginx_vhosts }}" # Boucle sur la liste des vhosts
+  when: nginx_vhosts | length > 0 # Condition : si la liste n'est pas vide
+  tags: ['config'] # Tag pour exécution sélective
 
-- name: Démarrer et activer Nginx
-  service:
-    name: nginx
-    state: "{{ nginx_service_state }}"
-    enabled: "{{ nginx_service_enabled }}"
-  tags: ['service']
+- name: Démarrer et activer Nginx # Description du démarrage du service
+  service: # Module de gestion des services systemd
+    name: nginx # Nom du service
+    state: "{{ nginx_service_state }}" # État souhaité (started/stopped)
+    enabled: "{{ nginx_service_enabled }}" # Activer au démarrage du système
+  tags: ['service'] # Tag pour exécution sélective

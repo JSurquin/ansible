@@ -1,63 +1,63 @@
 # Configuration Nginx générée par Ansible
 # Rôle: nginx
-# Généré le: {{ ansible_date_time.iso8601 }}
+# Généré le: {{ ansible_date_time.iso8601 }} {# Date ISO8601 de génération #}
 
-user {{ nginx_user }};
-worker_processes {{ nginx_worker_processes }};
-pid /run/nginx.pid;
-include /etc/nginx/modules-enabled/*.conf;
+user {{ nginx_user }}; {# Utilisateur sous lequel Nginx s'exécute #}
+worker_processes {{ nginx_worker_processes }}; {# Nombre de processus workers #}
+pid /run/nginx.pid; {# Fichier PID pour la gestion du processus #}
+include /etc/nginx/modules-enabled/*.conf; {# Inclure les modules activés #}
 
-events {
-    worker_connections {{ nginx_worker_connections }};
-    # multi_accept on;
-}
+events { {# Bloc de configuration des événements #}
+    worker_connections {{ nginx_worker_connections }}; {# Connexions simultanées par worker #}
+    # multi_accept on; {# Option : accepter plusieurs connexions à la fois (commenté) #}
+} {# Fin du bloc events #}
 
-http {
-    ##
-    # Basic Settings
-    ##
-    sendfile on;
-    tcp_nopush on;
-    tcp_nodelay on;
-    keepalive_timeout {{ nginx_keepalive_timeout }};
-    types_hash_max_size 2048;
-    client_max_body_size {{ nginx_client_max_body_size }};
+http { {# Bloc de configuration HTTP #}
+    ## {# Commentaire de section #}
+    # Basic Settings {# Section : paramètres de base #}
+    ## {# Commentaire de section #}
+    sendfile on; {# Optimisation : utiliser sendfile() pour l'envoi de fichiers #}
+    tcp_nopush on; {# Optimisation : envoyer les headers et début de fichier ensemble #}
+    tcp_nodelay on; {# Optimisation : désactiver l'algorithme de Nagle #}
+    keepalive_timeout {{ nginx_keepalive_timeout }}; {# Durée de vie des connexions persistantes #}
+    types_hash_max_size 2048; {# Taille maximale de la table de hachage des types MIME #}
+    client_max_body_size {{ nginx_client_max_body_size }}; {# Taille maximale des requêtes (uploads) #}
 
-    # server_tokens off;
-    # server_names_hash_bucket_size 64;
-    # server_name_in_redirect off;
+    # server_tokens off; {# Masquer la version de Nginx (commenté) #}
+    # server_names_hash_bucket_size 64; {# Taille bucket pour noms de serveurs (commenté) #}
+    # server_name_in_redirect off; {# Ne pas utiliser server_name dans redirections (commenté) #}
 
-    include /etc/nginx/mime.types;
-    default_type application/octet-stream;
+    include /etc/nginx/mime.types; {# Inclure les types MIME standards #}
+    default_type application/octet-stream; {# Type MIME par défaut pour fichiers inconnus #}
 
-    ##
-    # SSL Settings
-    ##
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_prefer_server_ciphers on;
+    ## {# Commentaire de section #}
+    # SSL Settings {# Section : paramètres SSL/TLS #}
+    ## {# Commentaire de section #}
+    ssl_protocols TLSv1.2 TLSv1.3; {# Protocoles SSL/TLS autorisés (sécurisés uniquement) #}
+    ssl_prefer_server_ciphers on; {# Préférer l'ordre des ciphers du serveur #}
 
-    ##
-    # Logging Settings
-    ##
-    access_log {{ nginx_log_path }}/access.log;
-    error_log {{ nginx_log_path }}/error.log;
+    ## {# Commentaire de section #}
+    # Logging Settings {# Section : paramètres de logs #}
+    ## {# Commentaire de section #}
+    access_log {{ nginx_log_path }}/access.log; {# Fichier de log des accès HTTP #}
+    error_log {{ nginx_log_path }}/error.log; {# Fichier de log des erreurs #}
 
-    ##
-    # Gzip Settings
-    ##
-    gzip {{ 'on' if nginx_gzip_enabled else 'off' }};
-{% if nginx_gzip_enabled %}
-    gzip_vary on;
-    gzip_proxied any;
-    gzip_comp_level 6;
-    gzip_types text/plain text/css text/xml text/javascript 
-               application/json application/javascript application/xml+rss 
-               application/rss+xml font/truetype font/opentype 
-               application/vnd.ms-fontobject image/svg+xml;
-{% endif %}
+    ## {# Commentaire de section #}
+    # Gzip Settings {# Section : paramètres de compression #}
+    ## {# Commentaire de section #}
+    gzip {{ 'on' if nginx_gzip_enabled else 'off' }}; {# Activer ou désactiver gzip selon variable #}
+{% if nginx_gzip_enabled %} {# Condition : si gzip est activé #}
+    gzip_vary on; {# Ajouter header Vary: Accept-Encoding #}
+    gzip_proxied any; {# Compresser aussi les réponses proxy #}
+    gzip_comp_level 6; {# Niveau de compression (1-9, 6 = bon compromis) #}
+    gzip_types text/plain text/css text/xml text/javascript  {# Types MIME à compresser (ligne 1) #}
+               application/json application/javascript application/xml+rss  {# Types MIME à compresser (ligne 2) #}
+               application/rss+xml font/truetype font/opentype  {# Types MIME à compresser (ligne 3) #}
+               application/vnd.ms-fontobject image/svg+xml; {# Types MIME à compresser (ligne 4) #}
+{% endif %} {# Fin de la condition gzip #}
 
-    ##
-    # Virtual Host Configs
-    ##
-    include {{ nginx_vhost_enabled_path }}/*;
-}
+    ## {# Commentaire de section #}
+    # Virtual Host Configs {# Section : configuration des vhosts #}
+    ## {# Commentaire de section #}
+    include {{ nginx_vhost_enabled_path }}/*; {# Inclure tous les vhosts actifs #}
+} {# Fin du bloc http #}

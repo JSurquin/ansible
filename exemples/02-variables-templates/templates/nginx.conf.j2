@@ -1,53 +1,53 @@
 # Configuration Nginx générée par Ansible
-# Serveur: {{ inventory_hostname }}
-# Date: {{ ansible_date_time.date }} {{ ansible_date_time.time }}
+# Serveur: {{ inventory_hostname }} {# Nom du serveur depuis l'inventaire #}
+# Date: {{ ansible_date_time.date }} {{ ansible_date_time.time }} {# Date et heure de génération #}
 
-user www-data;
-worker_processes {{ nginx_worker_processes | default('auto') }};
-pid /run/nginx.pid;
+user www-data; {# Utilisateur sous lequel Nginx s'exécute #}
+worker_processes {{ nginx_worker_processes | default('auto') }}; {# Nombre de workers (auto par défaut) #}
+pid /run/nginx.pid; {# Fichier contenant le PID du processus principal #}
 
-events {
-    worker_connections {{ nginx_config.worker_connections }};
-}
+events { {# Bloc de configuration des événements #}
+    worker_connections {{ nginx_config.worker_connections }}; {# Connexions simultanées par worker #}
+} {# Fin du bloc events #}
 
-http {
-    # Configuration de base
-    sendfile on;
-    tcp_nopush on;
-    tcp_nodelay on;
-    keepalive_timeout 65;
-    types_hash_max_size 2048;
-    client_max_body_size {{ nginx_config.client_max_body_size }};
+http { {# Bloc de configuration HTTP principal #}
+    # Configuration de base {# Section : paramètres de base #}
+    sendfile on; {# Optimisation : utiliser sendfile() pour l'envoi de fichiers #}
+    tcp_nopush on; {# Optimisation : envoyer headers et fichier ensemble #}
+    tcp_nodelay on; {# Optimisation : désactiver l'algorithme de Nagle #}
+    keepalive_timeout 65; {# Durée de vie des connexions persistantes en secondes #}
+    types_hash_max_size 2048; {# Taille max de la table de hachage des types MIME #}
+    client_max_body_size {{ nginx_config.client_max_body_size }}; {# Taille max des requêtes (uploads) #}
 
-    # MIME types
-    include /etc/nginx/mime.types;
-    default_type application/octet-stream;
+    # MIME types {# Section : types de contenu #}
+    include /etc/nginx/mime.types; {# Inclure la liste des types MIME standards #}
+    default_type application/octet-stream; {# Type par défaut pour fichiers inconnus #}
 
-    # Logs
-    access_log /var/log/nginx/access.log;
-    error_log /var/log/nginx/error.log;
+    # Logs {# Section : fichiers de logs #}
+    access_log /var/log/nginx/access.log; {# Log des requêtes HTTP #}
+    error_log /var/log/nginx/error.log; {# Log des erreurs #}
 
-    # Gzip
-    gzip on;
-    gzip_disable "msie6";
+    # Gzip {# Section : compression des réponses #}
+    gzip on; {# Activer la compression gzip #}
+    gzip_disable "msie6"; {# Désactiver pour Internet Explorer 6 (bug connu) #}
 
-    # Virtual Host
-    server {
-        listen {{ nginx_config.port }};
-        server_name {{ inventory_hostname }};
+    # Virtual Host {# Section : configuration du vhost #}
+    server { {# Bloc de configuration du serveur virtuel #}
+        listen {{ nginx_config.port }}; {# Port d'écoute HTTP #}
+        server_name {{ inventory_hostname }}; {# Nom de domaine du serveur #}
 
-        root /var/www/html;
-        index index.html;
+        root /var/www/html; {# Répertoire racine des fichiers du site #}
+        index index.html; {# Fichier index par défaut #}
 
-        location / {
-            try_files $uri $uri/ =404;
-        }
+        location / { {# Configuration pour la racine du site #}
+            try_files $uri $uri/ =404; {# Essayer fichier, puis répertoire, sinon 404 #}
+        } {# Fin du bloc location / #}
 
-        # Health check
-        location /health {
-            access_log off;
-            return 200 "OK";
-            add_header Content-Type text/plain;
-        }
-    }
-}
+        # Health check {# Section : endpoint de vérification santé #}
+        location /health { {# Configuration pour l'endpoint /health #}
+            access_log off; {# Ne pas logger ces requêtes #}
+            return 200 "OK"; {# Retourner code 200 avec message "OK" #}
+            add_header Content-Type text/plain; {# Type de contenu : texte brut #}
+        } {# Fin du bloc location /health #}
+    } {# Fin du bloc server #}
+} {# Fin du bloc http #}

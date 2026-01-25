@@ -1,35 +1,35 @@
----
+--- # Début du document YAML
 # Variables globales pour tous les environnements
 
 # Application
-app_name: "MonApp"
-app_port: 8080
-app_user: "appuser"
+app_name: "MonApp" # Nom de l'application
+app_port: 8080 # Port d'écoute de l'application
+app_user: "appuser" # Utilisateur système pour l'application
 
 # Nginx
-nginx_worker_processes: "auto"
-nginx_worker_connections: 1024
+nginx_worker_processes: "auto" # Nombre de workers Nginx (auto = nombre de CPU)
+nginx_worker_connections: 1024 # Connexions simultanées par worker
 
 # Monitoring
-monitoring_enabled: true
-monitoring_port: 9090
+monitoring_enabled: true # Activer le monitoring
+monitoring_port: 9090 # Port d'écoute du monitoring (ex: Prometheus)
 
 # Backup
-backup_enabled: true
-backup_retention_days: 7
+backup_enabled: true # Activer les backups automatiques
+backup_retention_days: 7 # Nombre de jours de rétention des backups
 
 # Logs
-log_level: "info"
-app_log_path: "/var/log/app"
+log_level: "info" # Niveau de log (debug/info/warning/error)
+app_log_path: "/var/log/app" # Répertoire des logs de l'application
 
 # Timezone
-timezone: "Europe/Paris"
+timezone: "Europe/Paris" # Fuseau horaire du système
 
 # Packages communs
-common_packages:
-  - curl
-  - wget
-  - vim
-  - git
-  - htop
-  - net-tools
+common_packages: # Liste des packages à installer sur tous les serveurs
+  - curl # Outil de requêtes HTTP
+  - wget # Téléchargeur de fichiers
+  - vim # Éditeur de texte
+  - git # Système de contrôle de version
+  - htop # Moniteur de processus interactif
+  - net-tools # Outils réseau (ifconfig, netstat, etc.)

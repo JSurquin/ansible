@@ -1,40 +1,40 @@
----
+--- # Début du document YAML
 # Playbook principal : Déploiement complet
 
-- name: Configuration commune de tous les serveurs
-  hosts: all
-  roles:
-    - role: common
-      tags: ['common', 'base']
+- name: Configuration commune de tous les serveurs # Premier play : config commune
+  hosts: all # Appliquer à tous les serveurs
+  roles: # Liste des rôles à exécuter
+    - role: common # Rôle de configuration de base
+      tags: ['common', 'base'] # Tags pour exécution sélective
 
-- name: Configuration des serveurs web
-  hosts: webservers
-  roles:
-    - role: nginx
-      tags: ['nginx', 'web']
+- name: Configuration des serveurs web # Deuxième play : serveurs web
+  hosts: webservers # Appliquer uniquement au groupe webservers
+  roles: # Liste des rôles à exécuter
+    - role: nginx # Rôle d'installation et configuration Nginx
+      tags: ['nginx', 'web'] # Tags pour exécution sélective
 
-- name: Déploiement de l'application
-  hosts: appservers
-  roles:
-    - role: app
-      tags: ['app', 'application']
+- name: Déploiement de l'application # Troisième play : application
+  hosts: appservers # Appliquer uniquement au groupe appservers
+  roles: # Liste des rôles à exécuter
+    - role: app # Rôle de déploiement de l'application
+      tags: ['app', 'application'] # Tags pour exécution sélective
 
-- name: Configuration du monitoring
-  hosts: monitoring
-  roles:
-    - role: monitoring
-      tags: ['monitoring', 'observability']
+- name: Configuration du monitoring # Quatrième play : monitoring
+  hosts: monitoring # Appliquer uniquement au groupe monitoring
+  roles: # Liste des rôles à exécuter
+    - role: monitoring # Rôle de configuration du monitoring
+      tags: ['monitoring', 'observability'] # Tags pour exécution sélective
 
 # Post-déploiement
-- name: Vérifications post-déploiement
-  hosts: all
-  tasks:
-    - name: Afficher le résumé du déploiement
-      debug:
-        msg: |
+- name: Vérifications post-déploiement # Cinquième play : vérifications finales
+  hosts: all # Appliquer à tous les serveurs
+  tasks: # Liste des tâches à exécuter
+    - name: Afficher le résumé du déploiement # Tâche d'affichage du résumé
+      debug: # Module debug pour afficher des informations
+        msg: | # Message multiligne
           ✅ Déploiement terminé avec succès !
           🌍 Environnement: {{ app_environment }}
           🏷️ Version: {{ app_version }}
           📊 Serveurs: {{ ansible_play_hosts | length }}
-      run_once: true
-      tags: ['always']
+      run_once: true # Exécuter une seule fois (pas sur chaque hôte)
+      tags: ['always'] # Tag always : toujours exécuté même avec --tags

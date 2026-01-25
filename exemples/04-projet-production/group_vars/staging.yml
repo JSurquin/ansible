@@ -1,32 +1,32 @@
----
+--- # Début du document YAML
 # Variables STAGING
 
-app_environment: "staging"
+app_environment: "staging" # Nom de l'environnement : staging (pré-production)
 
 # Application
-app_version: "latest"
-app_replicas: 1
-app_debug: true
+app_version: "latest" # Version de l'app : toujours la dernière en staging
+app_replicas: 1 # Nombre de réplicas de l'application (un seul en staging)
+app_debug: true # Mode debug activé pour faciliter le débogage
 
 # Ressources
-max_memory: "512m"
-max_cpu: "0.5"
+max_memory: "512m" # Limite mémoire : 512 Mo (ressources limitées en staging)
+max_cpu: "0.5" # Limite CPU : 0.5 cœur
 
 # Base de données
-db_host: "db-staging.internal"
-db_name: "myapp_staging"
-db_user: "staging_user"
-# db_password: voir secrets.yml (Vault)
+db_host: "db-staging.internal" # Hôte de la base de données staging
+db_name: "myapp_staging" # Nom de la base de données staging
+db_user: "staging_user" # Utilisateur de la base de données staging
+# db_password: voir secrets.yml (Vault) # Mot de passe stocké dans Vault (sécurisé)
 
 # URLs
-app_url: "https://staging.monapp.com"
-api_url: "https://api-staging.monapp.com"
+app_url: "https://staging.monapp.com" # URL publique de l'application staging
+api_url: "https://api-staging.monapp.com" # URL de l'API staging
 
 # SSL
-ssl_enabled: false
+ssl_enabled: false # SSL désactivé en staging (certificat non nécessaire)
 
 # Monitoring
-monitoring_interval: 60
+monitoring_interval: 60 # Intervalle de monitoring en secondes (1 minute)
 
 # Backup
-backup_schedule: "0 2 * * *"  # 2h du matin
+backup_schedule: "0 2 * * *"  # 2h du matin # Cron : backup tous les jours à 2h du matin

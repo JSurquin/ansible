@@ -10,3 +10,7 @@ all:
     # Serveur web
     web01:
       ansible_host: ansible-lab-web01
+
+# hosts direct = inventaire simple
+# children = inventaire structuré avec groupes
+# Les deux sont valides. Vous choissisez selon la complexité de votre infra.

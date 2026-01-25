@@ -1,43 +1,43 @@
-# Virtual Host pour {{ item.server_name }}
-# Généré par Ansible le {{ ansible_date_time.date }}
+# Virtual Host pour {{ item.server_name }} {# Nom du vhost depuis la variable de boucle #}
+# Généré par Ansible le {{ ansible_date_time.date }} {# Date de génération #}
 
-server {
-    listen {{ item.port | default(nginx_listen_port) }};
-{% if nginx_listen_ipv6 %}
-    listen [::]:{{ item.port | default(nginx_listen_port) }};
-{% endif %}
+server { {# Bloc de configuration du serveur virtuel #}
+    listen {{ item.port | default(nginx_listen_port) }}; {# Port d'écoute IPv4 #}
+{% if nginx_listen_ipv6 %} {# Condition : si IPv6 est activé #}
+    listen [::]:{{ item.port | default(nginx_listen_port) }}; {# Port d'écoute IPv6 #}
+{% endif %} {# Fin de la condition IPv6 #}
 
-    server_name {{ item.server_name }};
+    server_name {{ item.server_name }}; {# Nom de domaine du vhost #}
     
-    root {{ item.root }};
-    index index.html index.htm index.nginx-debian.html;
+    root {{ item.root }}; {# Répertoire racine des fichiers du site #}
+    index index.html index.htm index.nginx-debian.html; {# Fichiers index par ordre de priorité #}
 
-    # Logs spécifiques
-    access_log {{ nginx_log_path }}/{{ item.server_name }}-access.log;
-    error_log {{ nginx_log_path }}/{{ item.server_name }}-error.log;
+    # Logs spécifiques {# Commentaire de section #}
+    access_log {{ nginx_log_path }}/{{ item.server_name }}-access.log; {# Log des accès pour ce vhost #}
+    error_log {{ nginx_log_path }}/{{ item.server_name }}-error.log; {# Log des erreurs pour ce vhost #}
 
-    # Configuration principale
-    location / {
-        try_files $uri $uri/ =404;
-    }
+    # Configuration principale {# Commentaire de section #}
+    location / { {# Bloc location pour la racine du site #}
+        try_files $uri $uri/ =404; {# Essayer fichier, puis répertoire, sinon 404 #}
+    } {# Fin du bloc location / #}
 
-    # Health check endpoint
-    location /health {
-        access_log off;
-        return 200 "OK\n";
-        add_header Content-Type text/plain;
-    }
+    # Health check endpoint {# Commentaire : endpoint de vérification santé #}
+    location /health { {# Bloc location pour le health check #}
+        access_log off; {# Ne pas logger ces requêtes #}
+        return 200 "OK\n"; {# Retourner code 200 avec message "OK" #}
+        add_header Content-Type text/plain; {# Définir le type MIME de la réponse #}
+    } {# Fin du bloc location /health #}
 
-    # Status endpoint (optionnel)
-    location /status {
-        stub_status on;
-        access_log off;
-        allow 127.0.0.1;
-        deny all;
-    }
+    # Status endpoint (optionnel) {# Commentaire : endpoint de statut (optionnel) #}
+    location /status { {# Bloc location pour les statistiques Nginx #}
+        stub_status on; {# Activer le module stub_status #}
+        access_log off; {# Ne pas logger ces requêtes #}
+        allow 127.0.0.1; {# Autoriser uniquement localhost #}
+        deny all; {# Interdire tous les autres accès #}
+    } {# Fin du bloc location /status #}
 
-{% if item.extra_config is defined %}
-    # Configuration supplémentaire
-    {{ item.extra_config | indent(4) }}
-{% endif %}
-}
+{% if item.extra_config is defined %} {# Condition : si configuration supplémentaire existe #}
+    # Configuration supplémentaire {# Commentaire de section #}
+    {{ item.extra_config | indent(4) }} {# Insérer la config supplémentaire avec indentation #}
+{% endif %} {# Fin de la condition extra_config #}
+} {# Fin du bloc server #}

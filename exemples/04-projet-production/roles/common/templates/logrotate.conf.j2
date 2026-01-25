@@ -1,10 +1,10 @@
 # Configuration logrotate pour l'application
-{{ log_path }}/*.log {
-    daily
-    rotate {{ backup_retention_days }}
-    compress
-    delaycompress
-    notifempty
-    missingok
-    create 0644 root root
-}
+{{ log_path }}/*.log { {# Pattern des fichiers de logs à gérer #}
+    daily {# Rotation quotidienne des logs #}
+    rotate {{ backup_retention_days }} {# Nombre de fichiers rotés à conserver #}
+    compress {# Compresser les logs rotés avec gzip #}
+    delaycompress {# Différer la compression d'une rotation (pour traitement en cours) #}
+    notifempty {# Ne pas effectuer la rotation si le fichier est vide #}
+    missingok {# Ne pas générer d'erreur si le fichier log n'existe pas #}
+    create 0644 root root {# Créer un nouveau fichier log avec permissions et propriétaire #}
+} {# Fin du bloc de configuration logrotate #}

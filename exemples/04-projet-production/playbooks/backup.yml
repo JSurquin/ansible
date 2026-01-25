@@ -1,48 +1,48 @@
----
+--- # Début du document YAML
 # Playbook de backup
 
-- name: Backup des serveurs
-  hosts: all
+- name: Backup des serveurs # Nom du play de sauvegarde
+  hosts: all # Appliquer à tous les serveurs
   
-  vars:
-    backup_dir: "/backup"
-    backup_date: "{{ ansible_date_time.date }}"
-    backup_retention_days: 7
-    app_log_path: "/var/log/app"
+  vars: # Variables locales au playbook
+    backup_dir: "/backup" # Répertoire racine des backups
+    backup_date: "{{ ansible_date_time.date }}" # Date du jour pour nommer le backup
+    backup_retention_days: 7 # Nombre de jours de conservation des backups
+    app_log_path: "/var/log/app" # Chemin des logs de l'application
   
-  tasks:
-    - name: Créer le répertoire de backup
-      file:
-        path: "{{ backup_dir }}/{{ backup_date }}"
-        state: directory
-        mode: '0750'
+  tasks: # Liste des tâches à exécuter
+    - name: Créer le répertoire de backup # Création du répertoire daté
+      file: # Module de gestion des fichiers/répertoires
+        path: "{{ backup_dir }}/{{ backup_date }}" # Chemin avec sous-répertoire daté
+        state: directory # Type : répertoire
+        mode: '0750' # Permissions : rwxr-x--- (sécurisé)
     
-    - name: Backup configuration Nginx
-      archive:
-        path: /etc/nginx
-        dest: "{{ backup_dir }}/{{ backup_date }}/nginx-{{ inventory_hostname }}.tar.gz"
-      when: inventory_hostname in groups['webservers']
+    - name: Backup configuration Nginx # Sauvegarde de la config Nginx
+      archive: # Module pour créer des archives
+        path: /etc/nginx # Répertoire à archiver
+        dest: "{{ backup_dir }}/{{ backup_date }}/nginx-{{ inventory_hostname }}.tar.gz" # Archive de destination
+      when: inventory_hostname in groups['webservers'] # Condition : uniquement pour les webservers
     
-    - name: Backup logs application
-      archive:
-        path: "{{ app_log_path }}"
-        dest: "{{ backup_dir }}/{{ backup_date }}/logs-{{ inventory_hostname }}.tar.gz"
-      when: inventory_hostname in groups['appservers']
+    - name: Backup logs application # Sauvegarde des logs applicatifs
+      archive: # Module pour créer des archives
+        path: "{{ app_log_path }}" # Répertoire des logs à archiver
+        dest: "{{ backup_dir }}/{{ backup_date }}/logs-{{ inventory_hostname }}.tar.gz" # Archive de destination
+      when: inventory_hostname in groups['appservers'] # Condition : uniquement pour les appservers
     
-    - name: Nettoyer les anciens backups
-      find:
-        paths: "{{ backup_dir }}"
-        age: "{{ backup_retention_days }}d"
-        file_type: directory
-      register: old_backups
+    - name: Nettoyer les anciens backups # Recherche des backups expirés
+      find: # Module pour rechercher des fichiers/répertoires
+        paths: "{{ backup_dir }}" # Répertoire de recherche
+        age: "{{ backup_retention_days }}d" # Critère : plus vieux que X jours
+        file_type: directory # Type recherché : répertoires uniquement
+      register: old_backups # Sauvegarder les résultats dans une variable
     
-    - name: Supprimer les backups expirés
-      file:
-        path: "{{ item.path }}"
-        state: absent
-      loop: "{{ old_backups.files }}"
-      when: old_backups.files | length > 0
+    - name: Supprimer les backups expirés # Suppression des anciens backups
+      file: # Module de gestion des fichiers
+        path: "{{ item.path }}" # Chemin du répertoire à supprimer (depuis la boucle)
+        state: absent # Action : supprimer
+      loop: "{{ old_backups.files }}" # Boucler sur les résultats de find
+      when: old_backups.files | length > 0 # Condition : si des backups expirés existent
     
-    - name: Résumé des backups
-      debug:
-        msg: "✅ Backup créé: {{ backup_dir }}/{{ backup_date }}"
+    - name: Résumé des backups # Affichage du résumé
+      debug: # Module pour afficher un message
+        msg: "✅ Backup créé: {{ backup_dir }}/{{ backup_date }}" # Message avec chemin du backup

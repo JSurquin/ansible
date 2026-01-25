@@ -1,45 +1,45 @@
----
+--- # Début du document YAML
 # Rôle common : Configuration de base pour tous les serveurs
 
-- name: Mettre à jour le cache APT
-  apt:
-    update_cache: yes
-    cache_valid_time: 3600
+- name: Mettre à jour le cache APT # Mise à jour de la liste des packages
+  apt: # Module de gestion des packages Debian/Ubuntu
+    update_cache: yes # Rafraîchir le cache des packages disponibles
+    cache_valid_time: 3600 # Durée de validité du cache en secondes (1h)
 
-- name: Installer les packages communs
-  apt:
-    name: "{{ common_packages }}"
-    state: present
+- name: Installer les packages communs # Installation des outils de base
+  apt: # Module de gestion des packages
+    name: "{{ common_packages }}" # Liste des packages depuis la variable
+    state: present # S'assurer que tous les packages sont installés
 
-- name: Configurer le timezone
-  timezone:
-    name: "{{ timezone }}"
-  when: ansible_service_mgr == "systemd"
+- name: Configurer le timezone # Configuration du fuseau horaire
+  timezone: # Module de gestion du timezone système
+    name: "{{ timezone }}" # Fuseau horaire depuis la variable
+  when: ansible_service_mgr == "systemd" # Condition : uniquement si systemd est utilisé
 
-- name: Créer les répertoires de logs
-  file:
-    path: "{{ log_path }}"
-    state: directory
-    mode: '0755'
+- name: Créer les répertoires de logs # Création des répertoires de logs
+  file: # Module de gestion des fichiers/répertoires
+    path: "{{ log_path }}" # Chemin du répertoire depuis la variable
+    state: directory # Type : répertoire
+    mode: '0755' # Permissions : rwxr-xr-x (lecture publique)
 
-- name: Configurer la rotation des logs
-  template:
-    src: logrotate.conf.j2
-    dest: /etc/logrotate.d/app
-    mode: '0644'
+- name: Configurer la rotation des logs # Configuration de logrotate
+  template: # Module pour générer des fichiers depuis des templates
+    src: logrotate.conf.j2 # Template source pour la configuration logrotate
+    dest: /etc/logrotate.d/app # Destination dans le répertoire logrotate.d
+    mode: '0644' # Permissions : rw-r--r-- (lecture publique)
 
-- name: Désactiver les services inutiles
-  service:
-    name: "{{ item }}"
-    state: stopped
-    enabled: no
-  loop:
-    - snapd
-  ignore_errors: yes
+- name: Désactiver les services inutiles # Désactivation de services non nécessaires
+  service: # Module de gestion des services systemd
+    name: "{{ item }}" # Nom du service (variable de boucle)
+    state: stopped # État : arrêté
+    enabled: no # Ne pas démarrer au boot
+  loop: # Boucle sur la liste des services
+    - snapd # Service snapd (gestionnaire de snaps Ubuntu)
+  ignore_errors: yes # Continuer même si le service n'existe pas
 
-- name: Afficher les informations système
-  debug:
-    msg: |
+- name: Afficher les informations système # Affichage des infos du serveur
+  debug: # Module pour afficher des messages
+    msg: | # Message multiligne avec variables Ansible
       📊 Serveur: {{ inventory_hostname }}
       💻 OS: {{ ansible_distribution }} {{ ansible_distribution_version }}
       🔧 CPU: {{ ansible_processor_vcpus }} vCPUs

@@ -1,34 +1,34 @@
----
+--- # Début du document YAML
 # Variables par défaut du rôle nginx
 # Ces valeurs peuvent être surchargées dans le playbook
 
 # Configuration de base
-nginx_user: "www-data"
-nginx_worker_processes: "auto"
-nginx_worker_connections: 1024
-nginx_keepalive_timeout: 65
+nginx_user: "www-data" # Utilisateur système sous lequel Nginx s'exécute
+nginx_worker_processes: "auto" # Nombre de processus workers (auto = nombre de CPU)
+nginx_worker_connections: 1024 # Connexions simultanées par worker
+nginx_keepalive_timeout: 65 # Durée en secondes avant fermeture d'une connexion inactive
 
 # Ports
-nginx_listen_port: 80
-nginx_listen_ipv6: true
+nginx_listen_port: 80 # Port HTTP standard d'écoute
+nginx_listen_ipv6: true # Activer l'écoute sur IPv6
 
 # Chemins
-nginx_conf_path: "/etc/nginx/nginx.conf"
-nginx_vhost_path: "/etc/nginx/sites-available"
-nginx_vhost_enabled_path: "/etc/nginx/sites-enabled"
-nginx_log_path: "/var/log/nginx"
+nginx_conf_path: "/etc/nginx/nginx.conf" # Chemin du fichier de configuration principal
+nginx_vhost_path: "/etc/nginx/sites-available" # Répertoire des vhosts disponibles
+nginx_vhost_enabled_path: "/etc/nginx/sites-enabled" # Répertoire des vhosts actifs
+nginx_log_path: "/var/log/nginx" # Répertoire des fichiers de logs
 
 # Virtual hosts (peut être défini dans le playbook)
-nginx_vhosts: []
-#  - server_name: "example.com"
-#    root: "/var/www/example"
-#    port: 80
+nginx_vhosts: [] # Liste vide par défaut des vhosts à configurer
+#  - server_name: "example.com" # Exemple : nom de domaine du vhost
+#    root: "/var/www/example" # Exemple : répertoire racine du site
+#    port: 80 # Exemple : port d'écoute du vhost
 
 # Options
-nginx_remove_default_vhost: true
-nginx_gzip_enabled: true
-nginx_client_max_body_size: "10m"
+nginx_remove_default_vhost: true # Supprimer le vhost par défaut de Nginx
+nginx_gzip_enabled: true # Activer la compression Gzip
+nginx_client_max_body_size: "10m" # Taille maximale des requêtes (uploads)
 
 # Gestion du service
-nginx_service_state: "started"
-nginx_service_enabled: true
+nginx_service_state: "started" # État souhaité du service (started/stopped)
+nginx_service_enabled: true # Activer le service au démarrage du système

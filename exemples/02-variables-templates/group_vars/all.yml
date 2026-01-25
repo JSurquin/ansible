@@ -1,23 +1,23 @@
----
+--- # Début du document YAML
 # Variables globales pour tous les serveurs
-app_name: "Mon Application Ansible"
-app_version: "1.0.0"
-app_environment: "development"
+app_name: "Mon Application Ansible" # Nom de l'application affiché dans l'interface
+app_version: "1.0.0" # Version actuelle de l'application
+app_environment: "development" # Environnement d'exécution (development/staging/production)
 
 # Configuration Nginx
-nginx_config:
-  port: 80
-  worker_connections: 1024
-  client_max_body_size: "10m"
+nginx_config: # Objet contenant tous les paramètres Nginx
+  port: 80 # Port d'écoute du serveur web
+  worker_connections: 1024 # Nombre maximum de connexions simultanées par worker
+  client_max_body_size: "10m" # Taille maximale des fichiers uploadés
 
 # Informations sur l'entreprise
-company:
-  name: "Andromed"
-  url: "https://www.andromed.fr"
-  support_email: "support@andromed.fr"
+company: # Objet contenant les informations de l'entreprise
+  name: "Andromed" # Nom de l'entreprise
+  url: "https://www.andromed.fr" # Site web de l'entreprise
+  support_email: "support@andromed.fr" # Email de support technique
 
 # Couleurs par environnement
-env_colors:
-  development: "#e3f2fd"
-  staging: "#fff3e0"
-  production: "#e8f5e8"
+env_colors: # Dictionnaire des couleurs de fond par environnement
+  development: "#e3f2fd" # Bleu clair pour le développement
+  staging: "#fff3e0" # Orange clair pour le staging
+  production: "#e8f5e8" # Vert clair pour la production

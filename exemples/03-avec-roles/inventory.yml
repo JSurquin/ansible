@@ -1,16 +1,16 @@
 # Inventaire pour l'exemple avec rôles
-all:
-  vars:
-    ansible_connection: docker
-    ansible_user: root
-    ansible_python_interpreter: /usr/bin/python3
+all: # Groupe racine contenant tous les serveurs
+  vars: # Variables communes à tous les serveurs
+    ansible_connection: docker # Type de connexion : Docker (pour le lab)
+    ansible_user: root # Utilisateur pour se connecter aux conteneurs
+    ansible_python_interpreter: /usr/bin/python3 # Chemin de l'interpréteur Python sur les hôtes cibles
 
-  children:
-    webservers:
-      hosts:
-        web01:
-          ansible_host: ansible-lab-web01
-        web02:
-          ansible_host: ansible-lab-web02
-        web03:
-          ansible_host: ansible-lab-web03
+  children: # Sous-groupes d'hôtes
+    webservers: # Groupe des serveurs web
+      hosts: # Liste des serveurs du groupe webservers
+        web01: # Premier serveur web
+          ansible_host: ansible-lab-web01 # Nom du conteneur Docker
+        web02: # Deuxième serveur web
+          ansible_host: ansible-lab-web02 # Nom du conteneur Docker
+        web03: # Troisième serveur web
+          ansible_host: ansible-lab-web03 # Nom du conteneur Docker
