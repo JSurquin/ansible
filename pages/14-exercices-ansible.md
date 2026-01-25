@@ -512,6 +512,14 @@ flowchart LR
     C --> E[docker build utilise index.html généré]
     E --> F[Image Docker avec contenu dynamique]
     F --> G[Container nginx sert le HTML personnalisé]
+
+    style A fill:#9c27b0,stroke:#7b1fa2,stroke-width:3px,color:#fff
+    style B fill:#673ab7,stroke:#512da8,stroke-width:3px,color:#fff
+    style C fill:#ff9800,stroke:#f57c00,stroke-width:3px,color:#fff
+    style D fill:#3f51b5,stroke:#303f9f,stroke-width:3px,color:#fff
+    style E fill:#00bcd4,stroke:#0097a7,stroke-width:3px,color:#fff
+    style F fill:#009688,stroke:#00796b,stroke-width:3px,color:#fff
+    style G fill:#4caf50,stroke:#388e3c,stroke-width:3px,color:#fff
 ```
 
 <br/>
@@ -774,6 +782,14 @@ flowchart LR
     
     D --> M
     D --> B
+
+    style U fill:#9c27b0,stroke:#7b1fa2,stroke-width:3px,color:#fff
+    style N fill:#00bcd4,stroke:#0097a7,stroke-width:3px,color:#fff
+    style A1 fill:#2196f3,stroke:#1976d2,stroke-width:3px,color:#fff
+    style A2 fill:#42a5f5,stroke:#1976d2,stroke-width:3px,color:#fff
+    style D fill:#ff9800,stroke:#f57c00,stroke-width:3px,color:#fff
+    style M fill:#4caf50,stroke:#388e3c,stroke-width:2px,color:#fff
+    style B fill:#673ab7,stroke:#512da8,stroke-width:2px,color:#fff
 ```
 
 **🎯 Stack finale** : Nginx + 2 WebApps + MySQL + Monitoring/Backup
