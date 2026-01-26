@@ -2597,3 +2597,2387 @@ Un **tag** permet d'exécuter seulement certaines parties :
 ansible-playbook site.yml --tags "docker,config"
 ansible-playbook site.yml --skip-tags "install"
 ```
+
+---
+layout: new-section
+routeAlias: 'cheatsheet-tasks'
+---
+
+<a name="cheatsheet-tasks" id="cheatsheet-tasks"></a>
+
+# CheatSheet - Toutes les tâches possible en playbook
+
+---
+
+# CheatSheet Ansible : Introduction 📚
+
+### Guide complet des modules par catégories
+
+Ce cheatsheet regroupe tous les modules essentiels pour créer vos playbooks Ansible.
+
+**Organisation par catégories** :
+- 📦 Packages
+- ⚙️ Services
+- 📁 Fichiers & Dossiers
+- 👥 Utilisateurs & Permissions
+- 🐳 Docker
+- 💻 Commandes
+- 🌐 Réseau
+- 🗄️ Bases de données
+- 🔧 Variables & Debug
+- 📝 Git & Version Control
+
+---
+layout: new-section
+---
+
+# 📦 Packages
+
+---
+
+# Packages : apt (Debian/Ubuntu)
+
+### Installation de packages sur Debian/Ubuntu
+
+```yaml
+# Installer un seul package
+- name: Installer nginx
+  apt:
+    name: nginx
+    state: present
+    update_cache: yes
+
+# Installer plusieurs packages
+- name: Installer plusieurs packages
+  apt:
+    name:
+      - nginx
+      - git
+      - curl
+      - vim
+    state: present
+    update_cache: yes
+```
+
+---
+
+# Packages : apt (suite)
+
+```yaml
+# Mettre à jour un package
+- name: Mettre à jour nginx
+  apt:
+    name: nginx
+    state: latest
+
+# Désinstaller un package
+- name: Désinstaller nginx
+  apt:
+    name: nginx
+    state: absent
+
+# Mettre à jour tous les packages
+- name: Mettre à jour tous les packages
+  apt:
+    upgrade: dist
+    update_cache: yes
+```
+
+---
+
+# Packages : yum (RedHat/CentOS)
+
+### Installation de packages sur RedHat/CentOS
+
+```yaml
+# Installer un package
+- name: Installer httpd
+  yum:
+    name: httpd
+    state: present
+
+# Installer plusieurs packages
+- name: Installer packages système
+  yum:
+    name:
+      - httpd
+      - git
+      - python3
+    state: present
+```
+
+---
+
+# Packages : yum (suite)
+
+```yaml
+# Mettre à jour un package
+- name: Mettre à jour httpd
+  yum:
+    name: httpd
+    state: latest
+
+# Désinstaller un package
+- name: Désinstaller httpd
+  yum:
+    name: httpd
+    state: absent
+
+# Installer depuis un fichier RPM
+- name: Installer package depuis RPM
+  yum:
+    name: /tmp/package.rpm
+    state: present
+```
+
+---
+
+# Packages : dnf (Fedora/RedHat 8+)
+
+### Installation avec dnf (nouvelle génération)
+
+```yaml
+# Installer un package
+- name: Installer nginx avec dnf
+  dnf:
+    name: nginx
+    state: present
+
+# Installer plusieurs packages
+- name: Installer plusieurs packages
+  dnf:
+    name:
+      - nginx
+      - podman
+      - python3-pip
+    state: present
+```
+
+---
+
+# Packages : pip (Python)
+
+### Installation de packages Python
+
+```yaml
+# Installer un package Python global
+- name: Installer ansible via pip
+  pip:
+    name: ansible
+    state: present
+
+# Installer dans un virtualenv
+- name: Installer dans un venv
+  pip:
+    name: flask
+    virtualenv: /opt/myapp/venv
+    virtualenv_python: python3
+
+# Installer depuis requirements.txt
+- name: Installer depuis requirements
+  pip:
+    requirements: /opt/myapp/requirements.txt
+    virtualenv: /opt/myapp/venv
+```
+
+---
+
+# Packages : npm (Node.js)
+
+### Installation de packages Node.js
+
+```yaml
+# Installer un package global
+- name: Installer npm package globalement
+  npm:
+    name: pm2
+    global: yes
+
+# Installer dans un projet
+- name: Installer dépendances projet
+  npm:
+    path: /opt/webapp
+    state: present
+
+# Installer une version spécifique
+- name: Installer version spécifique
+  npm:
+    name: vue
+    version: '3.2.45'
+```
+
+---
+layout: new-section
+---
+
+# ⚙️ Services
+
+---
+
+# Services : systemd (moderne)
+
+### Gestion des services avec systemd
+
+```yaml
+# Démarrer un service
+- name: Démarrer nginx
+  systemd:
+    name: nginx
+    state: started
+
+# Arrêter un service
+- name: Arrêter nginx
+  systemd:
+    name: nginx
+    state: stopped
+
+# Redémarrer un service
+- name: Redémarrer nginx
+  systemd:
+    name: nginx
+    state: restarted
+```
+
+---
+
+# Services : systemd (suite)
+
+```yaml
+# Recharger la configuration
+- name: Recharger nginx
+  systemd:
+    name: nginx
+    state: reloaded
+
+# Activer au démarrage
+- name: Activer nginx au boot
+  systemd:
+    name: nginx
+    enabled: yes
+
+# Désactiver au démarrage
+- name: Désactiver nginx
+  systemd:
+    name: nginx
+    enabled: no
+```
+
+---
+
+# Services : systemd (avancé)
+
+```yaml
+# Recharger les daemon systemd
+- name: Recharger systemd
+  systemd:
+    daemon_reload: yes
+
+# Démarrer et activer en une seule fois
+- name: Démarrer et activer docker
+  systemd:
+    name: docker
+    state: started
+    enabled: yes
+
+# Vérifier si un service est actif
+- name: Vérifier status nginx
+  systemd:
+    name: nginx
+  register: nginx_status
+```
+
+---
+
+# Services : service (compatible)
+
+### Module générique compatible avec tous les systèmes
+
+```yaml
+# Démarrer un service (compatible)
+- name: Démarrer nginx
+  service:
+    name: nginx
+    state: started
+
+# Redémarrer un service
+- name: Redémarrer apache2
+  service:
+    name: apache2
+    state: restarted
+
+# Activer au démarrage
+- name: Activer mysql
+  service:
+    name: mysql
+    enabled: yes
+```
+
+---
+layout: new-section
+---
+
+# 📁 Fichiers & Dossiers
+
+---
+
+# Fichiers : file (création/modification)
+
+### Gestion des fichiers et dossiers
+
+```yaml
+# Créer un dossier
+- name: Créer dossier application
+  file:
+    path: /opt/myapp
+    state: directory
+    owner: www-data
+    group: www-data
+    mode: '0755'
+
+# Créer un fichier vide
+- name: Créer fichier vide
+  file:
+    path: /tmp/test.txt
+    state: touch
+    owner: ubuntu
+    mode: '0644'
+```
+
+---
+
+# Fichiers : file (suppression)
+
+```yaml
+# Supprimer un fichier
+- name: Supprimer fichier temporaire
+  file:
+    path: /tmp/old-file.txt
+    state: absent
+
+# Supprimer un dossier et son contenu
+- name: Supprimer ancien dossier
+  file:
+    path: /opt/old-app
+    state: absent
+
+# Créer un lien symbolique
+- name: Créer symlink
+  file:
+    src: /opt/app/current
+    dest: /var/www/app
+    state: link
+```
+
+---
+
+# Fichiers : copy (copie simple)
+
+### Copier des fichiers sur les serveurs
+
+```yaml
+# Copier un fichier local vers distant
+- name: Copier fichier de config
+  copy:
+    src: files/app.conf
+    dest: /etc/app/app.conf
+    owner: root
+    group: root
+    mode: '0644'
+
+# Créer fichier avec contenu inline
+- name: Créer fichier avec contenu
+  copy:
+    content: |
+      APP_NAME=myapp
+      APP_ENV=production
+    dest: /opt/app/.env
+    mode: '0600'
+```
+
+---
+
+# Fichiers : copy (sauvegarde)
+
+```yaml
+# Copier avec backup automatique
+- name: Copier avec backup
+  copy:
+    src: files/nginx.conf
+    dest: /etc/nginx/nginx.conf
+    backup: yes
+
+# Copier depuis un serveur distant vers un autre
+- name: Copier entre serveurs
+  copy:
+    src: /tmp/file.txt
+    dest: /opt/app/file.txt
+    remote_src: yes
+
+# Copier avec validation
+- name: Copier et valider
+  copy:
+    src: files/config.json
+    dest: /etc/app/config.json
+    validate: 'json_verify %s'
+```
+
+---
+
+# Fichiers : template (Jinja2)
+
+### Générer des fichiers dynamiques
+
+```yaml
+# Template simple
+- name: Déployer configuration nginx
+  template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/nginx.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart nginx
+
+# Template avec variables
+- name: Créer fichier .env
+  template:
+    src: dotenv.j2
+    dest: /opt/app/.env
+    mode: '0600'
+```
+
+---
+
+# Fichiers : template (avancé)
+
+```yaml
+# Template avec backup
+- name: Template avec backup
+  template:
+    src: app.conf.j2
+    dest: /etc/app/app.conf
+    backup: yes
+
+# Template avec validation
+- name: Template nginx validé
+  template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/nginx.conf
+    validate: 'nginx -t -c %s'
+  notify: reload nginx
+```
+
+---
+
+# Fichiers : fetch (récupération)
+
+### Récupérer des fichiers depuis les serveurs
+
+```yaml
+# Récupérer un fichier
+- name: Récupérer logs
+  fetch:
+    src: /var/log/app/error.log
+    dest: ./logs/{{ inventory_hostname }}/
+    flat: yes
+
+# Récupérer avec structure
+- name: Récupérer config
+  fetch:
+    src: /etc/app/app.conf
+    dest: ./backups/
+
+# Récupérer et valider checksum
+- name: Récupérer avec checksum
+  fetch:
+    src: /opt/app/data.db
+    dest: ./backups/
+    validate_checksum: yes
+```
+
+---
+
+# Fichiers : lineinfile (édition ligne)
+
+### Modifier des lignes spécifiques
+
+```yaml
+# Ajouter une ligne
+- name: Ajouter config dans fichier
+  lineinfile:
+    path: /etc/hosts
+    line: '192.168.1.10 myserver.local'
+
+# Remplacer une ligne existante
+- name: Changer valeur
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^PermitRootLogin'
+    line: 'PermitRootLogin no'
+
+# Supprimer une ligne
+- name: Supprimer ligne
+  lineinfile:
+    path: /etc/hosts
+    regexp: '^192.168.1.10'
+    state: absent
+```
+
+---
+
+# Fichiers : blockinfile (édition bloc)
+
+### Modifier des blocs de lignes
+
+```yaml
+# Ajouter un bloc
+- name: Ajouter configuration Apache
+  blockinfile:
+    path: /etc/apache2/apache2.conf
+    block: |
+      <VirtualHost *:80>
+        ServerName example.com
+        DocumentRoot /var/www/html
+      </VirtualHost>
+
+# Remplacer un bloc existant
+- name: Remplacer bloc
+  blockinfile:
+    path: /etc/config.conf
+    marker: "# {mark} MANAGED BLOCK"
+    block: |
+      option1=value1
+      option2=value2
+```
+
+---
+
+# Fichiers : synchronize (rsync)
+
+### Synchroniser des dossiers
+
+```yaml
+# Synchroniser un dossier local vers distant
+- name: Synchroniser application
+  synchronize:
+    src: /local/app/
+    dest: /opt/app/
+    delete: yes
+    recursive: yes
+
+# Synchroniser avec exclusions
+- name: Sync avec exclusions
+  synchronize:
+    src: ./build/
+    dest: /var/www/html/
+    rsync_opts:
+      - "--exclude=.git"
+      - "--exclude=node_modules"
+```
+
+---
+layout: new-section
+---
+
+# 👥 Utilisateurs & Permissions
+
+---
+
+# Utilisateurs : user
+
+### Gestion des utilisateurs système
+
+```yaml
+# Créer un utilisateur
+- name: Créer utilisateur deploy
+  user:
+    name: deploy
+    shell: /bin/bash
+    create_home: yes
+    home: /home/deploy
+
+# Créer utilisateur avec groupes
+- name: Créer utilisateur avec groupes
+  user:
+    name: webapp
+    groups: www-data,docker
+    append: yes
+    shell: /bin/bash
+```
+
+---
+
+# Utilisateurs : user (suite)
+
+```yaml
+# Ajouter une clé SSH
+- name: Ajouter clé SSH
+  user:
+    name: deploy
+    state: present
+  authorized_key:
+    user: deploy
+    key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+
+# Supprimer un utilisateur
+- name: Supprimer utilisateur
+  user:
+    name: olduser
+    state: absent
+    remove: yes
+
+# Changer le mot de passe
+- name: Changer password
+  user:
+    name: deploy
+    password: "{{ 'mypassword' | password_hash('sha512') }}"
+```
+
+---
+
+# Groupes : group
+
+### Gestion des groupes système
+
+```yaml
+# Créer un groupe
+- name: Créer groupe docker
+  group:
+    name: docker
+    state: present
+
+# Créer groupe avec GID spécifique
+- name: Créer groupe avec GID
+  group:
+    name: webapp
+    gid: 1001
+    state: present
+
+# Supprimer un groupe
+- name: Supprimer groupe
+  group:
+    name: oldgroup
+    state: absent
+```
+
+---
+
+# Permissions : acl (ACL avancées)
+
+### Gestion des ACL (Access Control Lists)
+
+```yaml
+# Définir ACL pour un utilisateur
+- name: ACL utilisateur
+  acl:
+    path: /opt/app
+    entity: webapp
+    etype: user
+    permissions: rwx
+    state: present
+
+# ACL par défaut pour dossier
+- name: ACL par défaut
+  acl:
+    path: /opt/shared
+    entity: developers
+    etype: group
+    permissions: rw
+    default: yes
+    state: present
+```
+
+---
+
+# SSH : authorized_key
+
+### Gestion des clés SSH
+
+```yaml
+# Ajouter une clé SSH
+- name: Ajouter clé publique
+  authorized_key:
+    user: ubuntu
+    key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+    state: present
+
+# Ajouter plusieurs clés
+- name: Ajouter plusieurs clés
+  authorized_key:
+    user: deploy
+    key: "{{ item }}"
+  loop:
+    - "ssh-rsa AAAAB3...key1"
+    - "ssh-rsa AAAAB3...key2"
+
+# Supprimer une clé
+- name: Supprimer clé
+  authorized_key:
+    user: ubuntu
+    key: "ssh-rsa AAAAB3...oldkey"
+    state: absent
+```
+
+---
+layout: new-section
+---
+
+# 🐳 Docker
+
+---
+
+# Docker : docker_container
+
+### Gestion des containers Docker
+
+```yaml
+# Lancer un container simple
+- name: Lancer nginx
+  community.docker.docker_container:
+    name: nginx
+    image: nginx:alpine
+    state: started
+    ports:
+      - "80:80"
+
+# Container avec variables d'environnement
+- name: Lancer application
+  community.docker.docker_container:
+    name: webapp
+    image: myapp:latest
+    state: started
+    env:
+      APP_ENV: production
+      DB_HOST: db.example.com
+```
+
+---
+
+# Docker : docker_container (volumes)
+
+```yaml
+# Container avec volumes
+- name: Container avec volumes
+  community.docker.docker_container:
+    name: database
+    image: postgres:15
+    state: started
+    volumes:
+      - /opt/postgres/data:/var/lib/postgresql/data
+      - /opt/postgres/backup:/backup
+    env:
+      POSTGRES_PASSWORD: "{{ vault_db_password }}"
+
+# Container avec restart policy
+- name: Container avec auto-restart
+  community.docker.docker_container:
+    name: app
+    image: myapp:v1.0
+    state: started
+    restart_policy: always
+```
+
+---
+
+# Docker : docker_container (réseau)
+
+```yaml
+# Container avec réseau personnalisé
+- name: Container sur réseau custom
+  community.docker.docker_container:
+    name: webapp
+    image: nginx
+    networks:
+      - name: frontend
+    state: started
+
+# Arrêter un container
+- name: Arrêter container
+  community.docker.docker_container:
+    name: webapp
+    state: stopped
+
+# Supprimer un container
+- name: Supprimer container
+  community.docker.docker_container:
+    name: old-app
+    state: absent
+```
+
+---
+
+# Docker : docker_image
+
+### Gestion des images Docker
+
+```yaml
+# Pull une image
+- name: Télécharger image
+  community.docker.docker_image:
+    name: nginx:alpine
+    source: pull
+
+# Build une image
+- name: Build image custom
+  community.docker.docker_image:
+    name: myapp:latest
+    build:
+      path: /opt/myapp
+      dockerfile: Dockerfile
+    source: build
+
+# Supprimer une image
+- name: Supprimer image
+  community.docker.docker_image:
+    name: old-app:v1.0
+    state: absent
+```
+
+---
+
+# Docker : docker_network
+
+### Gestion des réseaux Docker
+
+```yaml
+# Créer un réseau
+- name: Créer réseau frontend
+  community.docker.docker_network:
+    name: frontend
+    driver: bridge
+    state: present
+
+# Créer réseau avec subnet
+- name: Réseau avec subnet custom
+  community.docker.docker_network:
+    name: backend
+    ipam_config:
+      - subnet: 172.20.0.0/16
+        gateway: 172.20.0.1
+
+# Supprimer un réseau
+- name: Supprimer réseau
+  community.docker.docker_network:
+    name: old-network
+    state: absent
+```
+
+---
+
+# Docker : docker_volume
+
+### Gestion des volumes Docker
+
+```yaml
+# Créer un volume
+- name: Créer volume pour données
+  community.docker.docker_volume:
+    name: app-data
+    state: present
+
+# Volume avec driver spécifique
+- name: Volume avec driver
+  community.docker.docker_volume:
+    name: backup-data
+    driver: local
+    driver_options:
+      type: nfs
+      o: addr=nfs-server,rw
+      device: ":/path/to/data"
+
+# Supprimer un volume
+- name: Supprimer volume
+  community.docker.docker_volume:
+    name: old-data
+    state: absent
+```
+
+---
+
+# Docker : docker_compose
+
+### Gestion avec Docker Compose
+
+```yaml
+# Démarrer stack docker-compose
+- name: Démarrer services
+  community.docker.docker_compose:
+    project_src: /opt/myapp
+    state: present
+
+# Arrêter et supprimer
+- name: Arrêter stack
+  community.docker.docker_compose:
+    project_src: /opt/myapp
+    state: absent
+
+# Rebuild et restart
+- name: Rebuild services
+  community.docker.docker_compose:
+    project_src: /opt/myapp
+    build: yes
+    restarted: yes
+```
+
+---
+
+# Docker : docker_login
+
+### Authentification aux registries
+
+```yaml
+# Login à Docker Hub
+- name: Login Docker Hub
+  community.docker.docker_login:
+    username: myuser
+    password: "{{ vault_docker_password }}"
+
+# Login à registry privé
+- name: Login registry privé
+  community.docker.docker_login:
+    registry_url: registry.example.com
+    username: deployer
+    password: "{{ vault_registry_password }}"
+
+# Logout
+- name: Logout
+  community.docker.docker_login:
+    state: absent
+```
+
+---
+
+# Docker : docker_prune
+
+### Nettoyage Docker
+
+```yaml
+# Nettoyer containers arrêtés
+- name: Nettoyer containers
+  community.docker.docker_prune:
+    containers: yes
+
+# Nettoyer images non utilisées
+- name: Nettoyer images
+  community.docker.docker_prune:
+    images: yes
+    images_filters:
+      dangling: false
+
+# Nettoyage complet
+- name: Nettoyage complet
+  community.docker.docker_prune:
+    containers: yes
+    images: yes
+    networks: yes
+    volumes: yes
+    builder_cache: yes
+```
+
+---
+layout: new-section
+---
+
+# 💻 Commandes
+
+---
+
+# Commandes : command
+
+### Exécuter des commandes simples
+
+```yaml
+# Commande simple
+- name: Créer dossier
+  command: mkdir -p /opt/app/data
+
+# Commande avec arguments
+- name: Lister fichiers
+  command: ls -la /opt/app
+  register: listing
+
+# Commande avec chemin de travail
+- name: Build application
+  command: make build
+  args:
+    chdir: /opt/app
+
+# Ne pas exécuter si fichier existe
+- name: Initialiser base
+  command: ./init-db.sh
+  args:
+    creates: /opt/app/db.sqlite
+```
+
+---
+
+# Commandes : shell
+
+### Exécuter des commandes shell complexes
+
+```yaml
+# Avec pipes et redirections
+- name: Sauvegarder base de données
+  shell: |
+    mysqldump -u root -p{{ db_password }} mydb > /backup/db.sql
+  no_log: yes
+
+# Avec variables d'environnement
+- name: Commande avec env vars
+  shell: npm install
+  args:
+    chdir: /opt/webapp
+  environment:
+    NODE_ENV: production
+
+# Avec condition de changement
+- name: Vérifier version
+  shell: node --version | grep "v18"
+  register: node_version
+  changed_when: false
+  failed_when: false
+```
+
+---
+
+# Commandes : script
+
+### Exécuter un script local sur serveurs distants
+
+```yaml
+# Exécuter script bash
+- name: Exécuter script setup
+  script: scripts/setup.sh
+
+# Script avec arguments
+- name: Script avec args
+  script: scripts/deploy.sh --env production --version 1.2.0
+
+# Script Python
+- name: Exécuter script Python
+  script: scripts/migration.py
+  args:
+    executable: python3
+```
+
+---
+
+# Commandes : raw
+
+### Commande brute sans Python
+
+```yaml
+# Utile pour serveurs sans Python
+- name: Installer Python
+  raw: apt-get install -y python3
+
+# Commande système basique
+- name: Reboot serveur
+  raw: shutdown -r now
+  async: 0
+  poll: 0
+
+# Check système
+- name: Vérifier uptime
+  raw: uptime
+  register: uptime_result
+```
+
+---
+
+# Commandes : expect
+
+### Automatiser des commandes interactives
+
+```yaml
+# Répondre à des prompts
+- name: Changer password MySQL
+  expect:
+    command: mysql_secure_installation
+    responses:
+      'Enter password': "{{ mysql_root_password }}"
+      'New password': "{{ new_mysql_password }}"
+      'Remove anonymous users': 'Y'
+      'Disallow root login remotely': 'Y'
+```
+
+---
+layout: new-section
+---
+
+# 🌐 Réseau & API
+
+---
+
+# Réseau : uri (requêtes HTTP)
+
+### Faire des appels API
+
+```yaml
+# GET simple
+- name: Vérifier API health
+  uri:
+    url: https://api.example.com/health
+    method: GET
+    status_code: 200
+
+# POST avec JSON
+- name: Créer utilisateur via API
+  uri:
+    url: https://api.example.com/users
+    method: POST
+    body_format: json
+    body:
+      name: John Doe
+      email: john@example.com
+    headers:
+      Authorization: "Bearer {{ api_token }}"
+    status_code: 201
+```
+
+---
+
+# Réseau : uri (suite)
+
+```yaml
+# PUT pour mise à jour
+- name: Mettre à jour ressource
+  uri:
+    url: https://api.example.com/resource/123
+    method: PUT
+    body_format: json
+    body:
+      status: active
+    return_content: yes
+  register: api_response
+
+# DELETE
+- name: Supprimer ressource
+  uri:
+    url: https://api.example.com/resource/456
+    method: DELETE
+    status_code: 204
+```
+
+---
+
+# Réseau : get_url
+
+### Télécharger des fichiers
+
+```yaml
+# Télécharger fichier
+- name: Télécharger binaire
+  get_url:
+    url: https://example.com/app.tar.gz
+    dest: /tmp/app.tar.gz
+    mode: '0644'
+
+# Avec vérification checksum
+- name: Télécharger avec checksum
+  get_url:
+    url: https://example.com/file.zip
+    dest: /opt/file.zip
+    checksum: sha256:abc123...
+
+# Avec authentification
+- name: Télécharger fichier protégé
+  get_url:
+    url: https://secure.example.com/data.json
+    dest: /opt/data.json
+    url_username: user
+    url_password: "{{ vault_password }}"
+```
+
+---
+
+# Réseau : wait_for
+
+### Attendre une condition
+
+```yaml
+# Attendre qu'un port soit ouvert
+- name: Attendre MySQL
+  wait_for:
+    host: db.example.com
+    port: 3306
+    delay: 5
+    timeout: 300
+
+# Attendre qu'un service soit down
+- name: Attendre arrêt nginx
+  wait_for:
+    port: 80
+    state: stopped
+    timeout: 60
+
+# Attendre qu'un fichier existe
+- name: Attendre fichier
+  wait_for:
+    path: /opt/app/ready.flag
+    state: present
+```
+
+---
+
+# Réseau : wait_for_connection
+
+### Attendre la connexion SSH
+
+```yaml
+# Attendre que le serveur soit accessible
+- name: Attendre connexion SSH
+  wait_for_connection:
+    delay: 10
+    timeout: 300
+
+# Utile après un reboot
+- name: Reboot et attendre
+  reboot:
+  
+- name: Attendre reconnexion
+  wait_for_connection:
+    delay: 30
+```
+
+---
+layout: new-section
+---
+
+# 🗄️ Bases de données
+
+---
+
+# MySQL : mysql_db
+
+### Gestion des bases MySQL
+
+```yaml
+# Créer une base de données
+- name: Créer base MySQL
+  mysql_db:
+    name: myapp
+    state: present
+    login_user: root
+    login_password: "{{ vault_mysql_root }}"
+
+# Supprimer une base
+- name: Supprimer base
+  mysql_db:
+    name: oldapp
+    state: absent
+
+# Importer un dump SQL
+- name: Importer données
+  mysql_db:
+    name: myapp
+    state: import
+    target: /tmp/backup.sql
+```
+
+---
+
+# MySQL : mysql_user
+
+### Gestion des utilisateurs MySQL
+
+```yaml
+# Créer utilisateur MySQL
+- name: Créer user application
+  mysql_user:
+    name: webapp
+    password: "{{ vault_mysql_password }}"
+    priv: 'myapp.*:ALL'
+    state: present
+    login_user: root
+    login_password: "{{ vault_mysql_root }}"
+
+# User avec droits spécifiques
+- name: User avec privlèges limités
+  mysql_user:
+    name: readonly
+    password: "{{ vault_readonly_password }}"
+    priv: 'myapp.*:SELECT'
+    host: '192.168.1.%'
+```
+
+---
+
+# MySQL : mysql_user (suite)
+
+```yaml
+# Supprimer utilisateur
+- name: Supprimer user
+  mysql_user:
+    name: olduser
+    state: absent
+
+# Changer le mot de passe
+- name: Changer password
+  mysql_user:
+    name: webapp
+    password: "{{ new_password }}"
+    update_password: always
+```
+
+---
+
+# PostgreSQL : postgresql_db
+
+### Gestion des bases PostgreSQL
+
+```yaml
+# Créer base PostgreSQL
+- name: Créer base
+  postgresql_db:
+    name: myapp
+    owner: webapp
+    state: present
+  become_user: postgres
+
+# Avec encoding spécifique
+- name: Base avec UTF8
+  postgresql_db:
+    name: myapp_prod
+    encoding: UTF-8
+    lc_collate: fr_FR.UTF-8
+    lc_ctype: fr_FR.UTF-8
+    template: template0
+
+# Supprimer base
+- name: Drop database
+  postgresql_db:
+    name: oldapp
+    state: absent
+```
+
+---
+
+# PostgreSQL : postgresql_user
+
+### Gestion des utilisateurs PostgreSQL
+
+```yaml
+# Créer utilisateur PostgreSQL
+- name: Créer user PostgreSQL
+  postgresql_user:
+    name: webapp
+    password: "{{ vault_pg_password }}"
+    role_attr_flags: CREATEDB,NOSUPERUSER
+  become_user: postgres
+
+# User avec droits sur base
+- name: Grant privileges
+  postgresql_privs:
+    database: myapp
+    roles: webapp
+    privs: ALL
+    type: database
+  become_user: postgres
+
+# Supprimer user
+- name: Drop user
+  postgresql_user:
+    name: olduser
+    state: absent
+```
+
+---
+
+# Redis : redis (community.general)
+
+### Gestion de Redis
+
+```yaml
+# Définir une clé Redis
+- name: Set Redis key
+  community.general.redis:
+    command: set
+    login_host: localhost
+    key: myapp:config
+    value: '{"env":"production"}'
+
+# Récupérer une valeur
+- name: Get Redis value
+  community.general.redis:
+    command: get
+    key: myapp:status
+  register: redis_value
+
+# Supprimer une clé
+- name: Delete key
+  community.general.redis:
+    command: delete
+    key: old:data
+```
+
+---
+layout: new-section
+---
+
+# 🔧 Variables & Debug
+
+---
+
+# Variables : set_fact
+
+### Définir des variables dynamiquement
+
+```yaml
+# Définir une variable simple
+- name: Définir version
+  set_fact:
+    app_version: "1.2.3"
+
+# Calculer une valeur
+- name: Calculer timestamp
+  set_fact:
+    backup_date: "{{ ansible_date_time.date }}"
+
+# Construire une variable complexe
+- name: Build config object
+  set_fact:
+    app_config:
+      name: "{{ app_name }}"
+      version: "{{ app_version }}"
+      env: "{{ environment }}"
+      replicas: "{{ environments[env].replicas }}"
+```
+
+---
+
+# Variables : set_fact (suite)
+
+```yaml
+# Variable conditionnelle
+- name: Définir URL selon environnement
+  set_fact:
+    api_url: "{{ 'https://api.prod.com' if env == 'prod' else 'https://api.dev.com' }}"
+
+# Concaténer des listes
+- name: Merger des packages
+  set_fact:
+    all_packages: "{{ base_packages + custom_packages }}"
+
+# Variable from registered result
+- name: Version from command
+  shell: node --version
+  register: node_version
+
+- name: Store version
+  set_fact:
+    node_ver: "{{ node_version.stdout | regex_replace('^v', '') }}"
+```
+
+---
+
+# Debug : debug
+
+### Afficher des informations
+
+```yaml
+# Message simple
+- name: Afficher message
+  debug:
+    msg: "Déploiement de {{ app_name }} version {{ app_version }}"
+
+# Afficher une variable
+- name: Debug variable
+  debug:
+    var: ansible_hostname
+
+# Afficher plusieurs variables
+- name: Debug complet
+  debug:
+    msg: |
+      Hostname: {{ ansible_hostname }}
+      IP: {{ ansible_default_ipv4.address }}
+      OS: {{ ansible_distribution }} {{ ansible_distribution_version }}
+```
+
+---
+
+# Debug : debug (suite)
+
+```yaml
+# Avec verbosité conditionnelle
+- name: Debug détaillé
+  debug:
+    var: hostvars[inventory_hostname]
+    verbosity: 2
+
+# Debug résultat de tâche
+- name: Check disk space
+  shell: df -h
+  register: disk_space
+
+- name: Show disk info
+  debug:
+    var: disk_space.stdout_lines
+
+# Debug JSON pretty print
+- name: Show config
+  debug:
+    msg: "{{ app_config | to_nice_json }}"
+```
+
+---
+
+# Variables : include_vars
+
+### Charger des variables depuis fichiers
+
+```yaml
+# Charger fichier de variables
+- name: Charger vars environnement
+  include_vars:
+    file: "vars/{{ environment }}.yml"
+
+# Charger avec nom custom
+- name: Charger config
+  include_vars:
+    file: config.yml
+    name: app_config
+
+# Charger conditionnellement
+- name: Charger vars OS-specific
+  include_vars: "{{ ansible_distribution }}.yml"
+```
+
+---
+
+# Facts : setup
+
+### Récupérer les informations système
+
+```yaml
+# Récupérer tous les facts
+- name: Gather facts
+  setup:
+
+# Récupérer facts spécifiques
+- name: Only network facts
+  setup:
+    filter: ansible_*_ipv4
+
+# Désactiver gather facts
+- hosts: all
+  gather_facts: no
+  tasks:
+    - name: Manual gather
+      setup:
+```
+
+---
+
+# Facts : facts personnalisés
+
+### Créer des facts custom
+
+```yaml
+# Créer un fact local
+- name: Créer custom fact
+  copy:
+    content: |
+      [general]
+      app_version=1.2.3
+      deployed_at={{ ansible_date_time.iso8601 }}
+    dest: /etc/ansible/facts.d/myapp.fact
+    mode: '0644'
+
+# Recharger facts
+- name: Refresh facts
+  setup:
+
+# Utiliser le custom fact
+- name: Use custom fact
+  debug:
+    msg: "App version: {{ ansible_local.myapp.general.app_version }}"
+```
+
+---
+layout: new-section
+---
+
+# 📝 Git & Version Control
+
+---
+
+# Git : git
+
+### Cloner et gérer des dépôts Git
+
+```yaml
+# Cloner un dépôt
+- name: Cloner application
+  git:
+    repo: https://github.com/user/app.git
+    dest: /opt/app
+    version: main
+
+# Cloner une branche spécifique
+- name: Cloner branche develop
+  git:
+    repo: https://github.com/user/app.git
+    dest: /opt/app-dev
+    version: develop
+
+# Cloner avec authentification
+- name: Cloner repo privé
+  git:
+    repo: https://{{ github_token }}@github.com/user/private-app.git
+    dest: /opt/private-app
+```
+
+---
+
+# Git : git (suite)
+
+```yaml
+# Update vers un commit spécifique
+- name: Checkout commit
+  git:
+    repo: https://github.com/user/app.git
+    dest: /opt/app
+    version: abc123def456
+
+# Pull dernières modifications
+- name: Update repository
+  git:
+    repo: https://github.com/user/app.git
+    dest: /opt/app
+    update: yes
+    force: yes
+
+# Cloner avec SSH
+- name: Clone via SSH
+  git:
+    repo: git@github.com:user/app.git
+    dest: /opt/app
+    key_file: /home/deploy/.ssh/id_rsa
+    accept_hostkey: yes
+```
+
+---
+layout: new-section
+---
+
+# 🔄 Contrôle de flux
+
+---
+
+# Contrôle : when (conditions)
+
+### Exécution conditionnelle
+
+```yaml
+# Condition simple
+- name: Installer nginx sur Ubuntu
+  apt:
+    name: nginx
+  when: ansible_distribution == "Ubuntu"
+
+# Plusieurs conditions (AND)
+- name: Action en production
+  command: /opt/app/prod-script.sh
+  when:
+    - environment == "production"
+    - app_version is version('2.0', '>=')
+
+# Condition OR
+- name: Installer sur Debian/Ubuntu
+  apt:
+    name: nginx
+  when: ansible_distribution == "Debian" or ansible_distribution == "Ubuntu"
+```
+
+---
+
+# Contrôle : when (suite)
+
+```yaml
+# Basé sur un résultat
+- name: Check si fichier existe
+  stat:
+    path: /opt/app/config.yml
+  register: config_file
+
+- name: Créer config si absent
+  template:
+    src: config.yml.j2
+    dest: /opt/app/config.yml
+  when: not config_file.stat.exists
+
+# Condition sur variable définie
+- name: Use custom port
+  template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/nginx.conf
+  when: custom_port is defined
+```
+
+---
+
+# Contrôle : loop (boucles)
+
+### Itérer sur des listes
+
+```yaml
+# Boucle simple
+- name: Installer plusieurs packages
+  apt:
+    name: "{{ item }}"
+  loop:
+    - nginx
+    - git
+    - curl
+    - vim
+
+# Boucle avec dictionnaires
+- name: Créer utilisateurs
+  user:
+    name: "{{ item.name }}"
+    groups: "{{ item.groups }}"
+  loop:
+    - { name: 'alice', groups: 'sudo,docker' }
+    - { name: 'bob', groups: 'docker' }
+```
+
+---
+
+# Contrôle : loop (suite)
+
+```yaml
+# Boucle avec range
+- name: Créer containers
+  community.docker.docker_container:
+    name: "app-{{ item }}"
+    image: myapp:latest
+  loop: "{{ range(1, 4) | list }}"  # 1, 2, 3
+
+# Boucle avec when
+- name: Créer dossiers
+  file:
+    path: "/opt/{{ item }}"
+    state: directory
+  loop:
+    - app
+    - logs
+    - data
+  when: item != "logs" or enable_logging
+
+# Loop avec index
+- name: Deploy replicas
+  debug:
+    msg: "Deploy replica {{ item.0 + 1 }}: {{ item.1 }}"
+  loop: "{{ apps | enumerate }}"
+```
+
+---
+
+# Contrôle : block (regroupement)
+
+### Regrouper des tâches
+
+```yaml
+# Block simple
+- block:
+    - name: Install nginx
+      apt:
+        name: nginx
+    
+    - name: Start nginx
+      service:
+        name: nginx
+        state: started
+  when: install_webserver
+
+# Block avec gestion d'erreur
+- block:
+    - name: Tâche risquée
+      command: /opt/risky-command.sh
+  rescue:
+    - name: En cas d'erreur
+      debug:
+        msg: "La commande a échoué, rollback..."
+  always:
+    - name: Toujours exécuté
+      debug:
+        msg: "Nettoyage..."
+```
+
+---
+
+# Contrôle : failed_when
+
+### Définir les conditions d'échec
+
+```yaml
+# Custom fail condition
+- name: Check application status
+  shell: /opt/app/healthcheck.sh
+  register: health
+  failed_when: "'ERROR' in health.stdout"
+
+# Ne pas fail sur certains codes retour
+- name: Check optional service
+  systemd:
+    name: optional-service
+    state: started
+  register: service_result
+  failed_when: 
+    - service_result.failed
+    - "'could not be found' not in service_result.msg"
+
+# Fail si conditions multiples
+- name: Verify deployment
+  shell: curl -f http://localhost/health
+  register: health_check
+  failed_when:
+    - health_check.rc != 0
+    - health_check.stdout != "OK"
+```
+
+---
+
+# Contrôle : changed_when
+
+### Définir quand une tâche a changé
+
+```yaml
+# Forcer changed
+- name: Always report changed
+  command: /opt/notification.sh
+  changed_when: true
+
+# Jamais changed
+- name: Check only command
+  command: /opt/check-status.sh
+  changed_when: false
+
+# Condition custom
+- name: Update config if different
+  shell: diff /tmp/new.conf /etc/app.conf
+  register: diff_result
+  changed_when: diff_result.rc != 0
+  failed_when: false
+```
+
+---
+
+# Contrôle : ignore_errors
+
+### Continuer malgré les erreurs
+
+```yaml
+# Ignorer les erreurs
+- name: Try to stop service
+  service:
+    name: optional-service
+    state: stopped
+  ignore_errors: yes
+
+# Continue le playbook
+- name: Cleanup old files
+  file:
+    path: "/tmp/old-{{ item }}"
+    state: absent
+  loop:
+    - file1
+    - file2
+    - file3
+  ignore_errors: yes
+```
+
+---
+
+# Contrôle : delegate_to
+
+### Déléguer l'exécution
+
+```yaml
+# Exécuter sur un autre hôte
+- name: Update load balancer
+  command: /opt/update-lb.sh
+  delegate_to: loadbalancer
+
+# Exécuter localement
+- name: Build artifact locally
+  shell: npm run build
+  delegate_to: localhost
+
+# Loop avec delegation
+- name: Register with monitoring
+  uri:
+    url: http://monitoring.local/api/register
+    method: POST
+    body: "{{ inventory_hostname }}"
+  delegate_to: monitoring-server
+```
+
+---
+
+# Contrôle : run_once
+
+### Exécuter une seule fois
+
+```yaml
+# Une seule fois sur le premier hôte
+- name: Initialize database
+  command: /opt/app/init-db.sh
+  run_once: yes
+
+# Combiné avec delegate
+- name: Send deployment notification
+  slack:
+    msg: "Deployment started"
+  run_once: yes
+  delegate_to: localhost
+```
+
+---
+layout: new-section
+---
+
+# ⏰ Tâches planifiées
+
+---
+
+# Cron : cron
+
+### Planifier des tâches
+
+```yaml
+# Créer une tâche cron
+- name: Backup quotidien
+  cron:
+    name: "Daily backup"
+    minute: "0"
+    hour: "2"
+    job: "/opt/scripts/backup.sh"
+    user: root
+
+# Cron avec intervalle
+- name: Check toutes les 15 minutes
+  cron:
+    name: "Health check"
+    minute: "*/15"
+    job: "/opt/scripts/healthcheck.sh"
+
+# Cron avec jour spécifique
+- name: Weekly report
+  cron:
+    name: "Weekly report"
+    minute: "0"
+    hour: "9"
+    weekday: "1"
+    job: "/opt/scripts/weekly-report.sh"
+```
+
+---
+
+# Cron : cron (suite)
+
+```yaml
+# Supprimer une tâche cron
+- name: Remove old cron
+  cron:
+    name: "Old backup"
+    state: absent
+
+# Cron au reboot
+- name: Run at reboot
+  cron:
+    name: "Startup script"
+    special_time: reboot
+    job: "/opt/scripts/startup.sh"
+
+# Cron avec output redirigé
+- name: Silent cron job
+  cron:
+    name: "Silent task"
+    minute: "30"
+    hour: "3"
+    job: "/opt/scripts/task.sh > /dev/null 2>&1"
+```
+
+---
+
+# Systemd : systemd timer
+
+### Alternative moderne à cron
+
+```yaml
+# Créer un service systemd
+- name: Create systemd service
+  copy:
+    content: |
+      [Unit]
+      Description=Backup Service
+      
+      [Service]
+      Type=oneshot
+      ExecStart=/opt/scripts/backup.sh
+    dest: /etc/systemd/system/backup.service
+
+# Créer le timer
+- name: Create systemd timer
+  copy:
+    content: |
+      [Unit]
+      Description=Backup Timer
+      
+      [Timer]
+      OnCalendar=daily
+      Persistent=true
+      
+      [Install]
+      WantedBy=timers.target
+    dest: /etc/systemd/system/backup.timer
+```
+
+---
+
+# Systemd : timer (suite)
+
+```yaml
+# Activer le timer
+- name: Enable and start timer
+  systemd:
+    name: backup.timer
+    enabled: yes
+    state: started
+    daemon_reload: yes
+```
+
+---
+layout: new-section
+---
+
+# 🔐 Sécurité & Certificats
+
+---
+
+# SSL : openssl_certificate
+
+### Gestion des certificats SSL
+
+```yaml
+# Générer clé privée
+- name: Generate private key
+  community.crypto.openssl_privatekey:
+    path: /etc/ssl/private/example.com.key
+    size: 4096
+
+# Générer CSR
+- name: Generate CSR
+  community.crypto.openssl_csr:
+    path: /etc/ssl/certs/example.com.csr
+    privatekey_path: /etc/ssl/private/example.com.key
+    common_name: example.com
+    subject_alt_name:
+      - DNS:example.com
+      - DNS:www.example.com
+
+# Générer certificat self-signed
+- name: Generate self-signed certificate
+  community.crypto.x509_certificate:
+    path: /etc/ssl/certs/example.com.crt
+    privatekey_path: /etc/ssl/private/example.com.key
+    csr_path: /etc/ssl/certs/example.com.csr
+    provider: selfsigned
+```
+
+---
+
+# Firewall : ufw
+
+### Gestion du firewall Ubuntu
+
+```yaml
+# Activer UFW
+- name: Enable UFW
+  community.general.ufw:
+    state: enabled
+    policy: deny
+
+# Autoriser port SSH
+- name: Allow SSH
+  community.general.ufw:
+    rule: allow
+    port: '22'
+    proto: tcp
+
+# Autoriser HTTP/HTTPS
+- name: Allow web traffic
+  community.general.ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: tcp
+  loop:
+    - '80'
+    - '443'
+```
+
+---
+
+# Firewall : ufw (suite)
+
+```yaml
+# Autoriser depuis IP spécifique
+- name: Allow from specific IP
+  community.general.ufw:
+    rule: allow
+    from_ip: 192.168.1.100
+    to_port: '3306'
+
+# Supprimer règle
+- name: Delete rule
+  community.general.ufw:
+    rule: allow
+    port: '8080'
+    delete: yes
+```
+
+---
+
+# Firewall : firewalld (RedHat/CentOS)
+
+### Gestion du firewall RedHat
+
+```yaml
+# Activer firewalld
+- name: Enable firewalld
+  service:
+    name: firewalld
+    state: started
+    enabled: yes
+
+# Autoriser service
+- name: Allow HTTP service
+  ansible.posix.firewalld:
+    service: http
+    permanent: yes
+    state: enabled
+    immediate: yes
+
+# Autoriser port custom
+- name: Allow custom port
+  ansible.posix.firewalld:
+    port: 8080/tcp
+    permanent: yes
+    state: enabled
+```
+
+---
+
+# SELinux : seboolean
+
+### Gestion SELinux
+
+```yaml
+# Activer boolean SELinux
+- name: Allow httpd network connect
+  ansible.posix.seboolean:
+    name: httpd_can_network_connect
+    state: yes
+    persistent: yes
+
+# Changer contexte fichier
+- name: Set SELinux context
+  community.general.sefcontext:
+    target: '/opt/app(/.*)?'
+    setype: httpd_sys_content_t
+    state: present
+
+# Appliquer contexte
+- name: Apply SELinux context
+  command: restorecon -Rv /opt/app
+```
+
+---
+layout: new-section
+---
+
+# 📊 Monitoring & Logs
+
+---
+
+# Logs : syslog
+
+### Envoyer des messages syslog
+
+```yaml
+# Log simple
+- name: Log deployment
+  community.general.syslogger:
+    msg: "Deployment of {{ app_name }} v{{ app_version }} started"
+    priority: info
+
+# Log avec priorité
+- name: Log critical event
+  community.general.syslogger:
+    msg: "Critical error during deployment"
+    priority: crit
+    facility: daemon
+```
+
+---
+
+# Monitoring : stat
+
+### Vérifier fichiers/dossiers
+
+```yaml
+# Check si fichier existe
+- name: Check config exists
+  stat:
+    path: /etc/app/config.yml
+  register: config_stat
+
+- name: Show file info
+  debug:
+    msg: |
+      Exists: {{ config_stat.stat.exists }}
+      Size: {{ config_stat.stat.size | default(0) }}
+      Owner: {{ config_stat.stat.pw_name | default('unknown') }}
+  when: config_stat.stat.exists
+
+# Check permissions
+- name: Verify permissions
+  stat:
+    path: /opt/app/secrets
+  register: secrets_dir
+  failed_when: 
+    - secrets_dir.stat.exists
+    - secrets_dir.stat.mode != '0700'
+```
+
+---
+
+# Monitoring : service_facts
+
+### Récupérer infos sur services
+
+```yaml
+# Gather service facts
+- name: Get service facts
+  service_facts:
+
+# Check si service actif
+- name: Verify nginx running
+  debug:
+    msg: "Nginx is {{ ansible_facts.services['nginx.service'].state }}"
+  when: "'nginx.service' in ansible_facts.services"
+
+# List all running services
+- name: Show running services
+  debug:
+    msg: "{{ item }}"
+  loop: "{{ ansible_facts.services.keys() | list }}"
+  when: ansible_facts.services[item].state == "running"
+```
+
+---
+
+# System : reboot
+
+### Redémarrer le système
+
+```yaml
+# Reboot simple
+- name: Reboot server
+  reboot:
+
+# Reboot avec délai
+- name: Reboot with message
+  reboot:
+    msg: "Reboot initiated by Ansible"
+    pre_reboot_delay: 0
+    post_reboot_delay: 30
+    reboot_timeout: 600
+
+# Reboot conditionnel
+- name: Reboot if kernel updated
+  reboot:
+  when: kernel_updated
+```
+
+---
+
+# System : hostname
+
+### Changer le hostname
+
+```yaml
+# Set hostname
+- name: Set server hostname
+  hostname:
+    name: web-server-01
+
+# Set avec domaine
+- name: Set FQDN
+  hostname:
+    name: web01.example.com
+```
+
+---
+
+# System : timezone
+
+### Configurer le fuseau horaire
+
+```yaml
+# Set timezone
+- name: Set timezone to Paris
+  community.general.timezone:
+    name: Europe/Paris
+
+# Différentes zones
+- name: Set timezone based on location
+  community.general.timezone:
+    name: "{{ server_timezone }}"
+```
+
+---
+
+# Fin du CheatSheet 🎉
+
+### Vous avez maintenant une référence complète !
+
+**Ce cheatsheet couvre** :
+- ✅ Plus de 100 modules Ansible
+- ✅ Exemples concrets et utilisables
+- ✅ Toutes les catégories essentielles
+- ✅ Bonnes pratiques intégrées
+
+**Utilisation** : Gardez ce cheatsheet comme référence lors de vos développements !
+
+**💡 Astuce** : Utilisez `ansible-doc module_name` pour plus de détails sur chaque module.
+
+---
+
+# Ressources complémentaires 📚
+
+### Pour aller plus loin
+
+**Documentation officielle** :
+- https://docs.ansible.com/ansible/latest/modules/modules_by_category.html
+- https://galaxy.ansible.com/ (Collections et Rôles)
+
+**Commandes utiles** :
+```bash
+# Lister tous les modules
+ansible-doc -l
+
+# Documentation d'un module
+ansible-doc apt
+
+# Lister les collections
+ansible-galaxy collection list
+```
+
+**Community** :
+- Reddit : r/ansible
+- Stack Overflow : tag [ansible]
+- GitHub : ansible/ansible
