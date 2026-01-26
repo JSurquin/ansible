@@ -3,7 +3,7 @@ all: # Groupe racine contenant tous les serveurs
   vars: # Variables communes à tous les serveurs
     ansible_connection: docker # Type de connexion : Docker (pour le lab)
     ansible_user: root # Utilisateur pour se connecter aux conteneurs
-    ansible_python_interpreter: /usr/bin/python3 # Chemin de l'interpréteur Python sur les hôtes cibles
+    #ansible_python_interpreter: /usr/bin/python3 # Chemin de l'interpréteur Python sur les hôtes cibles
 
   children: # Sous-groupes d'hôtes
     webservers: # Groupe des serveurs web

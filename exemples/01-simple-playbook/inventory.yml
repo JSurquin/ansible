@@ -4,7 +4,7 @@ all:
     # Variables communes à tous les serveurs
     ansible_connection: docker
     ansible_user: root
-    ansible_python_interpreter: /usr/bin/python3
+    #ansible_python_interpreter: /opt/homebrew/bin/python3
 
   hosts:
     # Serveur web

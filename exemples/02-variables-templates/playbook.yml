@@ -1,5 +1,12 @@
 ---
 # Playbook avec variables et templates
+# NOTE SUR L'ENVIRONNEMENT DOCKER :
+# Ce playbook est adapté pour fonctionner dans des conteneurs Docker qui n'ont pas systemd.
+# Dans un environnement de production (VMs, serveurs physiques), on utiliserait normalement :
+#   - Le module 'service' au lieu de commandes shell directes
+#   - systemctl start/restart nginx au lieu de /usr/sbin/nginx
+# Mais pour un lab de formation avec Docker, on doit utiliser les commandes nginx natives.
+
 - name: Déploiement avec configuration personnalisée
   hosts: webservers
   become: true
@@ -42,11 +49,29 @@
         mode: '0644'
     
     # Tâche 5 : S'assurer que Nginx est démarré
+    # IMPORTANT : Dans un environnement Docker, on n'utilise PAS systemd/service car :
+    # - Les conteneurs Docker sont minimalistes et n'ont pas systemd installé
+    # - systemd nécessite des privilèges spéciaux (--privileged) et des volumes montés
+    # - Les scripts init (/etc/init.d/) ne fonctionnent pas correctement dans les conteneurs
+    # - Pour un lab de formation, on utilise donc des commandes directes nginx
+    # Note : En production sur des VMs/serveurs physiques, on utiliserait normalement le module 'service'
+    
+    - name: Vérifier la configuration Nginx
+      command: nginx -t
+      register: nginx_test
+      changed_when: false
+      failed_when: nginx_test.rc != 0
+    
     - name: Démarrer Nginx
-      service:
-        name: nginx
-        state: started
-        enabled: yes
+      shell: |
+        # Arrêter nginx s'il est déjà en cours d'exécution
+        pkill nginx || true
+        # Démarrer nginx directement (pas via systemd/init)
+        /usr/sbin/nginx
+      args:
+        executable: /bin/bash
+      register: nginx_start
+      changed_when: true
     
     # Tâche 6 : Afficher les informations
     - name: Afficher les informations de déploiement
@@ -58,8 +83,12 @@
           🔗 URL: http://{{ ansible_host }}:{{ nginx_config.port }}
   
   # Handlers : Actions déclenchées par notify
+  # Même raison que pour le démarrage : pas de systemd dans les conteneurs Docker
+  # On utilise les commandes natives de nginx :
+  # - 'nginx -s reload' pour recharger la config à chaud (si nginx tourne)
+  # - Sinon on redémarre complètement nginx (après test de la config)
   handlers:
     - name: Redémarrer Nginx
-      service:
-        name: nginx
-        state: restarted
+      shell: nginx -t && nginx -s reload || (pkill nginx && /usr/sbin/nginx)
+      args:
+        executable: /bin/bash

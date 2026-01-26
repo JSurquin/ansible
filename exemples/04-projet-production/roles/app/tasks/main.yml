@@ -1,0 +1,74 @@
+---
+# Tâches principales du rôle app
+# Ce rôle déploie une application Python simple pour la démonstration
+
+- name: Installer Python3 et pip
+  apt:
+    name:
+      - python3
+      - python3-pip
+    state: present
+    update_cache: yes
+  tags: ['packages']
+
+- name: Créer l'utilisateur de l'application
+  user:
+    name: "{{ app_user }}"
+    system: yes
+    shell: /bin/bash
+    home: "{{ app_dir }}"
+    createhome: no
+  tags: ['config']
+
+- name: Créer le répertoire de l'application
+  file:
+    path: "{{ app_dir }}"
+    state: directory
+    owner: "{{ app_user }}"
+    group: "{{ app_user }}"
+    mode: '0755'
+  tags: ['config']
+
+- name: Déployer l'application (serveur HTTP simple)
+  template:
+    src: app.py.j2
+    dest: "{{ app_dir }}/app.py"
+    owner: "{{ app_user }}"
+    group: "{{ app_user }}"
+    mode: '0755'
+  notify: Redémarrer l'application
+  tags: ['deploy']
+
+- name: Créer le fichier de service systemd
+  # NOTE : Dans Docker sans systemd, on démarre l'app directement
+  # En production, utilisez un vrai fichier systemd service
+  template:
+    src: app-start.sh.j2
+    dest: "{{ app_dir }}/start.sh"
+    owner: "{{ app_user }}"
+    group: "{{ app_user }}"
+    mode: '0755'
+  tags: ['config']
+
+- name: Arrêter l'application si elle tourne déjà
+  shell: pkill -f "python3 {{ app_dir }}/app.py" || true
+  failed_when: false
+  tags: ['service']
+
+- name: Démarrer l'application en arrière-plan
+  # NOTE : Pour Docker sans systemd, on utilise nohup
+  # En production avec systemd, utilisez : service: name=myapp state=started
+  shell: nohup python3 {{ app_dir }}/app.py > {{ app_dir }}/app.log 2>&1 &
+  args:
+    chdir: "{{ app_dir }}"
+    executable: /bin/bash
+  async: 5
+  poll: 0
+  tags: ['service']
+
+- name: Attendre que l'application démarre
+  wait_for:
+    port: "{{ app_port }}"
+    delay: 2
+    timeout: 30
+  tags: ['service']

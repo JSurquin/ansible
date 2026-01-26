@@ -1,0 +1,24 @@
+# inventory/hosts.yml - Fichier d'inventaire principal
+all:  # Groupe racine qui contient TOUS les serveurs
+  vars:  # Variables globales applicables à tous les serveurs
+    ansible_user: ubuntu  # Utilisateur par défaut pour se connecter via SSH
+    ansible_python_interpreter: /usr/bin/python3  # Chemin vers Python sur les serveurs cibles
+
+  children:  # Sous-groupes organisés par fonction
+    docker_hosts:  # Groupe des serveurs qui hébergent Docker
+      hosts:  # Liste des serveurs dans ce groupe
+        docker-01: {ansible_host: 10.0.1.10}  # Nom logique : adresse IP réelle
+        docker-02: {ansible_host: 10.0.1.11}  # Deuxième serveur Docker
+
+    databases:  # Groupe des serveurs de base de données
+      hosts:  # Serveurs de BDD
+        db-01: {ansible_host: 10.0.1.20}  # Serveur de base de données principal
+
+    webservers:  # Groupe des serveurs web (déclaration vide ici)
+databases:  # Redéfinition du groupe databases (peut créer confusion)
+  hosts:  # Liste des serveurs de BDD
+    db-01: {ansible_host: 10.0.1.20}  # Même serveur que plus haut
+
+webservers:  # Définition du groupe webservers
+  hosts:  # Serveurs web avec notation de plage
+    web-[01:03]: {ansible_host: '10.0.1.{{ 30 + item }}'}  # Génère web-01, web-02, web-03 avec IPs 10.0.1.31, 10.0.1.32, 10.0.1.33

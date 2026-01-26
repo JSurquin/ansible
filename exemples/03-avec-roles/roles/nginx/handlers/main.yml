@@ -1,15 +1,19 @@
 --- # Début du document YAML
 # Handlers du rôle nginx
+# NOTE : Dans un environnement Docker sans systemd, on utilise des commandes directes
+# En production avec systemd, utilisez plutôt le module 'service'
 
 - name: Recharger Nginx # Nom du handler (appelé via notify)
-  service: # Module de gestion des services
-    name: nginx # Nom du service à recharger
-    state: reloaded # Action : recharger la configuration sans interruption
+  # Recharger la config à chaud avec nginx -s reload
+  shell: nginx -t && nginx -s reload || true
+  args:
+    executable: /bin/bash
 
 - name: Redémarrer Nginx # Nom du handler pour redémarrage complet
-  service: # Module de gestion des services
-    name: nginx # Nom du service à redémarrer
-    state: restarted # Action : arrêter puis démarrer le service
+  # Redémarrer complètement nginx
+  shell: pkill nginx || true && /usr/sbin/nginx
+  args:
+    executable: /bin/bash
 
 - name: Vérifier la configuration Nginx # Nom du handler de validation
   command: nginx -t # Commande de test de la configuration Nginx

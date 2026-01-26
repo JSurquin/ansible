@@ -77,9 +77,12 @@
   when: nginx_vhosts | length > 0 # Condition : si la liste n'est pas vide
   tags: ['config'] # Tag pour exécution sélective
 
-- name: Démarrer et activer Nginx # Description du démarrage du service
-  service: # Module de gestion des services systemd
-    name: nginx # Nom du service
-    state: "{{ nginx_service_state }}" # État souhaité (started/stopped)
-    enabled: "{{ nginx_service_enabled }}" # Activer au démarrage du système
+- name: Vérifier et démarrer Nginx # Description du démarrage
+  # NOTE : Dans Docker sans systemd, on utilise des commandes directes
+  # En production avec systemd, utilisez : service: name=nginx state=started enabled=yes
+  shell: |
+    nginx -t && (pkill nginx || true) && /usr/sbin/nginx
+  args:
+    executable: /bin/bash
+  when: nginx_service_state == "started"
   tags: ['service'] # Tag pour exécution sélective

@@ -1,63 +1,92 @@
 # Configuration Nginx générée par Ansible
 # Rôle: nginx
-# Généré le: {{ ansible_date_time.iso8601 }} {# Date ISO8601 de génération #}
+# Généré le: {{ ansible_facts['date_time']['iso8601'] }}
 
-user {{ nginx_user }}; {# Utilisateur sous lequel Nginx s'exécute #}
-worker_processes {{ nginx_worker_processes }}; {# Nombre de processus workers #}
-pid /run/nginx.pid; {# Fichier PID pour la gestion du processus #}
-include /etc/nginx/modules-enabled/*.conf; {# Inclure les modules activés #}
+# Utilisateur sous lequel Nginx s'exécute
+user {{ nginx_user }};
+# Nombre de processus workers
+worker_processes {{ nginx_worker_processes }};
+# Fichier PID pour la gestion du processus
+pid /run/nginx.pid;
+# Inclure les modules activés
+include /etc/nginx/modules-enabled/*.conf;
 
-events { {# Bloc de configuration des événements #}
-    worker_connections {{ nginx_worker_connections }}; {# Connexions simultanées par worker #}
-    # multi_accept on; {# Option : accepter plusieurs connexions à la fois (commenté) #}
-} {# Fin du bloc events #}
+# Bloc de configuration des événements
+events {
+    # Connexions simultanées par worker
+    worker_connections {{ nginx_worker_connections }};
+    # Option : accepter plusieurs connexions à la fois (commenté)
+    # multi_accept on;
+}
 
-http { {# Bloc de configuration HTTP #}
-    ## {# Commentaire de section #}
-    # Basic Settings {# Section : paramètres de base #}
-    ## {# Commentaire de section #}
-    sendfile on; {# Optimisation : utiliser sendfile() pour l'envoi de fichiers #}
-    tcp_nopush on; {# Optimisation : envoyer les headers et début de fichier ensemble #}
-    tcp_nodelay on; {# Optimisation : désactiver l'algorithme de Nagle #}
-    keepalive_timeout {{ nginx_keepalive_timeout }}; {# Durée de vie des connexions persistantes #}
-    types_hash_max_size 2048; {# Taille maximale de la table de hachage des types MIME #}
-    client_max_body_size {{ nginx_client_max_body_size }}; {# Taille maximale des requêtes (uploads) #}
+# Bloc de configuration HTTP
+http {
+    ##
+    # Basic Settings
+    ##
+    # Optimisation : utiliser sendfile() pour l'envoi de fichiers
+    sendfile on;
+    # Optimisation : envoyer les headers et début de fichier ensemble
+    tcp_nopush on;
+    # Optimisation : désactiver l'algorithme de Nagle
+    tcp_nodelay on;
+    # Durée de vie des connexions persistantes
+    keepalive_timeout {{ nginx_keepalive_timeout }};
+    # Taille maximale de la table de hachage des types MIME
+    types_hash_max_size 2048;
+    # Taille maximale des requêtes (uploads)
+    client_max_body_size {{ nginx_client_max_body_size }};
 
-    # server_tokens off; {# Masquer la version de Nginx (commenté) #}
-    # server_names_hash_bucket_size 64; {# Taille bucket pour noms de serveurs (commenté) #}
-    # server_name_in_redirect off; {# Ne pas utiliser server_name dans redirections (commenté) #}
+    # Masquer la version de Nginx (commenté)
+    # server_tokens off;
+    # Taille bucket pour noms de serveurs (commenté)
+    # server_names_hash_bucket_size 64;
+    # Ne pas utiliser server_name dans redirections (commenté)
+    # server_name_in_redirect off;
 
-    include /etc/nginx/mime.types; {# Inclure les types MIME standards #}
-    default_type application/octet-stream; {# Type MIME par défaut pour fichiers inconnus #}
+    # Inclure les types MIME standards
+    include /etc/nginx/mime.types;
+    # Type MIME par défaut pour fichiers inconnus
+    default_type application/octet-stream;
 
-    ## {# Commentaire de section #}
-    # SSL Settings {# Section : paramètres SSL/TLS #}
-    ## {# Commentaire de section #}
-    ssl_protocols TLSv1.2 TLSv1.3; {# Protocoles SSL/TLS autorisés (sécurisés uniquement) #}
-    ssl_prefer_server_ciphers on; {# Préférer l'ordre des ciphers du serveur #}
+    ##
+    # SSL Settings
+    ##
+    # Protocoles SSL/TLS autorisés (sécurisés uniquement)
+    ssl_protocols TLSv1.2 TLSv1.3;
+    # Préférer l'ordre des ciphers du serveur
+    ssl_prefer_server_ciphers on;
 
-    ## {# Commentaire de section #}
-    # Logging Settings {# Section : paramètres de logs #}
-    ## {# Commentaire de section #}
-    access_log {{ nginx_log_path }}/access.log; {# Fichier de log des accès HTTP #}
-    error_log {{ nginx_log_path }}/error.log; {# Fichier de log des erreurs #}
+    ##
+    # Logging Settings
+    ##
+    # Fichier de log des accès HTTP
+    access_log {{ nginx_log_path }}/access.log;
+    # Fichier de log des erreurs
+    error_log {{ nginx_log_path }}/error.log;
 
-    ## {# Commentaire de section #}
-    # Gzip Settings {# Section : paramètres de compression #}
-    ## {# Commentaire de section #}
-    gzip {{ 'on' if nginx_gzip_enabled else 'off' }}; {# Activer ou désactiver gzip selon variable #}
-{% if nginx_gzip_enabled %} {# Condition : si gzip est activé #}
-    gzip_vary on; {# Ajouter header Vary: Accept-Encoding #}
-    gzip_proxied any; {# Compresser aussi les réponses proxy #}
-    gzip_comp_level 6; {# Niveau de compression (1-9, 6 = bon compromis) #}
-    gzip_types text/plain text/css text/xml text/javascript  {# Types MIME à compresser (ligne 1) #}
-               application/json application/javascript application/xml+rss  {# Types MIME à compresser (ligne 2) #}
-               application/rss+xml font/truetype font/opentype  {# Types MIME à compresser (ligne 3) #}
-               application/vnd.ms-fontobject image/svg+xml; {# Types MIME à compresser (ligne 4) #}
-{% endif %} {# Fin de la condition gzip #}
+    ##
+    # Gzip Settings
+    ##
+    # Activer ou désactiver gzip selon variable
+    gzip {{ 'on' if nginx_gzip_enabled else 'off' }};
+{% if nginx_gzip_enabled %}
+    # Ajouter header Vary: Accept-Encoding
+    gzip_vary on;
+    # Compresser aussi les réponses proxy
+    gzip_proxied any;
+    # Niveau de compression (1-9, 6 = bon compromis)
+    gzip_comp_level 6;
+    # Types MIME à compresser
+    gzip_types text/plain text/css text/xml text/javascript 
+               application/json application/javascript application/xml+rss 
+               application/rss+xml font/truetype font/opentype 
+               application/vnd.ms-fontobject image/svg+xml;
+{% endif %}
 
-    ## {# Commentaire de section #}
-    # Virtual Host Configs {# Section : configuration des vhosts #}
-    ## {# Commentaire de section #}
-    include {{ nginx_vhost_enabled_path }}/*; {# Inclure tous les vhosts actifs #}
-} {# Fin du bloc http #}
+    ##
+    # Virtual Host Configs
+    ##
+    # Inclure tous les vhosts actifs
+    include {{ nginx_vhost_enabled_path }}/*;
+}

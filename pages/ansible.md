@@ -497,6 +497,259 @@ ansible-inventory -i inventory.yml --graph
 ```
 
 ---
+
+# 🔧 Variables globales Ansible
+
+### Variables magiques utilisées par Ansible
+
+Ansible utilise des **variables spéciales** pour configurer la connexion et le comportement sur les hôtes cibles :
+
+- 🔌 **ansible_connection** : Type de connexion à utiliser
+- 👤 **ansible_user** : Utilisateur pour se connecter
+- 🐍 **ansible_python_interpreter** : Chemin vers l'interpréteur Python
+- 🔑 **ansible_ssh_private_key_file** : Clé SSH personnalisée
+- 🚪 **ansible_port** : Port de connexion (défaut: 22 pour SSH)
+
+Ces variables peuvent être définies :
+- Globalement (dans `all: vars:`)
+- Par groupe (dans `nom_groupe: vars:`)
+- Par hôte (directement sur l'hôte)
+
+---
+
+# 🔌 ansible_connection : Les 3 types
+
+### Type 1 : SSH (par défaut)
+
+```yaml
+all:
+  vars:
+    ansible_connection: ssh  # Connexion SSH classique (défaut)
+    ansible_user: ubuntu
+  hosts:
+    serveur-distant:
+      ansible_host: 192.168.1.100
+```
+
+**Utilisation** : Connexion à des serveurs distants via SSH
+**Prérequis** : Accès SSH configuré, clés SSH recommandées
+
+---
+
+# 🔌 ansible_connection : Type 2 - Local
+
+```yaml
+all:
+  children:
+    local:
+      hosts:
+        localhost:
+          ansible_connection: local  # Exécution locale
+          ansible_python_interpreter: /usr/bin/python3
+```
+
+**Utilisation** : Exécuter des tâches sur la machine de contrôle Ansible
+**Avantage** : Pas besoin de SSH, exécution directe
+**Cas d'usage** : Configuration de la machine locale, tests
+
+---
+
+# 🔌 ansible_connection : Type 3 - Docker
+
+```yaml
+all:
+  children:
+    containers:
+      vars:
+        ansible_connection: docker  # Connexion via Docker
+      hosts:
+        web01:
+          # Pas besoin d'ansible_host, utilise le nom du container
+        web02:
+```
+
+**Utilisation** : Gérer des conteneurs Docker directement
+**Avantage** : Pas besoin de SSH dans les conteneurs
+**Prérequis** : Docker installé sur la machine de contrôle
+
+---
+
+# 🐳 Exemple complet : Inventory Docker
+
+```yaml
+all:
+  children:
+    docker_containers:
+      vars:
+        ansible_connection: docker
+        ansible_user: root  # Utilisateur dans le container
+      hosts:
+        web01:  # Nom du container Docker
+        web02:
+        db01:
+```
+
+```bash
+# Les containers doivent être démarrés avant
+docker ps
+# CONTAINER ID   IMAGE     COMMAND   CREATED   STATUS   NAMES
+# abc123def456   nginx     ...       ...       Up       web01
+# 789ghi012jkl   nginx     ...       ...       Up       web02
+# 345mno678pqr   postgres  ...       ...       Up       db01
+```
+
+---
+
+# 👤 ansible_user : L'utilisateur de connexion
+
+```yaml
+all:
+  vars:
+    ansible_user: ubuntu  # Utilisateur par défaut pour tous les hôtes
+  
+  children:
+    databases:
+      vars:
+        ansible_user: postgres  # Surcharge pour le groupe databases
+      hosts:
+        db01:
+          ansible_host: 10.0.1.20
+    
+    webservers:
+      hosts:
+        web01:
+          ansible_host: 10.0.1.10
+          ansible_user: nginx  # Surcharge pour cet hôte spécifique
+```
+
+**Ordre de priorité** : Hôte > Groupe > Global
+
+---
+
+# 🐍 ansible_python_interpreter
+
+### Pourquoi cette variable ?
+
+Ansible a besoin de Python sur les machines cibles pour exécuter ses modules.
+
+```yaml
+all:
+  vars:
+    # Spécifier explicitement le chemin vers Python
+    ansible_python_interpreter: /usr/bin/python3
+```
+
+**Cas d'usage courants** :
+- `/usr/bin/python3` : Python 3 système (le plus courant)
+- `/opt/homebrew/bin/python3` : Python installé via Homebrew (macOS)
+- `/usr/local/bin/python3` : Python compilé manuellement
+- `auto` : Laisser Ansible découvrir automatiquement
+
+---
+
+# ⚠️ Le warning de découverte Python
+
+```bash
+[WARNING]: Host 'web01' is using the discovered Python 
+interpreter at '/usr/bin/python3.10', but future installation 
+of another Python interpreter could cause a different 
+interpreter to be discovered.
+```
+
+**Que signifie ce warning ?**
+
+Ansible a découvert automatiquement Python, mais prévient qu'une installation future pourrait changer l'interpréteur utilisé.
+
+---
+
+# ⚠️ Comment résoudre ce warning ?
+
+### Solution 1 : Spécifier explicitement le chemin
+
+```yaml
+all:
+  vars:
+    ansible_python_interpreter: /usr/bin/python3.10
+  hosts:
+    web01:
+      ansible_host: 192.168.1.10
+```
+
+### Solution 2 : Utiliser la découverte automatique (recommandé)
+
+```yaml
+all:
+  vars:
+    ansible_python_interpreter: auto_silent  # Découverte sans warning
+```
+
+---
+
+# 🎯 Cas pratique : Homebrew sur macOS
+
+Sur macOS avec Homebrew, Python est installé ailleurs :
+
+```yaml
+all:
+  children:
+    macos_hosts:
+      vars:
+        ansible_connection: ssh
+        ansible_user: admin
+        ansible_python_interpreter: /opt/homebrew/bin/python3
+      hosts:
+        mac-dev:
+          ansible_host: 192.168.1.50
+```
+
+**Sans cette config** : Ansible pourrait utiliser le Python système (ancien)
+**Avec cette config** : Ansible utilise le Python récent de Homebrew
+
+---
+
+# 📋 Récapitulatif : Variables Ansible
+
+| Variable | Usage | Exemple |
+|----------|-------|---------|
+| `ansible_connection` | Type de connexion | `ssh`, `local`, `docker` |
+| `ansible_user` | Utilisateur de connexion | `ubuntu`, `root`, `admin` |
+| `ansible_python_interpreter` | Chemin Python | `/usr/bin/python3` |
+| `ansible_host` | Adresse IP/FQDN réelle | `192.168.1.10` |
+| `ansible_port` | Port de connexion | `22`, `2222` |
+
+---
+
+# ✅ Mini-QCM : Variables Ansible
+
+**Question 1** : Quelle valeur pour `ansible_connection` avec Docker ?
+- A) `ssh`
+- B) `docker`
+- C) `container`
+
+**Question 2** : Comment éviter le warning Python ?
+- A) Ignorer le warning
+- B) Spécifier `ansible_python_interpreter`
+- C) Désinstaller Python
+
+**Question 3** : Quel type de connexion pour un hôte distant ?
+- A) `local`
+- B) `ssh`
+- C) `remote`
+
+---
+
+# 📝 Réponses Mini-QCM Variables Ansible
+
+**Question 1** : **B** ✅
+`ansible_connection: docker` pour gérer des conteneurs Docker.
+
+**Question 2** : **B** ✅
+Définir explicitement `ansible_python_interpreter` évite la découverte automatique.
+
+**Question 3** : **B** ✅
+`ansible_connection: ssh` est le type par défaut pour les connexions distantes.
+
+---
 layout: new-section
 routeAlias: 'playbooks'
 ---

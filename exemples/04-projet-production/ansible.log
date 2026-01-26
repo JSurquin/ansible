@@ -734,3 +734,181 @@ Use `ansible_facts["fact_name"]` (no `ansible_` prefix) instead.
 2026-01-23 16:55:10,592 p=61037 u=jimmy n=ansible INFO| app01                      : ok=5    changed=1    unreachable=0    failed=0    skipped=2    rescued=0    ignored=0   
 2026-01-23 16:55:10,592 p=61037 u=jimmy n=ansible INFO| monitor01                  : ok=4    changed=0    unreachable=0    failed=0    skipped=3    rescued=0    ignored=0   
 2026-01-23 16:55:10,592 p=61037 u=jimmy n=ansible INFO| web01                      : ok=5    changed=0    unreachable=0    failed=0    skipped=2    rescued=0    ignored=0   
+2026-01-26 19:14:50,424 p=26027 u=jimmy n=ansible INFO| PLAY [Déploiement application] ***************************************************************************************
+2026-01-26 19:14:50,431 p=26027 u=jimmy n=ansible INFO| TASK [Gathering Facts] ***********************************************************************************************
+2026-01-26 19:14:51,697 p=26027 u=jimmy n=ansible WARNING| [WARNING]: Host 'app01' is using the discovered Python interpreter at '/usr/bin/python3.10', but future installation of another Python interpreter could cause a different interpreter to be discovered. See https://docs.ansible.com/ansible-core/2.20/reference_appendices/interpreter_discovery.html for more information.
+
+2026-01-26 19:14:51,697 p=26027 u=jimmy n=ansible INFO| ok: [app01]
+2026-01-26 19:14:51,700 p=26027 u=jimmy n=ansible INFO| TASK [Vérifier la version à déployer] ********************************************************************************
+2026-01-26 19:14:51,718 p=26027 u=jimmy n=ansible ERROR| [ERROR]: Task failed: Action failed: La version de l'application doit être définie
+Origin: /Users/jimmy/git/slides/new_slidedev/ansible/exemples/04-projet-production/playbooks/deploy.yml:8:7
+
+6   
+7   pre_tasks: # Tâches à exécuter AVANT les rôles
+8     - name: Vérifier la version à déployer # Validation de la version
+        ^ column 7
+
+
+2026-01-26 19:14:51,718 p=26027 u=jimmy n=ansible INFO| fatal: [app01]: FAILED! => {
+    "assertion": "app_version is defined",
+    "changed": false,
+    "evaluated_to": false,
+    "msg": "La version de l'application doit être définie"
+}
+2026-01-26 19:14:51,719 p=26027 u=jimmy n=ansible INFO| 	to retry, use: --limit @/Users/jimmy/.ansible-retry/deploy.retry
+
+2026-01-26 19:14:51,719 p=26027 u=jimmy n=ansible INFO| PLAY RECAP ***********************************************************************************************************
+2026-01-26 19:14:51,719 p=26027 u=jimmy n=ansible INFO| app01                      : ok=1    changed=0    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0   
+2026-01-26 19:16:48,677 p=27487 u=jimmy n=ansible INFO| PLAY [Déploiement application] ***************************************************************************************
+2026-01-26 19:16:48,684 p=27487 u=jimmy n=ansible INFO| TASK [Gathering Facts] ***********************************************************************************************
+2026-01-26 19:16:49,995 p=27487 u=jimmy n=ansible WARNING| [WARNING]: Host 'app01' is using the discovered Python interpreter at '/usr/bin/python3.10', but future installation of another Python interpreter could cause a different interpreter to be discovered. See https://docs.ansible.com/ansible-core/2.20/reference_appendices/interpreter_discovery.html for more information.
+
+2026-01-26 19:16:49,995 p=27487 u=jimmy n=ansible INFO| ok: [app01]
+2026-01-26 19:16:49,998 p=27487 u=jimmy n=ansible INFO| TASK [Vérifier la version à déployer] ********************************************************************************
+2026-01-26 19:16:50,015 p=27487 u=jimmy n=ansible INFO| ok: [app01] => {
+    "changed": false,
+    "msg": "All assertions passed"
+}
+2026-01-26 19:16:50,017 p=27487 u=jimmy n=ansible INFO| TASK [Afficher les informations de déploiement] **********************************************************************
+2026-01-26 19:16:50,043 p=27487 u=jimmy n=ansible INFO| ok: [app01] => {
+    "msg": "🚀 Déploiement de MonApp\n🏷️ Version: latest\n🌍 Environnement: staging\n📍 Serveurs: app01\n"
+}
+2026-01-26 19:16:50,047 p=27487 u=jimmy n=ansible INFO| TASK [Vérifier que l'application répond] *****************************************************************************
+2026-01-26 19:16:50,512 p=27487 u=jimmy n=ansible INFO| FAILED - RETRYING: [app01]: Vérifier que l'application répond (5 retries left).
+2026-01-26 19:16:53,894 p=27487 u=jimmy n=ansible INFO| FAILED - RETRYING: [app01]: Vérifier que l'application répond (4 retries left).
+2026-01-26 19:16:57,235 p=27487 u=jimmy n=ansible INFO| FAILED - RETRYING: [app01]: Vérifier que l'application répond (3 retries left).
+2026-01-26 19:17:00,581 p=27487 u=jimmy n=ansible INFO| FAILED - RETRYING: [app01]: Vérifier que l'application répond (2 retries left).
+2026-01-26 19:17:03,963 p=27487 u=jimmy n=ansible INFO| FAILED - RETRYING: [app01]: Vérifier que l'application répond (1 retries left).
+2026-01-26 19:17:07,283 p=27487 u=jimmy n=ansible ERROR| [ERROR]: Task failed: Module failed: Status code was -1 and not [200]: Request failed: <urlopen error [Errno 111] Connection refused>
+Origin: /Users/jimmy/git/slides/new_slidedev/ansible/exemples/04-projet-production/playbooks/deploy.yml:27:7
+
+25   
+26   post_tasks: # Tâches à exécuter APRÈS les rôles
+27     - name: Vérifier que l'application répond # Test de santé de l'application
+         ^ column 7
+
+
+2026-01-26 19:17:07,284 p=27487 u=jimmy n=ansible INFO| fatal: [app01]: FAILED! => {"attempts": 5, "changed": false, "elapsed": 0, "msg": "Status code was -1 and not [200]: Request failed: <urlopen error [Errno 111] Connection refused>", "redirected": false, "status": -1, "url": "http://localhost:8080/health"}
+2026-01-26 19:17:07,286 p=27487 u=jimmy n=ansible INFO| 	to retry, use: --limit @/Users/jimmy/.ansible-retry/deploy.retry
+
+2026-01-26 19:17:07,286 p=27487 u=jimmy n=ansible INFO| PLAY RECAP ***********************************************************************************************************
+2026-01-26 19:17:07,286 p=27487 u=jimmy n=ansible INFO| app01                      : ok=3    changed=0    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0   
+2026-01-26 19:18:59,517 p=29364 u=jimmy n=ansible INFO| PLAY [Déploiement application] ***************************************************************************************
+2026-01-26 19:18:59,524 p=29364 u=jimmy n=ansible INFO| TASK [Gathering Facts] ***********************************************************************************************
+2026-01-26 19:19:00,910 p=29364 u=jimmy n=ansible WARNING| [WARNING]: Host 'app01' is using the discovered Python interpreter at '/usr/bin/python3.10', but future installation of another Python interpreter could cause a different interpreter to be discovered. See https://docs.ansible.com/ansible-core/2.20/reference_appendices/interpreter_discovery.html for more information.
+
+2026-01-26 19:19:00,911 p=29364 u=jimmy n=ansible INFO| ok: [app01]
+2026-01-26 19:19:00,913 p=29364 u=jimmy n=ansible INFO| TASK [Vérifier la version à déployer] ********************************************************************************
+2026-01-26 19:19:00,931 p=29364 u=jimmy n=ansible INFO| ok: [app01] => {
+    "changed": false,
+    "msg": "All assertions passed"
+}
+2026-01-26 19:19:00,934 p=29364 u=jimmy n=ansible INFO| TASK [Afficher les informations de déploiement] **********************************************************************
+2026-01-26 19:19:00,959 p=29364 u=jimmy n=ansible INFO| ok: [app01] => {
+    "msg": "🚀 Déploiement de MonApp\n🏷️ Version: latest\n🌍 Environnement: staging\n📍 Serveurs: app01\n"
+}
+2026-01-26 19:19:00,961 p=29364 u=jimmy n=ansible INFO| TASK [app : Installer Python3 et pip] ********************************************************************************
+2026-01-26 19:19:40,829 p=29364 u=jimmy n=ansible INFO| changed: [app01]
+2026-01-26 19:19:40,835 p=29364 u=jimmy n=ansible INFO| TASK [app : Créer l'utilisateur de l'application] ********************************************************************
+2026-01-26 19:19:41,437 p=29364 u=jimmy n=ansible INFO| changed: [app01]
+2026-01-26 19:19:41,439 p=29364 u=jimmy n=ansible INFO| TASK [app : Créer le répertoire de l'application] ********************************************************************
+2026-01-26 19:19:41,849 p=29364 u=jimmy n=ansible INFO| changed: [app01]
+2026-01-26 19:19:41,852 p=29364 u=jimmy n=ansible INFO| TASK [app : Déployer l'application (serveur HTTP simple)] ************************************************************
+2026-01-26 19:19:41,993 p=29364 u=jimmy n=ansible ERROR| [ERROR]: Task failed: Syntax error in template: expected token 'end of print statement', got ':'
+
+Task failed.
+Origin: /Users/jimmy/git/slides/new_slidedev/ansible/exemples/04-projet-production/roles/app/tasks/main.yml:32:3
+
+30   tags: ['config']
+31
+32 - name: Déployer l'application (serveur HTTP simple)
+     ^ column 3
+
+<<< caused by >>>
+
+Syntax error in template: expected token 'end of print statement', got ':'
+Origin: /Users/jimmy/git/slides/new_slidedev/ansible/exemples/04-projet-production/roles/app/templates/app.py.j2
+
+
+2026-01-26 19:19:41,994 p=29364 u=jimmy n=ansible INFO| fatal: [app01]: FAILED! => {"changed": false, "msg": "Task failed: Syntax error in template: expected token 'end of print statement', got ':'"}
+2026-01-26 19:19:41,994 p=29364 u=jimmy n=ansible INFO| 	to retry, use: --limit @/Users/jimmy/.ansible-retry/deploy.retry
+
+2026-01-26 19:19:41,994 p=29364 u=jimmy n=ansible INFO| PLAY RECAP ***********************************************************************************************************
+2026-01-26 19:19:41,995 p=29364 u=jimmy n=ansible INFO| app01                      : ok=6    changed=3    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0   
+2026-01-26 19:22:23,799 p=32053 u=jimmy n=ansible INFO| PLAY [Déploiement application] ***************************************************************************************
+2026-01-26 19:22:23,807 p=32053 u=jimmy n=ansible INFO| TASK [Gathering Facts] ***********************************************************************************************
+2026-01-26 19:22:25,008 p=32053 u=jimmy n=ansible WARNING| [WARNING]: Host 'app01' is using the discovered Python interpreter at '/usr/bin/python3.10', but future installation of another Python interpreter could cause a different interpreter to be discovered. See https://docs.ansible.com/ansible-core/2.20/reference_appendices/interpreter_discovery.html for more information.
+
+2026-01-26 19:22:25,009 p=32053 u=jimmy n=ansible INFO| ok: [app01]
+2026-01-26 19:22:25,011 p=32053 u=jimmy n=ansible INFO| TASK [Vérifier la version à déployer] ********************************************************************************
+2026-01-26 19:22:25,029 p=32053 u=jimmy n=ansible INFO| ok: [app01] => {
+    "changed": false,
+    "msg": "All assertions passed"
+}
+2026-01-26 19:22:25,031 p=32053 u=jimmy n=ansible INFO| TASK [Afficher les informations de déploiement] **********************************************************************
+2026-01-26 19:22:25,055 p=32053 u=jimmy n=ansible INFO| ok: [app01] => {
+    "msg": "🚀 Déploiement de MonApp\n🏷️ Version: latest\n🌍 Environnement: staging\n📍 Serveurs: app01\n"
+}
+2026-01-26 19:22:25,057 p=32053 u=jimmy n=ansible INFO| TASK [app : Installer Python3 et pip] ********************************************************************************
+2026-01-26 19:22:29,295 p=32053 u=jimmy n=ansible INFO| ok: [app01]
+2026-01-26 19:22:29,298 p=32053 u=jimmy n=ansible INFO| TASK [app : Créer l'utilisateur de l'application] ********************************************************************
+2026-01-26 19:22:30,096 p=32053 u=jimmy n=ansible INFO| ok: [app01]
+2026-01-26 19:22:30,099 p=32053 u=jimmy n=ansible INFO| TASK [app : Créer le répertoire de l'application] ********************************************************************
+2026-01-26 19:22:30,513 p=32053 u=jimmy n=ansible INFO| ok: [app01]
+2026-01-26 19:22:30,516 p=32053 u=jimmy n=ansible INFO| TASK [app : Déployer l'application (serveur HTTP simple)] ************************************************************
+2026-01-26 19:22:31,249 p=32053 u=jimmy n=ansible INFO| changed: [app01]
+2026-01-26 19:22:31,251 p=32053 u=jimmy n=ansible INFO| TASK [app : Créer le fichier de service systemd] *********************************************************************
+2026-01-26 19:22:31,824 p=32053 u=jimmy n=ansible INFO| changed: [app01]
+2026-01-26 19:22:31,827 p=32053 u=jimmy n=ansible INFO| TASK [app : Démarrer l'application] **********************************************************************************
+2026-01-26 19:22:32,344 p=32053 u=jimmy n=ansible ERROR| [ERROR]: Task failed: Module failed: non-zero return code
+Origin: /Users/jimmy/git/slides/new_slidedev/ansible/exemples/04-projet-production/roles/app/tasks/main.yml:53:3
+
+51   tags: ['config']
+52
+53 - name: Démarrer l'application
+     ^ column 3
+
+
+2026-01-26 19:22:32,344 p=32053 u=jimmy n=ansible INFO| fatal: [app01]: FAILED! => {"changed": true, "cmd": "pkill -f \"python3 /opt/app/app.py\" || true\nnohup python3 /opt/app/app.py > /opt/app/app.log 2>&1 &\n", "delta": "0:00:00.004253", "end": "2026-01-26 18:22:32.318393", "msg": "non-zero return code", "rc": -15, "start": "2026-01-26 18:22:32.314140", "stderr": "", "stderr_lines": [], "stdout": "", "stdout_lines": []}
+2026-01-26 19:22:32,345 p=32053 u=jimmy n=ansible INFO| 	to retry, use: --limit @/Users/jimmy/.ansible-retry/deploy.retry
+
+2026-01-26 19:22:32,345 p=32053 u=jimmy n=ansible INFO| PLAY RECAP ***********************************************************************************************************
+2026-01-26 19:22:32,345 p=32053 u=jimmy n=ansible INFO| app01                      : ok=8    changed=2    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0   
+2026-01-26 19:24:35,158 p=33602 u=jimmy n=ansible INFO| PLAY [Déploiement application] ***************************************************************************************
+2026-01-26 19:24:35,165 p=33602 u=jimmy n=ansible INFO| TASK [Gathering Facts] ***********************************************************************************************
+2026-01-26 19:24:36,145 p=33602 u=jimmy n=ansible WARNING| [WARNING]: Host 'app01' is using the discovered Python interpreter at '/usr/bin/python3.10', but future installation of another Python interpreter could cause a different interpreter to be discovered. See https://docs.ansible.com/ansible-core/2.20/reference_appendices/interpreter_discovery.html for more information.
+
+2026-01-26 19:24:36,145 p=33602 u=jimmy n=ansible INFO| ok: [app01]
+2026-01-26 19:24:36,147 p=33602 u=jimmy n=ansible INFO| TASK [Vérifier la version à déployer] ********************************************************************************
+2026-01-26 19:24:36,165 p=33602 u=jimmy n=ansible INFO| ok: [app01] => {
+    "changed": false,
+    "msg": "All assertions passed"
+}
+2026-01-26 19:24:36,168 p=33602 u=jimmy n=ansible INFO| TASK [Afficher les informations de déploiement] **********************************************************************
+2026-01-26 19:24:36,193 p=33602 u=jimmy n=ansible INFO| ok: [app01] => {
+    "msg": "🚀 Déploiement de MonApp\n🏷️ Version: latest\n🌍 Environnement: staging\n📍 Serveurs: app01\n"
+}
+2026-01-26 19:24:36,195 p=33602 u=jimmy n=ansible INFO| TASK [app : Installer Python3 et pip] ********************************************************************************
+2026-01-26 19:24:40,201 p=33602 u=jimmy n=ansible INFO| ok: [app01]
+2026-01-26 19:24:40,204 p=33602 u=jimmy n=ansible INFO| TASK [app : Créer l'utilisateur de l'application] ********************************************************************
+2026-01-26 19:24:40,672 p=33602 u=jimmy n=ansible INFO| changed: [app01]
+2026-01-26 19:24:40,674 p=33602 u=jimmy n=ansible INFO| TASK [app : Créer le répertoire de l'application] ********************************************************************
+2026-01-26 19:24:41,079 p=33602 u=jimmy n=ansible INFO| ok: [app01]
+2026-01-26 19:24:41,082 p=33602 u=jimmy n=ansible INFO| TASK [app : Déployer l'application (serveur HTTP simple)] ************************************************************
+2026-01-26 19:24:41,668 p=33602 u=jimmy n=ansible INFO| ok: [app01]
+2026-01-26 19:24:41,670 p=33602 u=jimmy n=ansible INFO| TASK [app : Créer le fichier de service systemd] *********************************************************************
+2026-01-26 19:24:42,176 p=33602 u=jimmy n=ansible INFO| ok: [app01]
+2026-01-26 19:24:42,180 p=33602 u=jimmy n=ansible INFO| TASK [app : Arrêter l'application si elle tourne déjà] ***************************************************************
+2026-01-26 19:24:42,578 p=33602 u=jimmy n=ansible INFO| changed: [app01]
+2026-01-26 19:24:42,580 p=33602 u=jimmy n=ansible INFO| TASK [app : Démarrer l'application en arrière-plan] ******************************************************************
+2026-01-26 19:24:42,990 p=33602 u=jimmy n=ansible INFO| changed: [app01]
+2026-01-26 19:24:42,992 p=33602 u=jimmy n=ansible INFO| TASK [app : Attendre que l'application démarre] **********************************************************************
+2026-01-26 19:24:45,423 p=33602 u=jimmy n=ansible INFO| ok: [app01]
+2026-01-26 19:24:45,428 p=33602 u=jimmy n=ansible INFO| TASK [Vérifier que l'application répond] *****************************************************************************
+2026-01-26 19:24:45,855 p=33602 u=jimmy n=ansible INFO| ok: [app01]
+2026-01-26 19:24:45,857 p=33602 u=jimmy n=ansible INFO| TASK [Confirmer le déploiement] **************************************************************************************
+2026-01-26 19:24:45,871 p=33602 u=jimmy n=ansible INFO| ok: [app01] => {
+    "msg": "✅ Application déployée et fonctionnelle sur app01"
+}
+2026-01-26 19:24:45,872 p=33602 u=jimmy n=ansible INFO| PLAY RECAP ***********************************************************************************************************
+2026-01-26 19:24:45,872 p=33602 u=jimmy n=ansible INFO| app01                      : ok=13   changed=3    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   

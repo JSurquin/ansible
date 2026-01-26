@@ -1,53 +1,79 @@
 # Configuration Nginx générée par Ansible
-# Serveur: {{ inventory_hostname }} {# Nom du serveur depuis l'inventaire #}
-# Date: {{ ansible_date_time.date }} {{ ansible_date_time.time }} {# Date et heure de génération #}
+# Serveur: {{ inventory_hostname }}
+# Date: {{ ansible_facts['date_time']['date'] }} {{ ansible_facts['date_time']['time'] }}
 
-user www-data; {# Utilisateur sous lequel Nginx s'exécute #}
-worker_processes {{ nginx_worker_processes | default('auto') }}; {# Nombre de workers (auto par défaut) #}
-pid /run/nginx.pid; {# Fichier contenant le PID du processus principal #}
+# Utilisateur sous lequel Nginx s'exécute
+user www-data;
+# Nombre de workers (auto par défaut)
+worker_processes {{ nginx_worker_processes | default('auto') }};
+# Fichier contenant le PID du processus principal
+pid /run/nginx.pid;
 
-events { {# Bloc de configuration des événements #}
-    worker_connections {{ nginx_config.worker_connections }}; {# Connexions simultanées par worker #}
-} {# Fin du bloc events #}
+# Bloc de configuration des événements
+events {
+    # Connexions simultanées par worker
+    worker_connections {{ nginx_config.worker_connections }};
+}
 
-http { {# Bloc de configuration HTTP principal #}
-    # Configuration de base {# Section : paramètres de base #}
-    sendfile on; {# Optimisation : utiliser sendfile() pour l'envoi de fichiers #}
-    tcp_nopush on; {# Optimisation : envoyer headers et fichier ensemble #}
-    tcp_nodelay on; {# Optimisation : désactiver l'algorithme de Nagle #}
-    keepalive_timeout 65; {# Durée de vie des connexions persistantes en secondes #}
-    types_hash_max_size 2048; {# Taille max de la table de hachage des types MIME #}
-    client_max_body_size {{ nginx_config.client_max_body_size }}; {# Taille max des requêtes (uploads) #}
+# Bloc de configuration HTTP principal
+http {
+    # Configuration de base - paramètres de base
+    # Optimisation : utiliser sendfile() pour l'envoi de fichiers
+    sendfile on;
+    # Optimisation : envoyer headers et fichier ensemble
+    tcp_nopush on;
+    # Optimisation : désactiver l'algorithme de Nagle
+    tcp_nodelay on;
+    # Durée de vie des connexions persistantes en secondes
+    keepalive_timeout 65;
+    # Taille max de la table de hachage des types MIME
+    types_hash_max_size 2048;
+    # Taille max des requêtes (uploads)
+    client_max_body_size {{ nginx_config.client_max_body_size }};
 
-    # MIME types {# Section : types de contenu #}
-    include /etc/nginx/mime.types; {# Inclure la liste des types MIME standards #}
-    default_type application/octet-stream; {# Type par défaut pour fichiers inconnus #}
+    # MIME types - inclure la liste des types MIME standards
+    include /etc/nginx/mime.types;
+    # Type par défaut pour fichiers inconnus
+    default_type application/octet-stream;
 
-    # Logs {# Section : fichiers de logs #}
-    access_log /var/log/nginx/access.log; {# Log des requêtes HTTP #}
-    error_log /var/log/nginx/error.log; {# Log des erreurs #}
+    # Logs
+    # Log des requêtes HTTP
+    access_log /var/log/nginx/access.log;
+    # Log des erreurs
+    error_log /var/log/nginx/error.log;
 
-    # Gzip {# Section : compression des réponses #}
-    gzip on; {# Activer la compression gzip #}
-    gzip_disable "msie6"; {# Désactiver pour Internet Explorer 6 (bug connu) #}
+    # Compression gzip
+    # Activer la compression gzip
+    gzip on;
+    # Désactiver pour Internet Explorer 6 (bug connu)
+    gzip_disable "msie6";
 
-    # Virtual Host {# Section : configuration du vhost #}
-    server { {# Bloc de configuration du serveur virtuel #}
-        listen {{ nginx_config.port }}; {# Port d'écoute HTTP #}
-        server_name {{ inventory_hostname }}; {# Nom de domaine du serveur #}
+    # Virtual Host - configuration du vhost
+    server {
+        # Port d'écoute HTTP
+        listen {{ nginx_config.port }};
+        # Nom de domaine du serveur
+        server_name {{ inventory_hostname }};
 
-        root /var/www/html; {# Répertoire racine des fichiers du site #}
-        index index.html; {# Fichier index par défaut #}
+        # Répertoire racine des fichiers du site
+        root /var/www/html;
+        # Fichier index par défaut
+        index index.html;
 
-        location / { {# Configuration pour la racine du site #}
-            try_files $uri $uri/ =404; {# Essayer fichier, puis répertoire, sinon 404 #}
-        } {# Fin du bloc location / #}
+        # Configuration pour la racine du site
+        location / {
+            # Essayer fichier, puis répertoire, sinon 404
+            try_files $uri $uri/ =404;
+        }
 
-        # Health check {# Section : endpoint de vérification santé #}
-        location /health { {# Configuration pour l'endpoint /health #}
-            access_log off; {# Ne pas logger ces requêtes #}
-            return 200 "OK"; {# Retourner code 200 avec message "OK" #}
-            add_header Content-Type text/plain; {# Type de contenu : texte brut #}
-        } {# Fin du bloc location /health #}
-    } {# Fin du bloc server #}
-} {# Fin du bloc http #}
+        # Health check - endpoint de vérification santé
+        location /health {
+            # Ne pas logger ces requêtes
+            access_log off;
+            # Retourner code 200 avec message "OK"
+            return 200 "OK";
+            # Type de contenu : texte brut
+            add_header Content-Type text/plain;
+        }
+    }
+}

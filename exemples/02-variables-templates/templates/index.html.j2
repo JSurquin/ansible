@@ -1,90 +1,91 @@
-<!DOCTYPE html> {# Déclaration du type de document HTML5 #}
-<html lang="fr"> {# Balise HTML avec langue française #}
-<head> {# Section HEAD avec métadonnées #}
-    <meta charset="UTF-8"> {# Encodage des caractères UTF-8 #}
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> {# Configuration responsive #}
-    <title>{{ app_name }}</title> {# Titre de la page depuis la variable #}
-    <style> {# Début du bloc CSS #}
-        body { {# Styles pour le corps de la page #}
-            font-family: Arial, sans-serif; {# Police de caractères #}
-            max-width: 800px; {# Largeur maximale du contenu #}
-            margin: 50px auto; {# Centrer le contenu avec marges #}
-            padding: 20px; {# Espacement interne #}
-            background-color: {{ env_colors[app_environment] | default('#f0f0f0') }}; {# Couleur de fond selon environnement #}
-        } {# Fin des styles body #}
-        .container { {# Styles pour le conteneur principal #}
-            background: white; {# Fond blanc #}
-            padding: 30px; {# Espacement interne #}
-            border-radius: 10px; {# Coins arrondis #}
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1); {# Ombre portée #}
-        } {# Fin des styles container #}
-        h1 { {# Styles pour le titre principal #}
-            color: #333; {# Couleur du texte #}
-            border-bottom: 3px solid #4CAF50; {# Bordure inférieure verte #}
-            padding-bottom: 10px; {# Espacement sous le texte #}
-        } {# Fin des styles h1 #}
-        .info { {# Styles pour les blocs d'information #}
-            background: #f9f9f9; {# Fond gris clair #}
-            padding: 15px; {# Espacement interne #}
-            border-left: 4px solid #4CAF50; {# Bordure gauche verte #}
-            margin: 20px 0; {# Marges verticales #}
-        } {# Fin des styles info #}
-        .info-item { {# Styles pour chaque ligne d'information #}
-            margin: 5px 0; {# Marges verticales #}
-        } {# Fin des styles info-item #}
-        .label { {# Styles pour les labels #}
-            font-weight: bold; {# Texte en gras #}
-            color: #555; {# Couleur grise #}
-        } {# Fin des styles label #}
-        .footer { {# Styles pour le pied de page #}
-            margin-top: 30px; {# Marge supérieure #}
-            padding-top: 20px; {# Espacement supérieur #}
-            border-top: 1px solid #ddd; {# Bordure supérieure #}
-            text-align: center; {# Texte centré #}
-            color: #777; {# Couleur grise #}
-        } {# Fin des styles footer #}
-    </style> {# Fin du bloc CSS #}
-</head> {# Fin de la section HEAD #}
-<body> {# Début du corps de la page #}
-    <div class="container"> {# Conteneur principal #}
-        <h1>🚀 {{ app_name }}</h1> {# Titre avec nom de l'application #}
+<!DOCTYPE html>
+<!-- Page générée par Ansible -->
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ app_name }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: {{ env_colors[app_environment] | default('#f0f0f0') }};
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        .info {
+            background: #f9f9f9;
+            padding: 15px;
+            border-left: 4px solid #4CAF50;
+            margin: 20px 0;
+        }
+        .info-item {
+            margin: 5px 0;
+        }
+        .label {
+            font-weight: bold;
+            color: #555;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            text-align: center;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 {{ app_name }}</h1>
         
-        <div class="info"> {# Premier bloc d'informations #}
-            <div class="info-item"> {# Ligne : nom du serveur #}
-                <span class="label">🖥️ Serveur:</span> {{ inventory_hostname }} {# Nom depuis inventaire #}
-            </div> {# Fin ligne serveur #}
-            <div class="info-item"> {# Ligne : adresse IP #}
-                <span class="label">📍 Adresse IP:</span> {{ ansible_default_ipv4.address | default('N/A') }} {# IP ou N/A #}
-            </div> {# Fin ligne IP #}
-            <div class="info-item"> {# Ligne : version #}
-                <span class="label">🏷️ Version:</span> {{ app_version }} {# Version de l'application #}
-            </div> {# Fin ligne version #}
-            <div class="info-item"> {# Ligne : environnement #}
-                <span class="label">🌍 Environnement:</span> {{ app_environment }} {# Nom de l'environnement #}
-            </div> {# Fin ligne environnement #}
-            <div class="info-item"> {# Ligne : rôle du serveur #}
-                <span class="label">🎭 Rôle:</span> {{ server_role | default('N/A') }} {# Rôle ou N/A #}
-            </div> {# Fin ligne rôle #}
-        </div> {# Fin du premier bloc info #}
+        <div class="info">
+            <div class="info-item">
+                <span class="label">🖥️ Serveur:</span> {{ inventory_hostname }}
+            </div>
+            <div class="info-item">
+                <span class="label">📍 Adresse IP:</span> {{ ansible_facts['default_ipv4']['address'] | default('N/A') }}
+            </div>
+            <div class="info-item">
+                <span class="label">🏷️ Version:</span> {{ app_version }}
+            </div>
+            <div class="info-item">
+                <span class="label">🌍 Environnement:</span> {{ app_environment }}
+            </div>
+            <div class="info-item">
+                <span class="label">🎭 Rôle:</span> {{ server_role | default('N/A') }}
+            </div>
+        </div>
 
-        <div class="info"> {# Deuxième bloc : informations système #}
-            <h3>📊 Informations système</h3> {# Sous-titre #}
-            <div class="info-item"> {# Ligne : distribution OS #}
-                <span class="label">💾 Distribution:</span> {{ ansible_distribution }} {{ ansible_distribution_version }} {# Nom et version de l'OS #}
-            </div> {# Fin ligne distribution #}
-            <div class="info-item"> {# Ligne : workers Nginx #}
-                <span class="label">🔧 Workers Nginx:</span> {{ nginx_worker_processes }} {# Nombre de workers #}
-            </div> {# Fin ligne workers #}
-            <div class="info-item"> {# Ligne : date de déploiement #}
-                <span class="label">📅 Déployé le:</span> {{ ansible_date_time.date }} à {{ ansible_date_time.time }} {# Date et heure #}
-            </div> {# Fin ligne date #}
-        </div> {# Fin du deuxième bloc info #}
+        <div class="info">
+            <h3>📊 Informations système</h3>
+            <div class="info-item">
+                <span class="label">💾 Distribution:</span> {{ ansible_facts['distribution'] }} {{ ansible_facts['distribution_version'] }}
+            </div>
+            <div class="info-item">
+                <span class="label">🔧 Workers Nginx:</span> {{ nginx_worker_processes }}
+            </div>
+            <div class="info-item">
+                <span class="label">📅 Déployé le:</span> {{ ansible_facts['date_time']['date'] }} à {{ ansible_facts['date_time']['time'] }}
+            </div>
+        </div>
 
-        <div class="footer"> {# Pied de page #}
-            <p>Déployé avec ❤️ par <strong>{{ company.name }}</strong></p> {# Nom de l'entreprise #}
-            <p><a href="{{ company.url }}">{{ company.url }}</a></p> {# Lien vers le site #}
-            <p>Support: {{ company.support_email }}</p> {# Email de support #}
-        </div> {# Fin du pied de page #}
-    </div> {# Fin du conteneur principal #}
-</body> {# Fin du corps #}
-</html> {# Fin du document HTML #}
+        <div class="footer">
+            <p>Déployé avec ❤️ par <strong>{{ company.name }}</strong></p>
+            <p><a href="{{ company.url }}">{{ company.url }}</a></p>
+            <p>Support: {{ company.support_email }}</p>
+        </div>
+    </div>
+</body>
+</html>
