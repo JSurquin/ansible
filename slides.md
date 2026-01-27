@@ -688,8 +688,6 @@ all:
 
 ---
 
----
-
 ## 3. Playbooks dédiés
 
 ### Apache2 (`playbooks/play-apache2.yml`)
@@ -913,8 +911,6 @@ ansible-playbook -i inventories/apache2.yml playbooks/play-apache2.yml
 - **INDEX.md** : Vue d'ensemble et FAQ
 - **test.sh** : Script de test automatique
 
-🎯 **23 fichiers créés** - Solution complète et testée !
-
 ---
 
 ## 💡 Concepts Ansible 2026 illustrés
@@ -938,10 +934,8 @@ ansible-playbook -i inventories/apache2.yml playbooks/play-apache2.yml
 
 1. Ajouter un 3ème serveur Apache
 2. Créer un rôle MySQL
-3. Implémenter des tags pour exécution sélective
-4. Ajouter Ansible Vault pour les secrets
-5. Créer un playbook qui déploie tout en une fois
-6. Ajouter des tests avec Molecule
+3. Ajouter Ansible Vault pour les secrets
+4. Créer un playbook qui déploie tout en une fois
 
 ---
 
