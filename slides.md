@@ -581,3 +581,415 @@ roles/
     └── vars/
         └── main.yml
 ```
+
+---
+routeAlias: 'correction-exercice-groupe'
+---
+
+# 📝 Correction de l'exercice
+
+### La solution complète est disponible dans le dossier `correction/`
+
+---
+
+## 🎯 Démarrage rapide de la correction
+
+### En 4 commandes
+
+```bash
+# 1. Se placer dans le dossier correction
+cd correction
+
+# 2. Lancer l'infrastructure (4 containers)
+docker-compose up -d
+
+# 3. Attendre que les containers soient prêts
+sleep 5
+
+# 4. Lancer le script de test automatique
+./test.sh
+```
+
+---
+
+## 📁 Structure de la correction
+
+```bash
+correction/
+├── ansible.cfg                 # Config Ansible (chemins)
+├── group_vars/all.yml          # Variables globales (doc)
+├── inventories/
+│   ├── apache2.yml             # 2 serveurs Apache
+│   └── nginx.yml               # 2 serveurs Nginx
+├── playbooks/
+│   ├── play-apache2.yml        # Playbook Apache
+│   └── play-nginx.yml          # Playbook Nginx
+├── roles/
+│   ├── apache2/                # Rôle complet Apache2
+│   └── nginx/                  # Rôle complet Nginx
+├── docker-compose.yml          # Infrastructure de test
+└── test.sh                     # Script de test auto
+```
+
+---
+
+## 🔑 Points clés de la solution
+
+### 1. Configuration Ansible (`ansible.cfg`)
+
+```ini
+[defaults]
+roles_path = ./roles
+inventory = ./inventories
+host_key_checking = False
+stdout_callback = default
+result_format = yaml
+```
+
+---
+
+### 2. Inventaires avec connexion Docker
+
+### Apache2 (`inventories/apache2.yml`)
+
+```yaml
+all:
+  vars:
+    ansible_connection: docker
+  children:
+    apache_servers:
+      hosts:
+        apache1:
+          ansible_host: apache-server-1
+          server_id: 1
+        apache2:
+          ansible_host: apache-server-2
+          server_id: 2
+```
+
+---
+
+### Nginx (`inventories/nginx.yml`)
+
+```yaml
+all:
+  vars:
+    ansible_connection: docker
+  children:
+    nginx_servers:
+      hosts:
+        nginx1:
+          ansible_host: nginx-server-1
+          server_id: 1
+        nginx2:
+          ansible_host: nginx-server-2
+          server_id: 2
+```
+
+---
+
+---
+
+## 3. Playbooks dédiés
+
+### Apache2 (`playbooks/play-apache2.yml`)
+
+```yaml
+---
+- name: Configuration des serveurs Apache2
+  hosts: apache_servers
+  become: yes
+  roles:
+    - apache2
+```
+
+---
+
+### Nginx (`playbooks/play-nginx.yml`)
+
+```yaml
+---
+- name: Configuration des serveurs Nginx
+  hosts: nginx_servers
+  become: yes
+  roles:
+    - nginx
+```
+
+---
+
+## 4. Rôle Apache2 - Tasks
+
+### `roles/apache2/tasks/main.yml`
+
+```yaml
+---
+- name: Mettre à jour le cache APT
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Installer Apache2
+  apt:
+    name: "{{ apache_package }}"
+    state: present
+
+- name: Créer le répertoire du site web
+  file:
+    path: "{{ apache_document_root }}"
+    state: directory
+    mode: '0755'
+```
+
+---
+
+### `roles/apache2/tasks/main.yml` (suite)
+
+```yaml
+- name: Déployer la configuration Apache2
+  template:
+    src: apache2.conf.j2
+    dest: "{{ apache_config_path }}"
+    mode: '0644'
+  notify: restart apache2
+
+- name: Déployer la page d'accueil
+  template:
+    src: index.html.j2
+    dest: "{{ apache_document_root }}/index.html"
+    mode: '0644'
+
+- name: S'assurer qu'Apache2 est démarré
+  service:
+    name: "{{ apache_service }}"
+    state: started
+    enabled: yes
+```
+
+---
+
+## 5. Rôle Apache2 - Handlers
+
+### `roles/apache2/handlers/main.yml`
+
+```yaml
+---
+- name: restart apache2
+  service:
+    name: "{{ apache_service }}"
+    state: restarted
+
+- name: reload apache2
+  service:
+    name: "{{ apache_service }}"
+    state: reloaded
+```
+
+---
+
+## 6. Rôle Apache2 - Variables
+
+### `roles/apache2/vars/main.yml`
+
+```yaml
+---
+apache_package: apache2
+apache_service: apache2
+apache_document_root: /var/www/html
+apache_config_path: /etc/apache2/sites-available/000-default.conf
+apache_server_name: apache.local
+apache_port: 80
+admin_email: admin@example.com
+```
+
+💡 **Les variables sont dans les rôles pour la portabilité**
+
+---
+
+## 7. Rôle Apache2 - Template Config
+
+### `roles/apache2/templates/apache2.conf.j2`
+
+```apache
+<VirtualHost *:{{ apache_port }}>
+    ServerAdmin {{ admin_email }}
+    ServerName {{ apache_server_name }}
+    DocumentRoot {{ apache_document_root }}
+
+    <Directory {{ apache_document_root }}>
+        Options Indexes FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
+
+    # Configuration générée par Ansible
+    # Server ID: {{ server_id }}
+    # Hostname: {{ ansible_facts['hostname'] }}
+</VirtualHost>
+```
+
+💡 **Syntaxe Ansible 2026** : `ansible_facts['hostname']`
+
+---
+
+## 8. Structure identique pour Nginx
+
+### Le rôle Nginx suit la même organisation :
+
+- `roles/nginx/tasks/main.yml` - Installation et config
+- `roles/nginx/handlers/main.yml` - Restart/reload
+- `roles/nginx/vars/main.yml` - Variables spécifiques
+- `roles/nginx/templates/nginx.conf.j2` - Config Nginx
+- `roles/nginx/templates/index.html.j2` - Page d'accueil
+
+---
+
+## 🧪 Tester la correction
+
+### Commandes de test
+
+```bash
+# Tester la connexion
+ansible -i inventories/apache2.yml all -m ping
+ansible -i inventories/nginx.yml all -m ping
+
+# Exécuter les playbooks
+ansible-playbook -i inventories/apache2.yml playbooks/play-apache2.yml
+ansible-playbook -i inventories/nginx.yml playbooks/play-nginx.yml
+
+# Vérifier les services
+docker exec apache-server-1 service apache2 status
+docker exec nginx-server-1 service nginx status
+```
+
+---
+
+## 🌐 Accès aux serveurs
+
+### Depuis votre navigateur
+
+- **Nginx 1** : http://localhost:8080
+- **Nginx 2** : http://localhost:8081
+
+### Depuis les containers
+
+```bash
+# Apache
+docker exec apache-server-1 curl http://localhost
+
+# Nginx
+docker exec nginx-server-1 curl http://localhost:8080
+```
+
+---
+
+## ✅ Test d'idempotence
+
+### Exécuter deux fois le même playbook
+
+```bash
+# Première exécution (fait des changements)
+ansible-playbook -i inventories/apache2.yml playbooks/play-apache2.yml
+
+# Deuxième exécution (ne doit rien changer)
+ansible-playbook -i inventories/apache2.yml playbooks/play-apache2.yml
+```
+
+**Résultat attendu** : `changed=0` ✅
+
+---
+
+## 📚 Fichiers de documentation
+
+### Dans le dossier `correction/`
+
+- **QUICKSTART.md** : Démarrage en 2 minutes
+- **README.md** : Documentation complète
+- **COMMANDS.md** : Toutes les commandes utiles
+- **EXPLICATIONS.md** : Concepts détaillés et architecture
+- **INDEX.md** : Vue d'ensemble et FAQ
+- **test.sh** : Script de test automatique
+
+🎯 **23 fichiers créés** - Solution complète et testée !
+
+---
+
+## 💡 Concepts Ansible 2026 illustrés
+
+### Cette correction démontre :
+
+1. ✅ **ansible.cfg** : Configuration du projet (chemins, options)
+2. ✅ **Inventaires** : Organisation avec `ansible_connection: docker`
+3. ✅ **Playbooks** : Orchestration des déploiements
+4. ✅ **Rôles** : Variables encapsulées et réutilisables
+5. ✅ **Templates** : Nouvelle syntaxe `ansible_facts['hostname']`
+6. ✅ **Handlers** : Gestion intelligente des redémarrages
+7. ✅ **Idempotence** : Exécutions répétées sans effets de bord
+8. ✅ **Séparation des responsabilités** : Clean Architecture
+
+---
+
+## 🎓 Pour aller plus loin
+
+### Exercices complémentaires
+
+1. Ajouter un 3ème serveur Apache
+2. Créer un rôle MySQL
+3. Implémenter des tags pour exécution sélective
+4. Ajouter Ansible Vault pour les secrets
+5. Créer un playbook qui déploie tout en une fois
+6. Ajouter des tests avec Molecule
+
+---
+
+## 🎓 Points importants pour 2026
+
+### Nouveautés appliquées :
+
+1. **ansible.cfg** : Configuration du projet
+   ```ini
+   roles_path = ./roles
+   result_format = yaml
+   ```
+
+2. **ansible_facts** : Nouvelle syntaxe obligatoire
+   ```jinja
+   ❌ {{ ansible_hostname }}
+   ✅ {{ ansible_facts['hostname'] }}
+   ```
+
+3. **Variables encapsulées** : Dans `roles/*/vars/main.yml`
+
+4. **ansible_connection** : Directement dans les inventaires
+
+---
+
+## 📝 Récapitulatif des fichiers clés
+
+### 3 fichiers essentiels à comprendre :
+
+1. **ansible.cfg** → Configuration Ansible
+2. **inventories/*.yml** → Serveurs + `ansible_connection`
+3. **roles/*/vars/main.yml** → Variables du rôle
+
+### Les templates utilisent :
+- Variables : `{{ apache_port }}`
+- Facts : `{{ ansible_facts['hostname'] }}`
+- Variables d'inventaire : `{{ server_id }}`
+
+---
+
+## 🔧 Nettoyage
+
+### Arrêter l'infrastructure
+
+```bash
+# Depuis le dossier correction/
+docker-compose down
+
+# Avec suppression des volumes
+docker-compose down -v
+```

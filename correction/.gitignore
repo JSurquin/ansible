@@ -1,0 +1,32 @@
+# Fichiers et dossiers à ignorer dans la correction
+
+# Logs Ansible
+*.retry
+*.log
+
+# Cache Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environnements virtuels
+venv/
+env/
+ENV/
+
+# Fichiers temporaires
+.tmp/
+tmp/
+*.tmp
+*.bak
+*.swp
+*~
+
+# IDEs
+.vscode/
+.idea/
+*.sublime-*
+
+# OS
+.DS_Store
+Thumbs.db

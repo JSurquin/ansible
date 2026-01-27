@@ -1,0 +1,35 @@
+---
+- name: Mettre à jour le cache APT
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Installer Nginx
+  apt:
+    name: "{{ nginx_package }}"
+    state: present
+
+- name: Créer le répertoire du site web
+  file:
+    path: "{{ nginx_document_root }}"
+    state: directory
+    mode: '0755'
+
+- name: Déployer la configuration Nginx
+  template:
+    src: nginx.conf.j2
+    dest: "{{ nginx_config_path }}"
+    mode: '0644'
+  notify: restart nginx
+
+- name: Déployer la page d'accueil
+  template:
+    src: index.html.j2
+    dest: "{{ nginx_document_root }}/index.html"
+    mode: '0644'
+
+- name: S'assurer que Nginx est démarré et activé
+  service:
+    name: "{{ nginx_service }}"
+    state: started
+    enabled: yes

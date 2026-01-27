@@ -1,0 +1,12 @@
+---
+# Variables globales pour tous les serveurs
+# 
+# Note : Les variables spécifiques sont maintenant définies dans :
+#   - ansible_connection : Défini dans chaque inventaire (inventories/*.yml)
+#   - Ports et config : Définis dans les vars de chaque rôle (roles/*/vars/main.yml)
+#
+# Ce fichier peut contenir des variables vraiment globales à tous les environnements
+# Par exemple :
+#   company_name: "Mon Entreprise"
+#   timezone: "Europe/Paris"
+#   ntp_server: "pool.ntp.org"

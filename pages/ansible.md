@@ -750,6 +750,61 @@ Définir explicitement `ansible_python_interpreter` évite la découverte automa
 `ansible_connection: ssh` est le type par défaut pour les connexions distantes.
 
 ---
+
+# 📄 Le fichier ansible.cfg (Configuration)
+
+### Configurer Ansible pour votre projet
+
+Le fichier `ansible.cfg` permet de définir les paramètres par défaut :
+
+```ini
+[defaults]
+# Chemin vers les rôles
+roles_path = ./roles
+
+# Inventaire par défaut
+inventory = ./inventory.yml
+
+# Désactiver la vérification SSH (pratique pour Docker/tests)
+host_key_checking = False
+
+# Affichage coloré
+force_color = True
+
+# Ne pas créer de fichiers .retry
+retry_files_enabled = False
+
+# Format d'affichage (Ansible 2.13+)
+stdout_callback = yaml
+```
+
+---
+
+# 📍 Où placer ansible.cfg ?
+
+### Ansible cherche dans cet ordre :
+
+```
+1. Variable d'environnement ANSIBLE_CONFIG
+   ↓
+2. ./ansible.cfg (répertoire courant) ← ✅ RECOMMANDÉ
+   ↓
+3. ~/.ansible.cfg (home utilisateur)
+   ↓
+4. /etc/ansible/ansible.cfg (système)
+```
+
+**Bonne pratique** : Créer un `ansible.cfg` à la racine de votre projet !
+
+```
+projet-ansible/
+├── ansible.cfg        # ← Configuration locale du projet
+├── inventory.yml      # ← Défini dans ansible.cfg
+├── playbook.yml
+└── roles/
+```
+
+---
 layout: new-section
 routeAlias: 'playbooks'
 ---
@@ -1663,6 +1718,21 @@ routeAlias: 'handlers'
 
 ---
 
+# 🎯 Avant de commencer : Segmentation & Organisation
+
+### Handlers et Rôles = Organisation des tâches
+
+**Concept clé** : Les handlers et les rôles ne sont pas des concepts magiques !
+
+- 📦 **Segmentation** : Découper et organiser vos tâches de manière logique
+- 🔄 **Toujours des tâches** : Au final, ce sont juste des tâches Ansible rangées différemment
+- 📁 **Organisation** : Structure pour gérer la complexité
+- 🧩 **Modularité** : Réutiliser et maintenir plus facilement
+
+**Pensez-y comme** : Ranger votre code dans des dossiers/fichiers plutôt que tout mettre dans un seul fichier de 10 000 lignes !
+
+---
+
 # Qu'est-ce qu'un Handler ? 🎯
 
 ### Les actions déclenchées automatiquement
@@ -1783,6 +1853,52 @@ handlers:
 
 ---
 
+# 📁 Où ranger les Handlers ?
+
+### Handlers : C'est juste des tâches déclenchées conditionnellement !
+
+```
+projet-ansible/
+│
+├── playbook.yml          # Playbook principal
+│   ├── tasks:            # ← Vos tâches normales
+│   └── handlers:         # ← Vos tâches "réactives"
+│
+└── inventory.ini
+```
+
+**Simple** : Les handlers sont dans la même structure que les tasks, juste dans une section différente !
+
+---
+
+# 📁 Handlers dans un fichier séparé
+
+### Pour les gros projets
+
+```
+projet-ansible/
+│
+├── playbook.yml
+├── handlers/
+│   ├── main.yml          # Handlers principaux
+│   └── docker.yml        # Handlers Docker
+│
+└── tasks/
+    └── setup.yml
+```
+
+```yaml
+# playbook.yml
+---
+- hosts: all
+  tasks:
+    - include_tasks: tasks/setup.yml
+  handlers:
+    - include: handlers/main.yml
+```
+
+---
+
 # ✅ Mini-QCM : Module 9 - Handlers
 
 **Question 1** : Quand un handler est-il exécuté ?
@@ -1865,6 +1981,154 @@ Un **rôle** est un ensemble organisé de tâches réutilisables :
 
 ---
 
+# 🧠 Rôles = Segmentation avancée des tâches
+
+### Concept fondamental
+
+**Un rôle n'est rien d'autre qu'une collection de tâches organisées !**
+
+```
+Playbook simple (tout mélangé)
+    ↓
+  Tasks dispersées
+    ↓
+Playbook avec rôles (organisé)
+    ↓
+  Tasks rangées par fonction
+```
+
+**Pourquoi ?** Imaginez un playbook de 500 lignes... impossible à maintenir !
+
+**Solution** : Découper en rôles (docker, nginx, app, monitoring...)
+
+---
+
+# 📁 Structure complète d'un Rôle
+
+### Le rangement standardisé
+
+```
+roles/
+└── nom_du_role/           # ← Le nom du dossier = nom du rôle !
+    ├── tasks/             # ← VOS TÂCHES (obligatoire)
+    │   └── main.yml       #    Point d'entrée
+    ├── handlers/          # ← VOS HANDLERS (optionnel)
+    │   └── main.yml       #    Réactions aux changements
+    ├── templates/         # ← VOS TEMPLATES Jinja2 (optionnel)
+    │   └── config.j2      #    Fichiers de config dynamiques
+    ├── files/             # ← FICHIERS STATIQUES (optionnel)
+    │   └── script.sh      #    Fichiers à copier tels quels
+    ├── vars/              # ← VARIABLES (optionnel)
+    │   └── main.yml       #    Variables du rôle
+    ├── defaults/          # ← VARIABLES PAR DÉFAUT (optionnel)
+    │   └── main.yml       #    Valeurs par défaut
+    └── meta/              # ← MÉTADONNÉES (optionnel)
+        └── main.yml       #    Dépendances, infos
+```
+
+---
+
+# 📁 Structure minimale vs complète
+
+### Ce qui est VRAIMENT obligatoire
+
+**Minimal** (fonctionnel) :
+```
+roles/nginx/
+└── tasks/
+    └── main.yml           # ← Suffit pour un rôle fonctionnel !
+```
+
+**Complet** (production) :
+```
+roles/nginx/
+├── tasks/main.yml         # ← Tâches d'installation
+├── handlers/main.yml      # ← Redémarrage nginx
+├── templates/nginx.conf.j2 # ← Config dynamique
+├── files/index.html       # ← Page par défaut
+├── vars/main.yml          # ← Variables
+└── defaults/main.yml      # ← Valeurs par défaut
+```
+
+**Règle** : Commencez simple, ajoutez ce dont vous avez besoin !
+
+---
+
+# 📦 Exemple concret : Projet multi-rôles
+
+```
+projet-ansible/
+│
+├── playbook.yml           # Orchestrateur principal
+├── inventory.yml          # Vos serveurs
+│
+└── roles/                 # ← Tous vos rôles ici
+    ├── common/            # Rôle 1 : Config de base
+    │   ├── tasks/
+    │   │   └── main.yml   # Install packages de base
+    │   └── handlers/
+    │       └── main.yml   # Restart services
+    │
+    ├── docker/            # Rôle 2 : Docker
+    │   ├── tasks/
+    │   │   └── main.yml   # Install Docker
+    │   ├── templates/
+    │   │   └── daemon.json.j2
+    │   └── handlers/
+    │       └── main.yml   # Restart docker
+    │
+    └── webapp/            # Rôle 3 : Application
+        ├── tasks/
+        │   └── main.yml   # Deploy app
+        ├── templates/
+        │   └── app.conf.j2
+        └── files/
+            └── deploy.sh
+```
+
+---
+
+# 📝 Contenu réel : tasks vs handlers
+
+### Même syntaxe, usage différent !
+
+**roles/docker/tasks/main.yml** (tâches normales)
+```yaml
+---
+- name: Installation Docker
+  apt:
+    name: docker.io
+    state: present
+
+- name: Configuration Docker daemon
+  template:
+    src: daemon.json.j2
+    dest: /etc/docker/daemon.json
+  notify: restart docker    # ← Déclenche le handler
+```
+
+---
+
+# 📝 Contenu réel : tasks vs handlers (suite)
+
+**roles/docker/handlers/main.yml** (tâches réactives)
+```yaml
+---
+- name: restart docker     # ← MÊME syntaxe qu'une task !
+  systemd:
+    name: docker
+    state: restarted
+
+- name: reload docker
+  systemd:
+    name: docker
+    state: reloaded
+```
+
+**La seule différence** : Les handlers sont dans `handlers/` et s'exécutent seulement si notifiés !
+
+---
+
 # Rôles : Réutilisabilité 📦
 
 ### Structure modulaire
@@ -1886,6 +2150,48 @@ Un **rôle** est un ensemble organisé de tâches réutilisables :
 
 ---
 
+# 🔄 Du Playbook monolithique aux Rôles
+
+### Transformation d'un gros playbook
+
+**AVANT** : Tout dans un seul fichier (difficile à maintenir)
+```yaml
+# playbook-monolithique.yml (200 lignes)
+---
+- hosts: all
+  tasks:
+    - name: Install Docker
+      apt: name=docker.io state=present
+    - name: Copy Docker daemon config
+      template: src=daemon.json.j2 dest=/etc/docker/daemon.json
+    - name: Install Nginx
+      apt: name=nginx state=present
+    - name: Copy Nginx config
+      template: src=nginx.conf.j2 dest=/etc/nginx/nginx.conf
+    # ... 50 autres tâches ...
+```
+
+---
+
+# 🔄 Du Playbook monolithique aux Rôles (suite)
+
+**APRÈS** : Organisé en rôles (clair et maintenable)
+```yaml
+# playbook.yml (10 lignes)
+---
+- name: Setup infrastructure
+  hosts: all
+  become: true
+  roles:
+    - docker    # ← Toutes les tâches Docker
+    - nginx     # ← Toutes les tâches Nginx
+    - app       # ← Toutes les tâches App
+```
+
+**Résultat** : Même exécution, mais code organisé !
+
+---
+
 # Utilisation des rôles
 
 ```yaml
@@ -1900,6 +2206,11 @@ Un **rôle** est un ensemble organisé de tâches réutilisables :
     - nginx
     - {role: app, app_version: 'v2.0.0'}
 ```
+
+**Ce qui se passe** : Ansible exécute automatiquement :
+1. `roles/docker/tasks/main.yml`
+2. `roles/nginx/tasks/main.yml`
+3. `roles/app/tasks/main.yml` (avec la variable app_version)
 
 ---
 
@@ -1966,6 +2277,62 @@ Tout ça est informatif, pas structurel.
 > **1 dossier = 1 rôle = 1 nom**
 
 Le système de fichiers détermine le nom, pas le contenu.
+
+---
+
+# 🔑 Concept clé : Tasks vs Handlers dans un rôle
+
+### C'est toujours des tâches !
+
+```
+roles/nginx/
+├── tasks/main.yml         # ← Tâches "normales"
+│   - Install nginx
+│   - Copy config
+│   - Enable service
+│
+└── handlers/main.yml      # ← Tâches "réactives"
+    - Restart nginx        # ← MÊME SYNTAXE qu'une task !
+    - Reload nginx         # ← MÊME CHOSE techniquement !
+```
+
+**La seule différence** : Les handlers s'exécutent seulement quand notifiés !
+
+---
+
+# 💡 Visualiser la segmentation complète
+
+### Du plus simple au plus organisé
+
+```
+Niveau 1 : Tout dans un playbook
+playbook.yml (500 lignes)
+
+Niveau 2 : Handlers séparés
+playbook.yml (300 lignes)
+  ├── tasks:
+  └── handlers:
+
+Niveau 3 : Fichiers séparés
+playbook.yml (50 lignes)
+  ├── tasks/
+  └── handlers/
+
+Niveau 4 : Rôles (organisation maximale)
+playbook.yml (10 lignes)
+  └── roles/
+      ├── docker/
+      │   ├── tasks/
+      │   └── handlers/
+      ├── nginx/
+      │   ├── tasks/
+      │   └── handlers/
+      └── app/
+          ├── tasks/
+          └── handlers/
+```
+
+**Même code, juste mieux rangé !**
 
 ---
 

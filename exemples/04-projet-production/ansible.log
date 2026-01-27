@@ -912,3 +912,182 @@ Origin: /Users/jimmy/git/slides/new_slidedev/ansible/exemples/04-projet-producti
 }
 2026-01-26 19:24:45,872 p=33602 u=jimmy n=ansible INFO| PLAY RECAP ***********************************************************************************************************
 2026-01-26 19:24:45,872 p=33602 u=jimmy n=ansible INFO| app01                      : ok=13   changed=3    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+2026-01-26 19:40:16,018 p=45805 u=jimmy n=ansible INFO| PLAY [Déploiement application] ***************************************************************************************
+2026-01-26 19:40:16,027 p=45805 u=jimmy n=ansible INFO| TASK [Gathering Facts] ***********************************************************************************************
+2026-01-26 19:40:18,859 p=45805 u=jimmy n=ansible WARNING| [WARNING]: Host 'app01' is using the discovered Python interpreter at '/usr/bin/python3.10', but future installation of another Python interpreter could cause a different interpreter to be discovered. See https://docs.ansible.com/ansible-core/2.20/reference_appendices/interpreter_discovery.html for more information.
+
+2026-01-26 19:40:18,860 p=45805 u=jimmy n=ansible INFO| ok: [app01]
+2026-01-26 19:40:18,891 p=45805 u=jimmy n=ansible WARNING| [WARNING]: Host 'app02' is using the discovered Python interpreter at '/usr/bin/python3.10', but future installation of another Python interpreter could cause a different interpreter to be discovered. See https://docs.ansible.com/ansible-core/2.20/reference_appendices/interpreter_discovery.html for more information.
+
+2026-01-26 19:40:18,891 p=45805 u=jimmy n=ansible INFO| ok: [app02]
+2026-01-26 19:40:18,896 p=45805 u=jimmy n=ansible INFO| TASK [Vérifier la version à déployer] ********************************************************************************
+2026-01-26 19:40:19,022 p=45805 u=jimmy n=ansible INFO| ok: [app02] => {
+    "changed": false,
+    "msg": "All assertions passed"
+}
+2026-01-26 19:40:19,022 p=45805 u=jimmy n=ansible INFO| ok: [app01] => {
+    "changed": false,
+    "msg": "All assertions passed"
+}
+2026-01-26 19:40:19,025 p=45805 u=jimmy n=ansible INFO| TASK [Afficher les informations de déploiement] **********************************************************************
+2026-01-26 19:40:19,092 p=45805 u=jimmy n=ansible INFO| ok: [app02] => {
+    "msg": "🚀 Déploiement de MonApp\n🏷️ Version: v1.2.0\n🌍 Environnement: production\n📍 Serveurs: app01, app02\n"
+}
+2026-01-26 19:40:19,092 p=45805 u=jimmy n=ansible INFO| ok: [app01] => {
+    "msg": "🚀 Déploiement de MonApp\n🏷️ Version: v1.2.0\n🌍 Environnement: production\n📍 Serveurs: app01, app02\n"
+}
+2026-01-26 19:40:19,095 p=45805 u=jimmy n=ansible INFO| TASK [app : Installer Python3 et pip] ********************************************************************************
+2026-01-26 19:40:24,037 p=45805 u=jimmy n=ansible ERROR| [ERROR]: User interrupted execution
+
+2026-01-26 19:40:28,915 p=46258 u=jimmy n=ansible INFO| PLAY [Backup des serveurs] *******************************************************************************************
+2026-01-26 19:40:28,923 p=46258 u=jimmy n=ansible INFO| TASK [Gathering Facts] ***********************************************************************************************
+2026-01-26 19:40:32,629 p=46258 u=jimmy n=ansible WARNING| [WARNING]: Host 'monitor01' is using the discovered Python interpreter at '/usr/bin/python3.10', but future installation of another Python interpreter could cause a different interpreter to be discovered. See https://docs.ansible.com/ansible-core/2.20/reference_appendices/interpreter_discovery.html for more information.
+
+2026-01-26 19:40:32,631 p=46258 u=jimmy n=ansible INFO| ok: [monitor01]
+2026-01-26 19:40:32,634 p=46258 u=jimmy n=ansible WARNING| [WARNING]: Host 'web02' is using the discovered Python interpreter at '/usr/bin/python3.10', but future installation of another Python interpreter could cause a different interpreter to be discovered. See https://docs.ansible.com/ansible-core/2.20/reference_appendices/interpreter_discovery.html for more information.
+
+2026-01-26 19:40:32,634 p=46258 u=jimmy n=ansible INFO| ok: [web02]
+2026-01-26 19:40:32,823 p=46258 u=jimmy n=ansible WARNING| [WARNING]: Host 'web01' is using the discovered Python interpreter at '/usr/bin/python3.10', but future installation of another Python interpreter could cause a different interpreter to be discovered. See https://docs.ansible.com/ansible-core/2.20/reference_appendices/interpreter_discovery.html for more information.
+
+2026-01-26 19:40:32,823 p=46258 u=jimmy n=ansible INFO| ok: [web01]
+2026-01-26 19:40:32,841 p=46258 u=jimmy n=ansible WARNING| [WARNING]: Host 'app01' is using the discovered Python interpreter at '/usr/bin/python3.10', but future installation of another Python interpreter could cause a different interpreter to be discovered. See https://docs.ansible.com/ansible-core/2.20/reference_appendices/interpreter_discovery.html for more information.
+
+2026-01-26 19:40:32,842 p=46258 u=jimmy n=ansible INFO| ok: [app01]
+2026-01-26 19:40:33,186 p=46258 u=jimmy n=ansible WARNING| [WARNING]: Host 'db01' is using the discovered Python interpreter at '/usr/bin/python3.10', but future installation of another Python interpreter could cause a different interpreter to be discovered. See https://docs.ansible.com/ansible-core/2.20/reference_appendices/interpreter_discovery.html for more information.
+
+2026-01-26 19:40:33,186 p=46258 u=jimmy n=ansible INFO| ok: [db01]
+2026-01-26 19:40:33,467 p=46258 u=jimmy n=ansible WARNING| [WARNING]: Host 'app02' is using the discovered Python interpreter at '/usr/bin/python3.10', but future installation of another Python interpreter could cause a different interpreter to be discovered. See https://docs.ansible.com/ansible-core/2.20/reference_appendices/interpreter_discovery.html for more information.
+
+2026-01-26 19:40:33,467 p=46258 u=jimmy n=ansible INFO| ok: [app02]
+2026-01-26 19:40:33,475 p=46258 u=jimmy n=ansible INFO| TASK [Créer le répertoire de backup] *********************************************************************************
+2026-01-26 19:40:36,696 p=46258 u=jimmy n=ansible WARNING| [WARNING]: Deprecation warnings can be disabled by setting `deprecation_warnings=False` in ansible.cfg.
+
+2026-01-26 19:40:36,697 p=46258 u=jimmy n=ansible INFO| [DEPRECATION WARNING]: INJECT_FACTS_AS_VARS default to `True` is deprecated, top-level facts will not be auto injected after the change. This feature will be removed from ansible-core version 2.24.
+Origin: /Users/jimmy/git/slides/new_slidedev/ansible/exemples/04-projet-production/playbooks/backup.yml:9:18
+
+7   vars: # Variables locales au playbook
+8     backup_dir: "/backup" # Répertoire racine des backups
+9     backup_date: "{{ ansible_date_time.date }}" # Date du jour pour nommer le backup
+                   ^ column 18
+
+Use `ansible_facts["fact_name"]` (no `ansible_` prefix) instead.
+
+
+2026-01-26 19:40:36,698 p=46258 u=jimmy n=ansible INFO| changed: [web02]
+2026-01-26 19:40:36,816 p=46258 u=jimmy n=ansible INFO| changed: [web01]
+2026-01-26 19:40:36,825 p=46258 u=jimmy n=ansible INFO| changed: [db01]
+2026-01-26 19:40:36,859 p=46258 u=jimmy n=ansible INFO| changed: [monitor01]
+2026-01-26 19:40:36,939 p=46258 u=jimmy n=ansible INFO| changed: [app01]
+2026-01-26 19:40:37,002 p=46258 u=jimmy n=ansible INFO| changed: [app02]
+2026-01-26 19:40:37,009 p=46258 u=jimmy n=ansible INFO| TASK [Backup configuration Nginx] ************************************************************************************
+2026-01-26 19:40:37,122 p=46258 u=jimmy n=ansible INFO| skipping: [app01]
+2026-01-26 19:40:37,135 p=46258 u=jimmy n=ansible INFO| skipping: [app02]
+2026-01-26 19:40:37,138 p=46258 u=jimmy n=ansible INFO| skipping: [db01]
+2026-01-26 19:40:37,148 p=46258 u=jimmy n=ansible INFO| skipping: [monitor01]
+2026-01-26 19:40:38,261 p=46258 u=jimmy n=ansible INFO| changed: [web02]
+2026-01-26 19:40:38,270 p=46258 u=jimmy n=ansible INFO| changed: [web01]
+2026-01-26 19:40:38,274 p=46258 u=jimmy n=ansible INFO| TASK [Backup logs application] ***************************************************************************************
+2026-01-26 19:40:38,301 p=46258 u=jimmy n=ansible INFO| skipping: [web01]
+2026-01-26 19:40:38,311 p=46258 u=jimmy n=ansible INFO| skipping: [web02]
+2026-01-26 19:40:38,349 p=46258 u=jimmy n=ansible INFO| skipping: [db01]
+2026-01-26 19:40:38,382 p=46258 u=jimmy n=ansible INFO| skipping: [monitor01]
+2026-01-26 19:40:39,227 p=46258 u=jimmy n=ansible INFO| ok: [app01]
+2026-01-26 19:40:39,236 p=46258 u=jimmy n=ansible INFO| ok: [app02]
+2026-01-26 19:40:39,240 p=46258 u=jimmy n=ansible INFO| TASK [Nettoyer les anciens backups] **********************************************************************************
+2026-01-26 19:40:41,440 p=46258 u=jimmy n=ansible INFO| ok: [db01]
+2026-01-26 19:40:41,472 p=46258 u=jimmy n=ansible INFO| ok: [web01]
+2026-01-26 19:40:41,473 p=46258 u=jimmy n=ansible INFO| ok: [app01]
+2026-01-26 19:40:41,554 p=46258 u=jimmy n=ansible INFO| ok: [web02]
+2026-01-26 19:40:41,628 p=46258 u=jimmy n=ansible INFO| ok: [monitor01]
+2026-01-26 19:40:41,654 p=46258 u=jimmy n=ansible INFO| ok: [app02]
+2026-01-26 19:40:41,660 p=46258 u=jimmy n=ansible INFO| TASK [Supprimer les backups expirés] *********************************************************************************
+2026-01-26 19:40:41,682 p=46258 u=jimmy n=ansible INFO| skipping: [web01]
+2026-01-26 19:40:41,690 p=46258 u=jimmy n=ansible INFO| skipping: [web02]
+2026-01-26 19:40:41,700 p=46258 u=jimmy n=ansible INFO| skipping: [app01]
+2026-01-26 19:40:41,708 p=46258 u=jimmy n=ansible INFO| skipping: [app02]
+2026-01-26 19:40:41,710 p=46258 u=jimmy n=ansible INFO| skipping: [db01]
+2026-01-26 19:40:41,717 p=46258 u=jimmy n=ansible INFO| skipping: [monitor01]
+2026-01-26 19:40:41,724 p=46258 u=jimmy n=ansible INFO| TASK [Résumé des backups] ********************************************************************************************
+2026-01-26 19:40:41,817 p=46258 u=jimmy n=ansible INFO| ok: [web01] => {
+    "msg": "✅ Backup créé: /backup/2026-01-26"
+}
+2026-01-26 19:40:41,818 p=46258 u=jimmy n=ansible INFO| ok: [web02] => {
+    "msg": "✅ Backup créé: /backup/2026-01-26"
+}
+2026-01-26 19:40:41,819 p=46258 u=jimmy n=ansible INFO| ok: [app01] => {
+    "msg": "✅ Backup créé: /backup/2026-01-26"
+}
+2026-01-26 19:40:41,822 p=46258 u=jimmy n=ansible INFO| ok: [app02] => {
+    "msg": "✅ Backup créé: /backup/2026-01-26"
+}
+2026-01-26 19:40:41,829 p=46258 u=jimmy n=ansible INFO| ok: [db01] => {
+    "msg": "✅ Backup créé: /backup/2026-01-26"
+}
+2026-01-26 19:40:41,837 p=46258 u=jimmy n=ansible INFO| ok: [monitor01] => {
+    "msg": "✅ Backup créé: /backup/2026-01-26"
+}
+2026-01-26 19:40:41,838 p=46258 u=jimmy n=ansible INFO| PLAY RECAP ***********************************************************************************************************
+2026-01-26 19:40:41,839 p=46258 u=jimmy n=ansible INFO| app01                      : ok=5    changed=1    unreachable=0    failed=0    skipped=2    rescued=0    ignored=0   
+2026-01-26 19:40:41,839 p=46258 u=jimmy n=ansible INFO| app02                      : ok=5    changed=1    unreachable=0    failed=0    skipped=2    rescued=0    ignored=0   
+2026-01-26 19:40:41,839 p=46258 u=jimmy n=ansible INFO| db01                       : ok=4    changed=1    unreachable=0    failed=0    skipped=3    rescued=0    ignored=0   
+2026-01-26 19:40:41,839 p=46258 u=jimmy n=ansible INFO| monitor01                  : ok=4    changed=1    unreachable=0    failed=0    skipped=3    rescued=0    ignored=0   
+2026-01-26 19:40:41,839 p=46258 u=jimmy n=ansible INFO| web01                      : ok=5    changed=2    unreachable=0    failed=0    skipped=2    rescued=0    ignored=0   
+2026-01-26 19:40:41,839 p=46258 u=jimmy n=ansible INFO| web02                      : ok=5    changed=2    unreachable=0    failed=0    skipped=2    rescued=0    ignored=0   
+2026-01-26 19:43:18,398 p=48482 u=jimmy n=ansible INFO| PLAY [Backup des serveurs] *******************************************************************************************
+2026-01-26 19:43:18,405 p=48482 u=jimmy n=ansible INFO| TASK [Gathering Facts] ***********************************************************************************************
+2026-01-26 19:43:19,920 p=48482 u=jimmy n=ansible WARNING| [WARNING]: Host 'monitor01' is using the discovered Python interpreter at '/usr/bin/python3.10', but future installation of another Python interpreter could cause a different interpreter to be discovered. See https://docs.ansible.com/ansible-core/2.20/reference_appendices/interpreter_discovery.html for more information.
+
+2026-01-26 19:43:19,920 p=48482 u=jimmy n=ansible INFO| ok: [monitor01]
+2026-01-26 19:43:19,922 p=48482 u=jimmy n=ansible WARNING| [WARNING]: Host 'app01' is using the discovered Python interpreter at '/usr/bin/python3.10', but future installation of another Python interpreter could cause a different interpreter to be discovered. See https://docs.ansible.com/ansible-core/2.20/reference_appendices/interpreter_discovery.html for more information.
+
+2026-01-26 19:43:19,922 p=48482 u=jimmy n=ansible INFO| ok: [app01]
+2026-01-26 19:43:19,972 p=48482 u=jimmy n=ansible WARNING| [WARNING]: Host 'web01' is using the discovered Python interpreter at '/usr/bin/python3.10', but future installation of another Python interpreter could cause a different interpreter to be discovered. See https://docs.ansible.com/ansible-core/2.20/reference_appendices/interpreter_discovery.html for more information.
+
+2026-01-26 19:43:19,972 p=48482 u=jimmy n=ansible INFO| ok: [web01]
+2026-01-26 19:43:19,974 p=48482 u=jimmy n=ansible INFO| TASK [Créer le répertoire de backup] *********************************************************************************
+2026-01-26 19:43:20,543 p=48482 u=jimmy n=ansible WARNING| [WARNING]: Deprecation warnings can be disabled by setting `deprecation_warnings=False` in ansible.cfg.
+
+2026-01-26 19:43:20,543 p=48482 u=jimmy n=ansible INFO| [DEPRECATION WARNING]: INJECT_FACTS_AS_VARS default to `True` is deprecated, top-level facts will not be auto injected after the change. This feature will be removed from ansible-core version 2.24.
+Origin: /Users/jimmy/git/slides/new_slidedev/ansible/exemples/04-projet-production/playbooks/backup.yml:9:18
+
+7   vars: # Variables locales au playbook
+8     backup_dir: "/backup" # Répertoire racine des backups
+9     backup_date: "{{ ansible_date_time.date }}" # Date du jour pour nommer le backup
+                   ^ column 18
+
+Use `ansible_facts["fact_name"]` (no `ansible_` prefix) instead.
+
+
+2026-01-26 19:43:20,543 p=48482 u=jimmy n=ansible INFO| ok: [app01]
+2026-01-26 19:43:20,548 p=48482 u=jimmy n=ansible INFO| ok: [web01]
+2026-01-26 19:43:20,556 p=48482 u=jimmy n=ansible INFO| ok: [monitor01]
+2026-01-26 19:43:20,559 p=48482 u=jimmy n=ansible INFO| TASK [Backup configuration Nginx] ************************************************************************************
+2026-01-26 19:43:20,577 p=48482 u=jimmy n=ansible INFO| skipping: [app01]
+2026-01-26 19:43:20,583 p=48482 u=jimmy n=ansible INFO| skipping: [monitor01]
+2026-01-26 19:43:21,073 p=48482 u=jimmy n=ansible INFO| ok: [web01]
+2026-01-26 19:43:21,076 p=48482 u=jimmy n=ansible INFO| TASK [Backup logs application] ***************************************************************************************
+2026-01-26 19:43:21,094 p=48482 u=jimmy n=ansible INFO| skipping: [web01]
+2026-01-26 19:43:21,102 p=48482 u=jimmy n=ansible INFO| skipping: [monitor01]
+2026-01-26 19:43:21,530 p=48482 u=jimmy n=ansible INFO| ok: [app01]
+2026-01-26 19:43:21,532 p=48482 u=jimmy n=ansible INFO| TASK [Nettoyer les anciens backups] **********************************************************************************
+2026-01-26 19:43:22,232 p=48482 u=jimmy n=ansible INFO| ok: [monitor01]
+2026-01-26 19:43:22,237 p=48482 u=jimmy n=ansible INFO| ok: [web01]
+2026-01-26 19:43:22,242 p=48482 u=jimmy n=ansible INFO| ok: [app01]
+2026-01-26 19:43:22,245 p=48482 u=jimmy n=ansible INFO| TASK [Supprimer les backups expirés] *********************************************************************************
+2026-01-26 19:43:22,260 p=48482 u=jimmy n=ansible INFO| skipping: [web01]
+2026-01-26 19:43:22,262 p=48482 u=jimmy n=ansible INFO| skipping: [app01]
+2026-01-26 19:43:22,267 p=48482 u=jimmy n=ansible INFO| skipping: [monitor01]
+2026-01-26 19:43:22,270 p=48482 u=jimmy n=ansible INFO| TASK [Résumé des backups] ********************************************************************************************
+2026-01-26 19:43:22,313 p=48482 u=jimmy n=ansible INFO| ok: [web01] => {
+    "msg": "✅ Backup créé: /backup/2026-01-26"
+}
+2026-01-26 19:43:22,320 p=48482 u=jimmy n=ansible INFO| ok: [app01] => {
+    "msg": "✅ Backup créé: /backup/2026-01-26"
+}
+2026-01-26 19:43:22,325 p=48482 u=jimmy n=ansible INFO| ok: [monitor01] => {
+    "msg": "✅ Backup créé: /backup/2026-01-26"
+}
+2026-01-26 19:43:22,325 p=48482 u=jimmy n=ansible INFO| PLAY RECAP ***********************************************************************************************************
+2026-01-26 19:43:22,325 p=48482 u=jimmy n=ansible INFO| app01                      : ok=5    changed=0    unreachable=0    failed=0    skipped=2    rescued=0    ignored=0   
+2026-01-26 19:43:22,325 p=48482 u=jimmy n=ansible INFO| monitor01                  : ok=4    changed=0    unreachable=0    failed=0    skipped=3    rescued=0    ignored=0   
+2026-01-26 19:43:22,326 p=48482 u=jimmy n=ansible INFO| web01                      : ok=5    changed=0    unreachable=0    failed=0    skipped=2    rescued=0    ignored=0   
