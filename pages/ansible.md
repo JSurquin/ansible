@@ -360,8 +360,86 @@ databases:  # Redéfinition du groupe databases (peut créer confusion)
 
 webservers:  # Définition du groupe webservers
   hosts:  # Serveurs web avec notation de plage
-    web-[01:03]: {ansible_host: '10.0.1.{{ 30 + item }}'}  # Génère web-01, web-02, web-03 avec IPs 10.0.1.31, 10.0.1.32, 10.0.1.33
+    web-[01:03]:  # Notation de plage : génère web-01, web-02, web-03
+      ansible_host: 10.0.1.30  # IP de base (sera incrémentée)
 ```
+
+**💡 Note** : La notation `[01:03]` est une fonctionnalité Ansible pour générer plusieurs hôtes automatiquement.
+
+---
+
+# 📝 Notation de plage expliquée
+
+### Générer plusieurs serveurs automatiquement
+
+**Syntaxe** : `nom-[debut:fin]`
+
+```yaml
+# Exemple 1 : Notation numérique
+webservers:
+  hosts:
+    web-[01:03]:  # Génère : web-01, web-02, web-03
+      ansible_host: 10.0.1.10
+
+# Résultat équivalent :
+webservers:
+  hosts:
+    web-01: {ansible_host: 10.0.1.10}
+    web-02: {ansible_host: 10.0.1.10}
+    web-03: {ansible_host: 10.0.1.10}
+```
+
+---
+
+# 📝 Notation de plage expliquée (suite)
+
+### Avec des IPs différentes
+
+```yaml
+# Pour des IPs différentes, il faut les définir explicitement
+webservers:
+  hosts:
+    web-01: {ansible_host: 10.0.1.31}
+    web-02: {ansible_host: 10.0.1.32}
+    web-03: {ansible_host: 10.0.1.33}
+
+# Ou avec des variables d'inventaire
+webservers:
+  hosts:
+    web-01:
+      ansible_host: 10.0.1.31
+      server_id: 1
+    web-02:
+      ansible_host: 10.0.1.32
+      server_id: 2
+    web-03:
+      ansible_host: 10.0.1.33
+      server_id: 3
+```
+
+---
+
+# 📝 Notation de plage : Cas d'usage
+
+### Quand l'utiliser ?
+
+**✅ Bon usage** : Serveurs avec configuration identique
+```yaml
+docker_nodes:
+  hosts:
+    node-[01:10]:  # 10 nœuds Docker identiques
+      ansible_host: 10.0.1.100  # Même réseau, Docker gère le routage
+      ansible_connection: docker
+```
+
+**❌ Mauvais usage** : Serveurs avec IPs différentes
+```yaml
+# ❌ Ne fonctionne pas comme attendu
+web-[01:03]: {ansible_host: '10.0.1.{{ 30 + item }}'}
+# La variable {{ item }} n'est pas disponible dans l'inventaire
+```
+
+**💡 Pour des IPs incrémentées** : Listez-les explicitement ou utilisez un script de génération.
 
 ---
 
@@ -3210,34 +3288,272 @@ ansible-playbook -i inventory deploy.yml --ask-vault-pass
 
 # Vault : Utilisation des secrets
 
-Avant il faut préciser le secrets.yml dans le playbook ou le group_vars/all.yml
+### Charger les secrets chiffrés dans vos playbooks
 
-```bash
-# dans le playbook
-vars_files:
-  - secrets.yml
-```
+Il existe plusieurs méthodes pour utiliser les fichiers chiffrés avec Ansible Vault.
 
-ou dans le group_vars/all.yml
+---
 
-```bash
-# dans le group_vars/all.yml
-vars_files:
-  - secrets.yml
-```
+# Vault : Méthode 1 - vars_files dans le playbook
+
+### Charger directement dans le playbook
 
 ```yaml
-# secrets.yml (chiffré)
-vault_db_password: 'super_secret_password'
-vault_api_key: '1234567890abcdef'
-
-# Utilisation dans les playbooks
-database:
-  password: '{{ vault_db_password }}'
-
-api:
-  key: '{{ vault_api_key }}'
+# playbook-deploy.yml
+---
+- name: Déploiement avec secrets
+  hosts: webservers
+  become: true
+  
+  vars_files:
+    - secrets.yml  # ← Fichier chiffré avec Vault
+  
+  tasks:
+    - name: Configuration de la base de données
+      template:
+        src: database.conf.j2
+        dest: /etc/app/database.conf
+      vars:
+        db_password: "{{ vault_db_password }}"  # ← Variable du fichier chiffré
+    
+    - name: Configuration API
+      template:
+        src: api.conf.j2
+        dest: /etc/app/api.conf
+      vars:
+        api_key: "{{ vault_api_key }}"  # ← Variable du fichier chiffré
 ```
+
+---
+
+# Vault : Méthode 1 - vars_files (suite)
+
+### Contenu du fichier secrets.yml (chiffré)
+
+```yaml
+# secrets.yml (à chiffrer avec ansible-vault)
+---
+vault_db_password: "P@ssw0rd_SuperSecret_2026!"
+vault_api_key: "ak_1234567890abcdef_ghijklmnop"
+vault_smtp_password: "smtp_secret_password"
+vault_jwt_secret: "jwt_random_secret_key_xyz"
+```
+
+### Créer et chiffrer le fichier
+
+```bash
+# 1. Créer le fichier secrets.yml avec les valeurs ci-dessus
+nano secrets.yml
+
+# 2. Chiffrer le fichier
+ansible-vault encrypt secrets.yml
+# Entrer un mot de passe vault
+
+# 3. Utiliser dans le playbook
+ansible-playbook playbook-deploy.yml --ask-vault-pass
+```
+
+---
+
+# Vault : Méthode 2 - group_vars
+
+### Charger automatiquement via group_vars
+
+**Structure recommandée** :
+
+```
+projet-ansible/
+├── playbook.yml
+├── inventory.yml
+└── group_vars/
+    ├── all.yml           # Variables non chiffrées (référence les vault_*)
+    └── vault.yml         # Variables chiffrées (préfixe vault_)
+```
+
+---
+
+# Vault : Méthode 2 - group_vars (suite)
+
+**group_vars/all.yml** (NON chiffré, visible dans Git)
+
+```yaml
+---
+# Variables publiques qui référencent les secrets
+db_host: "db.example.com"
+db_port: 5432
+db_user: "app_user"
+db_password: "{{ vault_db_password }}"  # ← Référence au secret
+
+api_url: "https://api.example.com"
+api_key: "{{ vault_api_key }}"  # ← Référence au secret
+
+# Configuration non sensible
+app_version: "v2.1.0"
+app_port: 8080
+```
+
+---
+
+# Vault : Méthode 2 - group_vars (suite 2)
+
+**group_vars/vault.yml** (CHIFFRÉ avec ansible-vault)
+
+```yaml
+---
+# Secrets réels (chiffrés)
+vault_db_password: "P@ssw0rd_SuperSecret_2026!"
+vault_api_key: "ak_1234567890abcdef_ghijklmnop"
+vault_smtp_password: "smtp_secret_password"
+vault_jwt_secret: "jwt_random_secret_key_xyz"
+```
+
+**Playbook simplifié** :
+
+```yaml
+# playbook.yml
+---
+- name: Déploiement
+  hosts: webservers
+  tasks:
+    - debug:
+        msg: "DB Password: {{ db_password }}"  # ← Utilise la variable publique
+```
+
+**💡 Avantage** : Pas besoin de `vars_files:`, Ansible charge automatiquement group_vars/ !
+
+---
+
+# Vault : Méthode 3 - Fichier de mot de passe
+
+### Éviter --ask-vault-pass à chaque fois
+
+```bash
+# 1. Créer un fichier de mot de passe vault
+echo "mon_mot_de_passe_vault_secret" > .vault_pass
+
+# 2. Sécuriser le fichier
+chmod 600 .vault_pass
+
+# 3. Ajouter au .gitignore
+echo ".vault_pass" >> .gitignore
+
+# 4. Utiliser avec --vault-password-file
+ansible-playbook playbook.yml --vault-password-file .vault_pass
+```
+
+**Ou dans ansible.cfg** :
+
+```ini
+[defaults]
+vault_password_file = .vault_pass
+```
+
+Ensuite, plus besoin de spécifier le mot de passe :
+
+```bash
+ansible-playbook playbook.yml  # ← Déchiffre automatiquement !
+```
+
+---
+
+# Vault : Exemple complet de bout en bout
+
+### Workflow complet avec Vault
+
+```bash
+# 1. Créer la structure
+mkdir -p group_vars templates
+```
+
+---
+
+# Vault : Exemple complet (suite)
+
+```bash
+# 2. Créer group_vars/all.yml (public)
+cat > group_vars/all.yml << 'EOF'
+---
+db_host: "localhost"
+db_user: "app_user"
+db_password: "{{ vault_db_password }}"
+api_key: "{{ vault_api_key }}"
+EOF
+
+# 3. Créer group_vars/vault.yml (à chiffrer)
+cat > group_vars/vault.yml << 'EOF'
+---
+vault_db_password: "P@ssw0rd_2026"
+vault_api_key: "secret_key_xyz"
+EOF
+
+# 4. Chiffrer vault.yml
+ansible-vault encrypt group_vars/vault.yml
+```
+
+---
+
+# Vault : Exemple complet (suite 2)
+
+```bash
+# 5. Créer un template qui utilise les secrets
+cat > templates/config.j2 << 'EOF'
+[database]
+host={{ db_host }}
+user={{ db_user }}
+password={{ db_password }}
+
+[api]
+key={{ api_key }}
+EOF
+
+# 6. Créer le playbook
+cat > playbook.yml << 'EOF'
+---
+- name: Déploiement avec secrets
+  hosts: localhost
+  tasks:
+    - name: Générer config
+      template:
+        src: config.j2
+        dest: /tmp/app.conf
+EOF
+```
+
+---
+
+# Vault : Exemple complet (suite 3)
+
+```bash
+# 7. Exécuter
+ansible-playbook playbook.yml --ask-vault-pass
+
+# 8. Vérifier le résultat
+cat /tmp/app.conf
+# Affichera :
+# [database]
+# host=localhost
+# user=app_user
+# password=P@ssw0rd_2026
+#
+# [api]
+# key=secret_key_xyz
+```
+
+**✅ Les secrets sont déchiffrés automatiquement lors de l'exécution !**
+
+---
+
+# Vault : Comparaison des 3 méthodes
+
+### Quand utiliser quoi ?
+
+| Méthode | Avantages | Inconvénients | Cas d'usage |
+|---------|-----------|---------------|-------------|
+| **vars_files** | Explicite, contrôle total | Doit être dans chaque playbook | Secrets spécifiques à 1 playbook |
+| **group_vars** | Automatique, organisé | Structure à respecter | Secrets partagés (recommandé) |
+| **vault-password-file** | Pas de saisie manuelle | Fichier sensible à protéger | Automatisation CI/CD |
+
+**💡 Recommandation** : Utilisez **group_vars/** pour la plupart des projets.
 
 ---
 
