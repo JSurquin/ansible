@@ -1,4 +1,3 @@
----
 - name: Configuration des serveurs Apache2
   hosts: apache_servers
   become: yes

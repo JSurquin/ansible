@@ -1423,6 +1423,150 @@ Ordre de priorité (du + fort au + faible) : extra-vars (-e) > vars du playbook 
 
 ---
 
+# Variables : Précédence détaillée 🔧
+
+### Les 5 niveaux les plus courants
+
+**Du plus FAIBLE au plus FORT** :
+
+1. **role defaults** (`roles/*/defaults/main.yml`)
+2. **group_vars** (`group_vars/all.yml`)
+3. **playbook vars** (`vars:` dans le playbook)
+4. **role vars** (`roles/*/vars/main.yml`) ⚠️
+5. **extra-vars** (`-e` en ligne de commande)
+
+---
+
+# Variables : Précédence détaillée (suite)
+
+### Pourquoi c'est important ?
+
+```yaml
+# roles/nginx/defaults/main.yml
+nginx_port: 80  # Priorité 1 (faible)
+
+# group_vars/production.yml  
+nginx_port: 443  # Priorité 2 (surcharge defaults ✅)
+
+# roles/nginx/vars/main.yml
+nginx_service: nginx  # Priorité 4 (très forte!)
+
+# Commande
+ansible-playbook site.yml -e "nginx_port=8080"
+# Priorité 5 (surcharge TOUT ✅)
+```
+
+**Résultat final** : `nginx_port` = `8080` (extra-vars gagne)
+
+---
+
+# 💡 Règle d'or : defaults/ vs vars/
+
+### Quand utiliser defaults/ ou vars/ dans un rôle ?
+
+**roles/*/defaults/main.yml** → Ce que l'utilisateur **PEUT** changer
+
+```yaml
+# roles/nginx/defaults/main.yml
+nginx_port: 80
+nginx_worker_processes: auto
+nginx_max_clients: 1024
+```
+
+---
+
+# 💡 Règle d'or : defaults/ vs vars/ (suite)
+
+**roles/*/vars/main.yml** → Ce que l'utilisateur **NE DOIT PAS** changer
+
+```yaml
+# roles/nginx/vars/main.yml  
+nginx_package: nginx
+nginx_service: nginx
+nginx_config_path: /etc/nginx/nginx.conf
+nginx_pid_path: /var/run/nginx.pid
+```
+
+**Bonne pratique Ansible 2026** :
+- `defaults/` = Configuration (valeurs personnalisables)
+- `vars/` = Constantes système (chemins, noms de services)
+
+---
+
+# 🧪 Exemple concret de précédence
+
+### Comprendre l'ordre avec un cas réel
+
+**Situation** : Vous avez un rôle `webapp` et vous voulez définir le port.
+
+```yaml
+# roles/webapp/defaults/main.yml
+app_port: 3000  # ← Valeur par défaut du rôle
+```
+
+---
+
+# 🧪 Exemple concret de précédence (suite)
+
+```yaml
+# group_vars/production.yml
+app_port: 8080  # ← Surcharge pour production
+
+# playbook.yml
+- hosts: webservers
+  vars:
+    app_port: 9000  # ← Surcharge dans le playbook
+  roles:
+    - webapp
+```
+
+**Question** : Quel port sera utilisé ?
+
+**Réponse** : `9000` (playbook vars > group_vars > defaults)
+
+---
+
+# 🧪 Exemple concret de précédence (suite 2)
+
+### Et si on ajoute role vars ?
+
+```yaml
+# roles/webapp/vars/main.yml
+app_name: "MyApp"  # ← Nom de l'app (constante)
+app_user: "www-data"  # ← Utilisateur système
+
+# group_vars/production.yml
+app_user: "nginx"  # ← Tentative de surcharge
+```
+
+**Question** : Quel utilisateur sera utilisé ?
+
+**Réponse** : `www-data` (role vars > group_vars !)
+
+**💡 C'est pour ça qu'on met les constantes dans vars/**
+
+---
+
+# 📊 Tableau récapitulatif complet
+
+### Toutes les sources de variables (2026)
+
+<small>
+
+| Priorité | Source | Fichier/Emplacement | Usage |
+|----------|--------|---------------------|-------|
+| 1 (faible) | Role defaults | `roles/*/defaults/main.yml` | Config par défaut |
+| 2-4 | Inventory vars | `inventory.yml` | Config serveurs |
+| 5-8 | group_vars/host_vars | `group_vars/all.yml` | Config environnement |
+| 9-12 | Play vars | `vars:` dans playbook | Config ponctuelle |
+| 13 (fort) | Role vars | `roles/*/vars/main.yml` | Constantes rôle |
+| 14-17 | Task vars | `vars:` dans task | Config task |
+| 18 (+ fort) | extra-vars | `-e` ligne de commande | Override total |
+
+</small>
+
+---
+
 # 🎯 Mini-exercice : Module 7 (5 min)
 
 **Objectif** : Utiliser des variables
@@ -1931,6 +2075,188 @@ Le nom doit être EXACTEMENT identique : sensible à la casse, aux espaces, aux 
 
 ---
 
+# 🐛 Troubleshooting : Handlers
+
+### Mon handler ne se déclenche pas ! Pourquoi ?
+
+**Les 4 raisons principales** :
+
+1. ❌ Nom différent entre `notify` et `handlers`
+2. ❌ La tâche n'a rien changé (`changed: false`)
+3. ❌ Le playbook a échoué avant la fin
+4. ❌ Mode `--check` activé
+
+---
+
+# 🐛 Raison 1 : Nom différent
+
+### Le piège le plus fréquent
+
+```yaml
+tasks:
+  - name: Config nginx
+    template:
+      src: nginx.conf.j2
+      dest: /etc/nginx/nginx.conf
+    notify: restart nginx  # ⚠️ Minuscules
+
+handlers:
+  - name: Restart nginx  # ❌ Majuscule → Ne marchera JAMAIS
+```
+
+**Solution** : Noms identiques à 100%
+
+```yaml
+notify: restart nginx
+handlers:
+  - name: restart nginx  # ✅ Parfait
+```
+
+---
+
+# 🐛 Raison 2 : changed: false
+
+### Le handler ne se déclenche QUE si quelque chose change
+
+```yaml
+# 1ère exécution
+TASK [template nginx.conf] *** changed: true
+RUNNING HANDLER [restart nginx] ***  # ✅ Se déclenche
+
+# 2ème exécution (fichier identique)
+TASK [template nginx.conf] *** ok
+# ❌ Pas de handler (c'est NORMAL, c'est l'idempotence!)
+```
+
+**C'est voulu** : Pourquoi redémarrer si rien n'a changé ?
+
+---
+
+# 🐛 Raison 3 : Playbook échoué
+
+### Les handlers s'exécutent à la FIN
+
+```yaml
+tasks:
+  - name: Config nginx
+    template: ...
+    notify: restart nginx  # Handler notifié ✅
+  
+  - name: Tâche qui échoue
+    command: /bin/false  # ❌ Échec → Playbook s'arrête
+    
+# ❌ Handler jamais exécuté car playbook arrêté avant la fin
+```
+
+---
+
+# 🐛 Raison 3 : Playbook échoué (suite)
+
+**Solution** : Forcer l'exécution des handlers même en cas d'erreur
+
+```bash
+# Les handlers s'exécutent même si le playbook échoue
+ansible-playbook site.yml --force-handlers
+```
+
+**Cas d'usage** : Quand vous DEVEZ redémarrer le service même si une tâche ultérieure échoue.
+
+---
+
+# 🐛 Raison 4 : Mode check
+
+### En mode check, les handlers ne s'exécutent jamais
+
+```bash
+# Mode dry-run : simule sans exécuter
+ansible-playbook site.yml --check
+
+# Résultat :
+# - Tasks simulées ✅
+# - Handlers listés mais PAS exécutés ❌
+```
+
+**C'est normal** : Le mode `--check` ne modifie rien réellement.
+
+---
+
+# 🎯 Test de handlers en pratique
+
+### Exercice pour comprendre l'idempotence
+
+```bash
+# 1ère exécution - handler doit se déclencher
+ansible-playbook playbook.yml -v
+
+# Cherchez dans la sortie :
+# TASK [Config nginx] *** changed: true
+# RUNNING HANDLER [restart nginx] ***  ✅
+
+# 2ème exécution - handler NE doit PAS se déclencher  
+ansible-playbook playbook.yml -v
+
+# Cherchez :
+# TASK [Config nginx] *** ok (pas changed)
+# Pas de RUNNING HANDLER  ✅ C'est normal !
+```
+
+---
+
+# 🎯 Test de handlers en pratique (suite)
+
+### Si le handler se déclenche à CHAQUE exécution
+
+**Symptôme** : Handler s'exécute même quand rien ne change
+
+```yaml
+tasks:
+  - name: Template
+    template:
+      src: app.conf.j2
+      dest: /tmp/app.conf
+    notify: restart app
+# À chaque exécution : changed: true → handler ✅
+```
+
+**Diagnostic** : Votre template n'est pas idempotent !
+
+---
+
+# 🎯 Test de handlers en pratique (suite 2)
+
+**Causes possibles** :
+
+1. Template contient une date/timestamp qui change
+   ```jinja
+   # ❌ Problème
+   Generated on: {{ ansible_date_time.iso8601 }}
+   ```
+
+2. Permissions différentes
+   ```yaml
+   # Vérifier mode, owner, group
+   template:
+     src: app.conf.j2
+     dest: /tmp/app.conf
+     mode: '0644'  # ← Important !
+     owner: root
+     group: root
+   ```
+
+---
+
+# 💡 Bonnes pratiques handlers 2026
+
+### Ce qu'il faut retenir
+
+1. **Noms identiques** : `notify` = nom exact du handler
+2. **Idempotence** : Handler se déclenche seulement si changement
+3. **Fin de playbook** : Handlers s'exécutent à la fin
+4. **Une seule fois** : Même notifié 10x, handler ne s'exécute qu'1x
+5. **--force-handlers** : Pour forcer l'exécution en cas d'erreur
+
+---
+
 # 🎯 Mini-exercice : Module 9 (10 min)
 
 **Objectif** : Créer un handler fonctionnel
@@ -2051,6 +2377,227 @@ roles/nginx/
 ```
 
 **Règle** : Commencez simple, ajoutez ce dont vous avez besoin !
+
+---
+
+# 📁 defaults/ vs vars/ : La différence cruciale
+
+### Deux dossiers de variables, mais rôles différents !
+
+**Question fréquente** : Pourquoi 2 dossiers de variables dans un rôle ?
+
+```
+roles/nginx/
+├── vars/main.yml       # ← Variables "dures"
+└── defaults/main.yml   # ← Variables "souples"
+```
+
+**Réponse** : Précédence différente !
+
+- `defaults/` = Priorité **FAIBLE** (facilement surchargeable)
+- `vars/` = Priorité **FORTE** (difficilement surchargeable)
+
+---
+
+# 📁 defaults/main.yml : Configuration
+
+### Ce que l'utilisateur PEUT personnaliser
+
+```yaml
+# roles/nginx/defaults/main.yml
+---
+# Configuration personnalisable par l'utilisateur
+nginx_port: 80
+nginx_worker_processes: auto
+nginx_worker_connections: 1024
+nginx_keepalive_timeout: 65
+nginx_client_max_body_size: 10M
+
+# Features optionnelles
+nginx_enable_gzip: true
+nginx_enable_ssl: false
+```
+
+**Usage** : Valeurs par défaut raisonnables que l'utilisateur peut changer.
+
+---
+
+# 📁 defaults/main.yml : Configuration (suite)
+
+### Comment surcharger defaults/ ?
+
+**Plusieurs méthodes (par ordre de priorité)** :
+
+```yaml
+# 1. Dans group_vars/production.yml
+nginx_port: 443
+nginx_enable_ssl: true
+
+# 2. Dans le playbook
+- hosts: webservers
+  vars:
+    nginx_port: 8080
+  roles:
+    - nginx
+
+# 3. En ligne de commande
+ansible-playbook site.yml -e "nginx_port=9090"
+```
+
+**Tous surchargent defaults/ facilement** ✅
+
+---
+
+# 📁 vars/main.yml : Constantes
+
+### Ce que l'utilisateur NE DOIT PAS changer
+
+```yaml
+# roles/nginx/vars/main.yml
+---
+# Constantes système (ne pas modifier)
+nginx_package: nginx
+nginx_service: nginx
+nginx_config_path: /etc/nginx/nginx.conf
+nginx_pid_path: /var/run/nginx.pid
+nginx_log_path: /var/log/nginx
+nginx_user: www-data
+nginx_group: www-data
+
+# Chemins internes du rôle
+nginx_vhost_path: /etc/nginx/sites-available
+nginx_modules_path: /etc/nginx/modules-enabled
+```
+
+**Usage** : Chemins système, noms de packages/services (dépendent de l'OS).
+
+---
+
+# 📁 vars/main.yml : Constantes (suite)
+
+### Pourquoi c'est important ?
+
+**vars/ a une priorité TRÈS FORTE** :
+
+```yaml
+# roles/nginx/vars/main.yml
+nginx_user: www-data  # Priorité 13 (forte)
+
+# group_vars/production.yml
+nginx_user: nginx  # Priorité 7 (moyenne)
+```
+
+**Résultat** : `nginx_user` = `www-data` (vars/ gagne !)
+
+**💡 Utilisez vars/ pour les valeurs qui ne doivent JAMAIS être surchargées accidentellement.**
+
+---
+
+# 🎯 Exemple réel : Rôle Apache2
+
+### defaults/ : Configuration utilisateur
+
+```yaml
+# roles/apache2/defaults/main.yml
+---
+# L'utilisateur peut personnaliser ces valeurs
+apache_port: 80
+apache_server_name: localhost
+apache_document_root: /var/www/html
+apache_timeout: 300
+apache_max_clients: 150
+apache_enable_ssl: false
+admin_email: admin@example.com
+```
+
+---
+
+# 🎯 Exemple réel : Rôle Apache2 (suite)
+
+### vars/ : Constantes système
+
+```yaml
+# roles/apache2/vars/main.yml
+---
+# Constantes système (ne pas modifier)
+apache_package: apache2
+apache_service: apache2
+apache_config_path: /etc/apache2/sites-available/000-default.conf
+apache_user: www-data
+apache_group: www-data
+apache_log_dir: /var/log/apache2
+```
+
+**Ces valeurs sont hardcodées car elles dépendent du système d'exploitation.**
+
+---
+
+# 🧪 Test pratique : defaults vs vars
+
+### Exercice de compréhension
+
+**Situation** : Vous voulez changer le port Apache
+
+**Méthode 1** : Port dans defaults/
+
+```yaml
+# roles/apache2/defaults/main.yml
+apache_port: 80
+
+# group_vars/production.yml
+apache_port: 443  # ✅ Ça marche !
+```
+
+---
+
+# 🧪 Test pratique : defaults vs vars (suite)
+
+**Méthode 2** : Port dans vars/ (❌ Mauvaise pratique)
+
+```yaml
+# roles/apache2/vars/main.yml
+apache_port: 80
+
+# group_vars/production.yml  
+apache_port: 443  # ❌ N'a AUCUN EFFET (vars/ prioritaire)
+```
+
+**Le port restera 80 !**
+
+**💡 Règle** : Configuration personnalisable → defaults/, Constantes → vars/
+
+---
+
+# 📊 Tableau récapitulatif defaults vs vars
+
+### Quand utiliser quoi ?
+
+| Critère | defaults/ | vars/ |
+|---------|-----------|-------|
+| **Priorité** | Faible (1) | Forte (13) |
+| **Surchargeable** | ✅ Facilement | ❌ Difficilement |
+| **Usage** | Configuration | Constantes |
+| **Exemples** | Ports, timeouts | Chemins, packages |
+| **Modifiable par** | group_vars, playbook | extra-vars uniquement |
+
+---
+
+# 💡 Bonnes pratiques 2026 : Variables de rôles
+
+### Ce qu'il faut retenir
+
+1. **defaults/** : Valeurs que l'utilisateur personnalise souvent
+   - Ports, domaines, tailles, timeouts
+   - Features on/off
+
+2. **vars/** : Valeurs système qui ne changent jamais
+   - Noms de packages/services
+   - Chemins de configuration
+   - Utilisateurs système
+
+3. **Si vous hésitez** : Mettez dans defaults/ (plus flexible)
+
+4. **Documentation** : Documentez vos defaults/ dans README.md
 
 ---
 
@@ -2662,6 +3209,22 @@ ansible-playbook -i inventory deploy.yml --ask-vault-pass
 ---
 
 # Vault : Utilisation des secrets
+
+Avant il faut préciser le secrets.yml dans le playbook ou le group_vars/all.yml
+
+```bash
+# dans le playbook
+vars_files:
+  - secrets.yml
+```
+
+ou dans le group_vars/all.yml
+
+```bash
+# dans le group_vars/all.yml
+vars_files:
+  - secrets.yml
+```
 
 ```yaml
 # secrets.yml (chiffré)

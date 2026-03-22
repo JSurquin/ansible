@@ -27,6 +27,7 @@
     src: index.html.j2
     dest: "{{ nginx_document_root }}/index.html"
     mode: '0644'
+  notify: restart nginx
 
 - name: S'assurer que Nginx est démarré et activé
   service:
