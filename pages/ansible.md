@@ -1469,6 +1469,96 @@ environments:
 
 ---
 
+# Variables spéciales : Les Facts
+
+### Les variables automatiques d'Ansible
+
+**Facts** = Informations système collectées automatiquement
+
+```yaml
+- hosts: all
+  tasks:
+    - debug:
+        msg: "Serveur {{ ansible_facts['hostname'] }} sous {{ ansible_facts['distribution'] }}"
+```
+
+**Collecte automatique au début du playbook** (sauf si `gather_facts: no`)
+
+**💡 Les facts sont des variables en lecture seule**
+
+---
+
+# Facts : Les plus utilisés
+
+### Variables système courantes
+
+```yaml
+# Système
+{{ ansible_facts['hostname'] }}              # web01
+{{ ansible_facts['fqdn'] }}                  # web01.example.com
+{{ ansible_facts['distribution'] }}          # Ubuntu
+{{ ansible_facts['distribution_version'] }}  # 22.04
+
+# Matériel
+{{ ansible_facts['processor_vcpus'] }}       # 4
+{{ ansible_facts['memtotal_mb'] }}           # 8192
+{{ ansible_facts['architecture'] }}          # x86_64
+
+# Réseau
+{{ ansible_facts['default_ipv4']['address'] }}  # 192.168.1.10
+{{ ansible_facts['all_ipv4_addresses'] }}       # ['192.168.1.10', '10.0.0.5']
+```
+
+---
+
+# Facts vs Variables classiques
+
+### Différence fondamentale
+
+**Variables classiques** → Vous les définissez
+
+```yaml
+vars:
+  app_name: "myapp"
+  app_port: 8080
+```
+
+**Facts** → Ansible les découvre
+
+```yaml
+# Automatiquement disponibles
+{{ ansible_facts['hostname'] }}
+{{ ansible_facts['memtotal_mb'] }}
+```
+
+**💡 Les facts permettent d'adapter la config selon le serveur**
+
+---
+
+# Exemple pratique : Facts + Variables
+
+### Adaptation automatique
+
+```yaml
+- hosts: webservers
+  vars:
+    app_name: "myapp"
+    base_memory: 512
+  
+  tasks:
+    - name: Calculer mémoire selon serveur
+      debug:
+        msg: |
+          App: {{ app_name }}
+          Serveur: {{ ansible_facts['hostname'] }}
+          RAM totale: {{ ansible_facts['memtotal_mb'] }} MB
+          RAM allouée: {{ (ansible_facts['memtotal_mb'] * 0.5) | int }} MB
+```
+
+**🎯 Combinaison** : Variables fixes + Facts dynamiques = Configuration intelligente
+
+---
+
 # ✅ Mini-QCM : Module 7 - Variables
 
 **Question 1** : Comment définir une variable dans un playbook ?
@@ -1661,6 +1751,31 @@ app_user: "nginx"  # ← Tentative de surcharge
 ansible-playbook playbook-vars.yml -e app_version=2.0.0
 # Doit afficher version 2.0.0 (override)
 ```
+
+---
+
+# 📝 Récapitulatif Module 7 : Variables & Facts
+
+### Ce que vous devez retenir
+
+**1. Types de variables** :
+- Variables statiques (`vars:`, `defaults/`, `group_vars/`)
+- Facts (infos système automatiques)
+- Variables dynamiques (créées avec `set_fact`)
+
+**2. Précédence** :
+- extra-vars (`-e`) > role vars > playbook vars > group_vars > defaults
+- Les extra-vars gagnent toujours !
+
+**3. Facts** :
+- Collectés automatiquement au début (`gather_facts: yes`)
+- Lecture seule (infos système)
+- Exemples : `ansible_facts['hostname']`, `ansible_facts['memtotal_mb']`
+
+**4. Bonnes pratiques** :
+- `defaults/` pour config modifiable
+- `vars/` pour constantes système
+- Utiliser facts pour adapter la config au serveur
 
 ---
 layout: new-section
@@ -5520,53 +5635,820 @@ layout: new-section
 
 # Variables : set_fact
 
-### Définir des variables dynamiquement
+### Définir des variables au runtime (dynamiques)
+
+**set_fact** crée ou modifie une variable **pendant l'exécution** du playbook.
+
+**⚠️ Règle d'or** : Ne pas le mettre "au début par défaut" !
+
+**🎯 Principe** : Le placer **juste avant son utilisation réelle**
+
+---
+
+# set_fact : Quand l'utiliser ?
+
+### 3 cas d'usage principaux
+
+**1. Calcul dynamique (valeur qui dépend du runtime)**
 
 ```yaml
-# Définir une variable simple
-- name: Définir version
-  set_fact:
-    app_version: "1.2.3"
-
-# Calculer une valeur
 - name: Calculer timestamp
   set_fact:
     backup_date: "{{ ansible_date_time.date }}"
+```
 
-# Construire une variable complexe
-- name: Build config object
+**2. Transformation de données**
+
+```yaml
+- name: Extraire version depuis commande
+  shell: node --version
+  register: result
+
+- name: Nettoyer la version
   set_fact:
-    app_config:
-      name: "{{ app_name }}"
-      version: "{{ app_version }}"
-      env: "{{ environment }}"
-      replicas: "{{ environments[env].replicas }}"
+    node_ver: "{{ result.stdout | regex_replace('^v', '') }}"
 ```
 
 ---
 
-# Variables : set_fact (suite)
+# set_fact : Quand l'utiliser ? (suite)
+
+**3. Condition/logique runtime**
 
 ```yaml
-# Variable conditionnelle
-- name: Définir URL selon environnement
+- name: Déterminer mode
   set_fact:
-    api_url: "{{ 'https://api.prod.com' if env == 'prod' else 'https://api.dev.com' }}"
+    is_prod: "{{ env == 'prod' }}"
 
-# Concaténer des listes
-- name: Merger des packages
-  set_fact:
-    all_packages: "{{ base_packages + custom_packages }}"
-
-# Variable from registered result
-- name: Version from command
-  shell: node --version
-  register: node_version
-
-- name: Store version
-  set_fact:
-    node_ver: "{{ node_version.stdout | regex_replace('^v', '') }}"
+- name: Configurer en mode production
+  template:
+    src: app.conf.j2
+    dest: /etc/app.conf
+  when: is_prod
 ```
+
+**❌ PAS pour des valeurs statiques** → Utilisez `vars:` à la place !
+
+---
+
+# set_fact vs vars : Le bon choix
+
+### Comparaison pratique
+
+**Si vous pouvez écrire sans `{{ }}` → PAS besoin de set_fact**
+
+```yaml
+# ❌ Mauvais : set_fact pour valeur statique
+- set_fact:
+    app_path: "/var/www/app"
+
+# ✅ Bon : vars pour valeur statique
+vars:
+  app_path: "/var/www/app"
+```
+
+---
+
+# set_fact vs vars : Le bon choix (suite)
+
+**Si ça dépend d'un résultat → set_fact**
+
+```yaml
+# ✅ Bon : calcul dynamique
+- name: Vérifier si fichier existe
+  stat:
+    path: /etc/app.conf
+  register: config_file
+
+- name: Déterminer si première install
+  set_fact:
+    first_install: "{{ not config_file.stat.exists }}"
+
+- name: Initialiser la config
+  template:
+    src: default.conf.j2
+    dest: /etc/app.conf
+  when: first_install
+```
+
+---
+
+# Placement de set_fact : Cas simple
+
+### Le plus courant : juste avant usage
+
+```yaml
+- hosts: all
+  tasks:
+    - name: Définir chemin app
+      set_fact:
+        app_path: "/var/www/app"
+
+    - name: Créer répertoire
+      file:
+        path: "{{ app_path }}"
+        state: directory
+
+    - name: Copier fichier
+      copy:
+        src: app.js
+        dest: "{{ app_path }}/app.js"
+```
+
+**👉 OK partout après le set_fact**
+
+---
+
+# Placement de set_fact : Bonne pratique
+
+### Juste avant l'utilisation réelle
+
+```yaml
+- hosts: all
+  tasks:
+    - name: Installer dépendances
+      apt:
+        name: nginx
+        state: present
+
+    - name: Calculer chemin config
+      set_fact:
+        config_path: "/etc/nginx/sites-available/{{ app_name }}.conf"
+
+    - name: Déployer config nginx
+      template:
+        src: nginx.conf.j2
+        dest: "{{ config_path }}"
+```
+
+**💡 Plus lisible : on voit immédiatement où la variable est utilisée**
+
+---
+
+# Placement de set_fact : Mauvaise pratique
+
+### ❌ Tout définir en haut "au cas où"
+
+```yaml
+- hosts: all
+  tasks:
+    - set_fact:
+        a: 1
+        b: 2
+        c: 3
+        d: 4
+        e: 5
+        f: 6
+    
+    # ... 50 tâches plus bas
+    
+    - debug:
+        msg: "{{ f }}"
+```
+
+**Problèmes** :
+- 🚫 Illisible (dépendances cachées)
+- 🚫 Debug difficile (quelle variable est utilisée où ?)
+- 🚫 Maintenance cauchemardesque
+
+---
+
+# Exemple concret : Cas dynamique
+
+### Utilisation typique de set_fact
+
+```yaml
+- hosts: webservers
+  vars:
+    env: "prod"
+  
+  tasks:
+    - name: Déterminer si prod
+      set_fact:
+        is_prod: "{{ env == 'prod' }}"
+
+    - name: Configurer sécurité production
+      template:
+        src: secure.conf.j2
+        dest: /etc/app/security.conf
+      when: is_prod
+
+    - name: Activer debug mode
+      lineinfile:
+        path: /etc/app/app.conf
+        line: "DEBUG=true"
+      when: not is_prod
+```
+
+---
+
+# Exemple concret : Transformation de données
+
+### Parser et nettoyer des résultats
+
+```yaml
+- hosts: all
+  tasks:
+    - name: Récupérer version Docker
+      shell: docker --version
+      register: docker_output
+
+    - name: Extraire version propre
+      set_fact:
+        docker_version: "{{ docker_output.stdout | regex_search('([0-9]+\\.[0-9]+\\.[0-9]+)') }}"
+
+    - name: Vérifier compatibilité
+      fail:
+        msg: "Docker {{ docker_version }} trop ancien (>= 24.0.0 requis)"
+      when: docker_version is version('24.0.0', '<')
+
+    - name: Installer app
+      docker_container:
+        name: myapp
+        image: "myapp:latest"
+```
+
+---
+
+# Exemple concret : Construction d'objet complexe
+
+### Assembler des données
+
+```yaml
+- hosts: all
+  vars:
+    app_name: "myapp"
+    app_version: "1.2.3"
+    environment: "prod"
+  
+  tasks:
+    - name: Construire configuration complète
+      set_fact:
+        app_config:
+          name: "{{ app_name }}"
+          version: "{{ app_version }}"
+          env: "{{ environment }}"
+          deploy_time: "{{ ansible_date_time.iso8601 }}"
+          server: "{{ ansible_facts['hostname'] }}"
+          ip: "{{ ansible_facts['default_ipv4']['address'] }}"
+
+    - name: Sauvegarder config JSON
+      copy:
+        content: "{{ app_config | to_nice_json }}"
+        dest: "/etc/{{ app_name }}/config.json"
+```
+
+---
+
+# set_fact : Portée (scope)
+
+### Où la variable est-elle disponible ?
+
+**set_fact** crée une variable **au niveau du host** (pas globale)
+
+```yaml
+- hosts: web1
+  tasks:
+    - set_fact:
+        my_var: "hello"
+    
+    - debug:
+        msg: "{{ my_var }}"  # ✅ Fonctionne
+
+- hosts: web2
+  tasks:
+    - debug:
+        msg: "{{ my_var }}"  # ❌ my_var n'existe pas ici !
+```
+
+---
+
+# set_fact : Facts globales
+
+### Rendre une variable disponible pour tous les hosts
+
+**Méthode 1 : run_once + delegate_to**
+
+```yaml
+- hosts: all
+  tasks:
+    - name: Calculer timestamp commun
+      set_fact:
+        deploy_timestamp: "{{ ansible_date_time.epoch }}"
+      run_once: true
+      delegate_to: localhost
+      delegate_facts: true
+
+    - name: Utiliser timestamp
+      debug:
+        msg: "Deployed at: {{ hostvars['localhost']['deploy_timestamp'] }}"
+```
+
+---
+
+# set_fact : Facts globales (suite)
+
+**Méthode 2 : Boucle sur tous les hosts**
+
+```yaml
+- hosts: localhost
+  gather_facts: yes
+  tasks:
+    - name: Définir version globale
+      set_fact:
+        app_version: "1.2.3"
+      delegate_to: "{{ item }}"
+      delegate_facts: true
+      with_items: "{{ groups['all'] }}"
+
+- hosts: all
+  tasks:
+    - debug:
+        msg: "Version: {{ app_version }}"
+```
+
+---
+
+# set_fact globales : Méthode 3 (la meilleure)
+
+### Utiliser group_vars pour les vraies variables globales
+
+**⚠️ Important** : Si la valeur est statique, préférez `group_vars/all.yml` !
+
+```yaml
+# group_vars/all.yml
+app_version: "1.2.3"
+deploy_user: "ansible"
+base_path: "/opt/apps"
+```
+
+**Pourquoi c'est mieux ?** :
+- ✅ Plus simple et lisible
+- ✅ Pas besoin de delegate_facts
+- ✅ Performance optimale
+- ✅ Disponible partout automatiquement
+
+**🎯 Règle** : set_fact global = seulement si calcul runtime nécessaire
+
+---
+
+# set_fact : Avec register
+
+### Combiner set_fact et register
+
+```yaml
+- hosts: databases
+  tasks:
+    - name: Compter connexions MySQL
+      shell: mysql -e "SHOW PROCESSLIST" | wc -l
+      register: mysql_connections
+
+    - name: Calculer seuil d'alerte
+      set_fact:
+        max_connections: 100
+        current_usage: "{{ mysql_connections.stdout | int }}"
+        usage_percent: "{{ (mysql_connections.stdout | int / 100 * 100) | round(2) }}"
+
+    - name: Alerte si trop de connexions
+      debug:
+        msg: "⚠️ ALERTE : {{ usage_percent }}% de connexions utilisées !"
+      when: usage_percent | float > 80
+```
+
+---
+
+# set_fact : Cas pratiques avancés
+
+### Exemples réels du quotidien
+
+**1. Déterminer le gestionnaire de packages**
+
+```yaml
+- name: Détecter package manager
+  set_fact:
+    pkg_manager: "{{ 'apt' if ansible_facts['os_family'] == 'Debian' else 'yum' }}"
+
+- name: Installer nginx
+  package:
+    name: nginx
+    state: present
+  vars:
+    ansible_pkg_mgr: "{{ pkg_manager }}"
+```
+
+---
+
+# set_fact : Cas pratiques avancés (suite)
+
+**2. Construire URL dynamique**
+
+```yaml
+- name: Déterminer protocole et port
+  set_fact:
+    use_ssl: "{{ env == 'prod' }}"
+    protocol: "{{ 'https' if env == 'prod' else 'http' }}"
+    port: "{{ 443 if env == 'prod' else 80 }}"
+
+- name: Construire URL API
+  set_fact:
+    api_url: "{{ protocol }}://api.{{ domain }}:{{ port }}/v1"
+
+- name: Configurer app
+  template:
+    src: app.conf.j2
+    dest: /etc/app.conf
+  vars:
+    api_endpoint: "{{ api_url }}"
+```
+
+---
+
+# set_fact : Cas pratiques avancés (suite 2)
+
+**3. Merger listes conditionnellement**
+
+```yaml
+- hosts: webservers
+  vars:
+    base_packages:
+      - nginx
+      - curl
+      - git
+    prod_packages:
+      - monitoring-agent
+      - security-tools
+  
+  tasks:
+    - name: Construire liste packages
+      set_fact:
+        all_packages: "{{ base_packages + (prod_packages if env == 'prod' else []) }}"
+
+    - name: Installer tous les packages
+      apt:
+        name: "{{ all_packages }}"
+        state: present
+```
+
+---
+
+# set_fact vs vars vs defaults : Récap
+
+### Quel mécanisme pour quel besoin ?
+
+| Situation | Solution | Exemple |
+|-----------|----------|---------|
+| Valeur statique connue d'avance | `vars:` dans playbook | `app_name: "myapp"` |
+| Valeur par défaut modifiable | `defaults/main.yml` | `nginx_port: 80` |
+| Constante système | `vars/main.yml` | `nginx_service: nginx` |
+| Calcul au runtime | `set_fact` | `timestamp: "{{ ansible_date_time.date }}"` |
+| Condition dynamique | `set_fact` | `is_prod: "{{ env == 'prod' }}"` |
+| Transformation de données | `set_fact` | `version: "{{ result.stdout \| regex }}"` |
+
+---
+
+# Résumé : set_fact - Les règles d'or
+
+### Ce qu'il faut retenir
+
+**✅ Quand utiliser set_fact** :
+- Calcul dynamique (timestamp, hostname...)
+- Condition/logique runtime (is_prod, should_backup...)
+- Transformation de résultat (register + traitement)
+
+**❌ Quand NE PAS utiliser set_fact** :
+- Valeurs statiques → `vars:`
+- Valeurs par défaut → `defaults/main.yml`
+- Constantes → `vars/main.yml`
+
+**📍 Où le placer** :
+- Juste avant son utilisation (pas en haut par défaut)
+- Après la tâche qui génère les données nécessaires
+
+**🎯 Règle simple** : `set_fact` = calcul runtime, pas stockage statique
+
+---
+
+# 💡 Aide-mémoire : Variables, Facts, set_fact
+
+### Quelle approche pour quel besoin ?
+
+```yaml
+# 1. VARIABLES STATIQUES (valeurs connues)
+vars:
+  app_name: "myapp"          # ✅ Simple et clair
+  app_port: 8080
+
+# 2. FACTS (infos système automatiques)
+- debug:
+    msg: "{{ ansible_facts['hostname'] }}"  # ✅ Découverte auto
+
+# 3. SET_FACT (calculs runtime)
+- set_fact:
+    is_prod: "{{ env == 'prod' }}"  # ✅ Condition dynamique
+    
+- set_fact:
+    deploy_time: "{{ ansible_date_time.iso8601 }}"  # ✅ Timestamp
+```
+
+---
+
+# Checklist : Avant d'utiliser set_fact
+
+### Posez-vous ces questions
+
+**1. La valeur est-elle statique ?**
+- ✅ Oui → Utilisez `vars:` ou `defaults/`
+- ❌ Non → Continuez
+
+**2. La valeur dépend-elle d'une commande/calcul ?**
+- ✅ Oui → `set_fact` est approprié
+- ❌ Non → Retour à `vars:`
+
+**3. Où placer le set_fact ?**
+- ✅ Juste avant l'usage
+- ❌ Pas en haut du playbook par défaut
+
+**4. Pouvez-vous écrire la valeur sans `{{ }}` ?**
+- ✅ Oui → Utilisez `vars:` (statique)
+- ❌ Non → Utilisez `set_fact` (dynamique)
+
+---
+
+# Arbre de décision : Choix de variable
+
+### Quel mécanisme utiliser ?
+
+```
+Avez-vous besoin d'une variable ?
+│
+├─ C'est une info système ? (OS, CPU, RAM...)
+│  └─ ✅ Utilisez ansible_facts['...']
+│
+├─ La valeur est connue à l'avance et ne change pas ?
+│  ├─ Variable modifiable par l'utilisateur ?
+│  │  └─ ✅ defaults/main.yml dans un rôle
+│  │
+│  ├─ Constante système (chemins, noms de services) ?
+│  │  └─ ✅ vars/main.yml dans un rôle
+│  │
+│  └─ Variable simple du playbook ?
+│     └─ ✅ vars: ou group_vars/
+│
+└─ La valeur dépend d'un calcul/commande/condition ?
+   └─ ✅ set_fact (juste avant l'usage)
+```
+
+---
+
+# ❌ Erreurs courantes vs ✅ Bonnes pratiques
+
+### Erreur 1 : set_fact pour valeur statique
+
+```yaml
+# ❌ MAUVAIS
+- name: Définir chemin
+  set_fact:
+    app_path: "/var/www/app"
+
+# ✅ BON
+vars:
+  app_path: "/var/www/app"
+```
+
+**Pourquoi ?** Si la valeur est statique, `vars:` est plus simple et performant.
+
+---
+
+# ❌ Erreurs courantes vs ✅ Bonnes pratiques (2)
+
+### Erreur 2 : Tous les set_fact en haut
+
+```yaml
+# ❌ MAUVAIS : Tout en haut par défaut
+- hosts: all
+  tasks:
+    - set_fact:
+        var_a: "value_a"
+        var_b: "value_b"
+        var_c: "value_c"
+    
+    - name: Tâche 1
+      debug: msg="Task 1"
+    
+    # ... 50 tâches plus tard ...
+    
+    - name: Utiliser var_c
+      debug: msg="{{ var_c }}"
+```
+
+---
+
+# ❌ Erreurs courantes vs ✅ Bonnes pratiques (3)
+
+### Erreur 2 : Correction
+
+```yaml
+# ✅ BON : Juste avant l'usage
+- hosts: all
+  tasks:
+    - name: Tâche 1
+      debug: msg="Task 1"
+    
+    # ... autres tâches ...
+    
+    - name: Calculer valeur pour tâche suivante
+      set_fact:
+        var_c: "{{ some_calculation }}"
+    
+    - name: Utiliser var_c
+      debug: msg="{{ var_c }}"
+```
+
+**Pourquoi ?** Plus lisible, plus maintenable, dépendances claires.
+
+---
+
+# ❌ Erreurs courantes vs ✅ Bonnes pratiques (4)
+
+### Erreur 3 : Ne pas utiliser facts quand disponible
+
+```yaml
+# ❌ MAUVAIS : Récupérer hostname manuellement
+- name: Get hostname
+  command: hostname
+  register: host_result
+
+- set_fact:
+    server_name: "{{ host_result.stdout }}"
+
+# ✅ BON : Utiliser facts
+- debug:
+    msg: "Server: {{ ansible_facts['hostname'] }}"
+```
+
+**Pourquoi ?** Les facts sont déjà collectés automatiquement !
+
+---
+
+# ❌ Erreurs courantes vs ✅ Bonnes pratiques (5)
+
+### Erreur 4 : set_fact global pour valeur statique
+
+```yaml
+# ❌ MAUVAIS : Compliqué pour rien
+- hosts: localhost
+  tasks:
+    - set_fact:
+        app_version: "1.2.3"
+      delegate_to: "{{ item }}"
+      delegate_facts: true
+      with_items: "{{ groups['all'] }}"
+```
+
+```yaml
+# ✅ BON : group_vars/all.yml
+app_version: "1.2.3"
+```
+
+**Pourquoi ?** Si c'est statique, group_vars est infiniment plus simple.
+
+---
+
+# 📚 Exemples du quotidien : Quoi utiliser ?
+
+### Cas pratiques réels
+
+**Cas 1 : Port de l'application**
+
+```yaml
+# Valeur connue et modifiable par environnement
+# ✅ group_vars/production.yml
+app_port: 443
+
+# ✅ group_vars/dev.yml
+app_port: 8080
+```
+
+---
+
+# 📚 Exemples du quotidien : Quoi utiliser ? (2)
+
+### Cas pratiques réels
+
+**Cas 2 : Nom du service système**
+
+```yaml
+# Constante système, ne doit pas changer
+# ✅ roles/nginx/vars/main.yml
+nginx_service: nginx
+nginx_package: nginx
+nginx_config_path: /etc/nginx/nginx.conf
+```
+
+---
+
+# 📚 Exemples du quotidien : Quoi utiliser ? (3)
+
+### Cas pratiques réels
+
+**Cas 3 : Hostname du serveur**
+
+```yaml
+# Info système disponible automatiquement
+# ✅ Utiliser facts
+- name: Afficher hostname
+  debug:
+    msg: "Serveur {{ ansible_facts['hostname'] }}"
+
+# ❌ NE PAS FAIRE
+- command: hostname
+  register: result
+- set_fact:
+    hostname: "{{ result.stdout }}"
+```
+
+---
+
+# 📚 Exemples du quotidien : Quoi utiliser ? (4)
+
+### Cas pratiques réels
+
+**Cas 4 : Déterminer si environnement prod**
+
+```yaml
+# Calcul/condition basée sur variable
+# ✅ set_fact
+- name: Vérifier si prod
+  set_fact:
+    is_production: "{{ env == 'prod' }}"
+
+- name: Config sécurisée pour prod
+  template:
+    src: secure.conf.j2
+    dest: /etc/app/security.conf
+  when: is_production
+```
+
+---
+
+# 📚 Exemples du quotidien : Quoi utiliser ? (5)
+
+### Cas pratiques réels
+
+**Cas 5 : Timestamp de déploiement**
+
+```yaml
+# Valeur qui change à chaque exécution
+# ✅ set_fact
+- name: Générer timestamp
+  set_fact:
+    deploy_timestamp: "{{ ansible_date_time.iso8601 }}"
+
+- name: Créer tag de version
+  set_fact:
+    version_tag: "{{ app_version }}-{{ deploy_timestamp }}"
+```
+
+---
+
+# 📚 Exemples du quotidien : Quoi utiliser ? (6)
+
+### Cas pratiques réels
+
+**Cas 6 : Parser résultat de commande**
+
+```yaml
+# Transformation de données
+# ✅ set_fact
+- name: Récupérer version Docker
+  shell: docker --version
+  register: docker_result
+
+- name: Extraire version propre
+  set_fact:
+    docker_version: "{{ docker_result.stdout | regex_search('([0-9]+\\.[0-9]+)') }}"
+
+- name: Vérifier compatibilité
+  fail:
+    msg: "Docker {{ docker_version }} trop ancien"
+  when: docker_version is version('24.0', '<')
+```
+
+---
+
+# 🎓 Pour aller plus loin : Documentation
+
+### Ressources officielles
+
+**Facts** :
+- Liste complète : `ansible -m setup hostname`
+- Doc : [docs.ansible.com/ansible/latest/user_guide/playbooks_vars_facts.html](https://docs.ansible.com/ansible/latest/user_guide/playbooks_vars_facts.html)
+
+**set_fact** :
+- Module : [docs.ansible.com/ansible/latest/collections/ansible/builtin/set_fact_module.html](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/set_fact_module.html)
+
+**Précédence des variables** :
+- [docs.ansible.com/ansible/latest/user_guide/playbooks_variables.html#variable-precedence](https://docs.ansible.com/ansible/latest/user_guide/playbooks_variables.html#variable-precedence)
 
 ---
 
@@ -5645,53 +6527,288 @@ layout: new-section
 
 ---
 
-# Facts : setup
+# Facts vs set_fact : La différence
+
+### Deux concepts différents
+
+**Facts** (ansible_facts) = **Découverte automatique du système**
+- Collectés par Ansible au début du playbook
+- Infos système (OS, CPU, RAM, réseau, disques...)
+- En lecture seule (vous ne les créez pas)
+
+**set_fact** = **Variables que VOUS créez**
+- Définies par vous pendant l'exécution
+- Calculs, conditions, transformations
+- Modifiables, dynamiques
+
+---
+
+# Facts : setup (collecte automatique)
 
 ### Récupérer les informations système
 
 ```yaml
-# Récupérer tous les facts
-- name: Gather facts
+# Par défaut : gather_facts: yes (automatique)
+- hosts: all
+  tasks:
+    - debug:
+        msg: "OS: {{ ansible_facts['distribution'] }}"
+
+# Récupérer manuellement
+- name: Collecter facts
   setup:
 
-# Récupérer facts spécifiques
-- name: Only network facts
+# Récupérer facts spécifiques (filtre)
+- name: Seulement facts réseau
   setup:
     filter: ansible_*_ipv4
-
-# Désactiver gather facts
-- hosts: all
-  gather_facts: no
-  tasks:
-    - name: Manual gather
-      setup:
 ```
 
 ---
 
-# Facts : facts personnalisés
+# Facts : Désactiver la collecte
 
-### Créer des facts custom
+### Optimiser la performance
 
 ```yaml
-# Créer un fact local
+# Désactiver si pas besoin (gain de temps)
+- hosts: all
+  gather_facts: no
+  tasks:
+    - name: Juste une action simple
+      ping:
+
+# Collecter manuellement plus tard
+- hosts: all
+  gather_facts: no
+  tasks:
+    - name: Faire d'autres trucs
+      debug:
+        msg: "Sans facts d'abord"
+    
+    - name: Maintenant collecter facts
+      setup:
+    
+    - debug:
+        msg: "OS: {{ ansible_facts['distribution'] }}"
+```
+
+---
+
+# Facts : Les facts les plus utiles
+
+### Informations système courantes
+
+```yaml
+- hosts: all
+  tasks:
+    - name: Afficher facts utiles
+      debug:
+        msg: |
+          Hostname: {{ ansible_facts['hostname'] }}
+          FQDN: {{ ansible_facts['fqdn'] }}
+          OS: {{ ansible_facts['distribution'] }} {{ ansible_facts['distribution_version'] }}
+          Architecture: {{ ansible_facts['architecture'] }}
+          Processeurs: {{ ansible_facts['processor_vcpus'] }}
+          RAM totale: {{ ansible_facts['memtotal_mb'] }} MB
+          IP principale: {{ ansible_facts['default_ipv4']['address'] }}
+          Toutes les IPs: {{ ansible_facts['all_ipv4_addresses'] }}
+```
+
+---
+
+# Facts : Exemples pratiques
+
+### Utilisation dans des conditions
+
+```yaml
+- hosts: all
+  tasks:
+    - name: Installer package Debian
+      apt:
+        name: nginx
+        state: present
+      when: ansible_facts['os_family'] == "Debian"
+
+    - name: Installer package RedHat
+      yum:
+        name: nginx
+        state: present
+      when: ansible_facts['os_family'] == "RedHat"
+
+    - name: Ajuster config selon RAM
+      template:
+        src: app.conf.j2
+        dest: /etc/app.conf
+      vars:
+        worker_processes: "{{ ansible_facts['processor_vcpus'] }}"
+        max_memory: "{{ (ansible_facts['memtotal_mb'] * 0.7) | int }}"
+```
+
+---
+
+# Facts personnalisés (custom facts)
+
+### Créer vos propres facts
+
+**Cas d'usage** : Stocker des infos custom sur le serveur
+- Version d'app déployée
+- Date de dernier déploiement
+- Config spécifique métier
+
+```yaml
 - name: Créer custom fact
   copy:
     content: |
       [general]
       app_version=1.2.3
       deployed_at={{ ansible_date_time.iso8601 }}
+      deployed_by={{ lookup('env', 'USER') }}
     dest: /etc/ansible/facts.d/myapp.fact
     mode: '0644'
+```
 
-# Recharger facts
+**📁 Emplacement** : `/etc/ansible/facts.d/*.fact`
+
+---
+
+# Facts personnalisés : Utilisation
+
+### Accéder aux custom facts
+
+```yaml
+# Recharger facts (pour récupérer le nouveau .fact)
 - name: Refresh facts
   setup:
 
 # Utiliser le custom fact
-- name: Use custom fact
+- name: Afficher version déployée
   debug:
     msg: "App version: {{ ansible_local.myapp.general.app_version }}"
+
+# Utiliser dans un template
+- name: Générer page status
+  template:
+    src: status.html.j2
+    dest: /var/www/status.html
+```
+
+**status.html.j2** :
+
+```html
+<p>Version: {{ ansible_local.myapp.general.app_version }}</p>
+<p>Deployed: {{ ansible_local.myapp.general.deployed_at }}</p>
+```
+
+---
+
+# Facts personnalisés : Format JSON
+
+### Alternative au format INI
+
+```yaml
+- name: Créer custom fact JSON
+  copy:
+    content: |
+      {
+        "app": {
+          "name": "myapp",
+          "version": "1.2.3",
+          "environment": "production"
+        },
+        "database": {
+          "host": "db.example.com",
+          "port": 5432
+        }
+      }
+    dest: /etc/ansible/facts.d/myapp.fact
+    mode: '0644'
+
+- setup:
+
+- debug:
+    msg: "DB host: {{ ansible_local.myapp.database.host }}"
+```
+
+---
+
+# Comparaison complète : Facts vs set_fact
+
+### Tableau récapitulatif
+
+| Critère | **Facts** (setup) | **set_fact** |
+|---------|-------------------|--------------|
+| **Source** | Système (collecte auto) | Vous (définition manuelle) |
+| **Quand** | Début du playbook | Pendant l'exécution |
+| **Modifiable** | ❌ Non (lecture seule) | ✅ Oui |
+| **Contenu** | Infos système | Calculs, conditions, données custom |
+| **Exemples** | `ansible_facts['hostname']` | `is_prod`, `app_version` |
+| **Stockage** | Mémoire Ansible | Mémoire Ansible |
+| **Portée** | Par host | Par host |
+| **Performance** | Coût initial (collecte) | Coût à chaque set_fact |
+
+---
+
+# Exemple complet : Facts + set_fact
+
+### Combiner les deux
+
+```yaml
+- hosts: webservers
+  vars:
+    env: "prod"
+  
+  tasks:
+    # Facts = collectés automatiquement
+    - name: Afficher infos système
+      debug:
+        msg: "Server: {{ ansible_facts['hostname'] }}, OS: {{ ansible_facts['distribution'] }}"
+    
+    # set_fact = calculs custom
+    - name: Calculer config selon RAM
+      set_fact:
+        is_prod: "{{ env == 'prod' }}"
+        max_workers: "{{ ansible_facts['processor_vcpus'] * 2 }}"
+        cache_size: "{{ (ansible_facts['memtotal_mb'] * 0.1) | int }}"
+    
+    # Utilisation combinée
+    - name: Déployer config
+      template:
+        src: nginx.conf.j2
+        dest: /etc/nginx/nginx.conf
+```
+
+---
+
+# Exemple pratique : Adaptation automatique
+
+### Déploiement intelligent basé sur facts
+
+```yaml
+- hosts: all
+  tasks:
+    - name: Déterminer stratégie selon ressources
+      set_fact:
+        deployment_type: "{{ 'high-perf' if ansible_facts['memtotal_mb'] > 8000 else 'standard' }}"
+        is_ssd: "{{ ansible_facts['devices']['sda']['model'] is search('SSD') }}"
+        needs_swap: "{{ ansible_facts['memtotal_mb'] < 2000 }}"
+
+    - name: Créer swap si nécessaire
+      command: |
+        dd if=/dev/zero of=/swapfile bs=1M count=2048
+        chmod 600 /swapfile
+        mkswap /swapfile
+        swapon /swapfile
+      when: needs_swap
+
+    - name: Optimiser pour SSD
+      sysctl:
+        name: vm.swappiness
+        value: "1"
+      when: is_ssd
+
+    - debug:
+        msg: "Déploiement {{ deployment_type }} configuré"
 ```
 
 ---
