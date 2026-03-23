@@ -1131,7 +1131,7 @@ ansible-playbook -i inventory/hosts.yml deploy.yml
 
 # state : Modules de services
 
-### systemd, service
+### service (recommandé pour Docker)
 
 | State | Signification |
 |-------|---------------|
@@ -1141,15 +1141,17 @@ ansible-playbook -i inventory/hosts.yml deploy.yml
 | `reloaded` | Configuration rechargée (sans redémarrage complet) |
 
 ```yaml
-# ✅ Démarrer nginx
-- systemd: name=nginx state=started
+# ✅ Démarrer nginx (compatible Docker)
+- service: name=nginx state=started
 
 # ✅ Arrêter nginx
-- systemd: name=nginx state=stopped
+- service: name=nginx state=stopped
 
 # ✅ Redémarrer nginx
-- systemd: name=nginx state=restarted
+- service: name=nginx state=restarted
 ```
+
+💡 **Note** : Utilisez `service` au lieu de `systemd` pour la compatibilité avec Docker
 
 ---
 
@@ -1208,8 +1210,10 @@ ansible-playbook -i inventory/hosts.yml deploy.yml
 ```yaml
 # ✅ CORRECT : Deux tâches distinctes
 - apt: name=nginx state=present  # 1. Installer
-- systemd: name=nginx state=started  # 2. Démarrer
+- service: name=nginx state=started  # 2. Démarrer (compatible Docker)
 ```
+
+💡 **Note** : Utilisez `service` au lieu de `systemd` pour la compatibilité avec Docker
 
 ---
 
@@ -1220,7 +1224,7 @@ ansible-playbook -i inventory/hosts.yml deploy.yml
 Vérifiez toujours la documentation du module :
 ```bash
 ansible-doc apt
-ansible-doc systemd
+ansible-doc service
 ansible-doc file
 ```
 
@@ -2126,15 +2130,17 @@ tasks:
 ```yaml
 handlers:
   - name: restart docker
-    systemd:
+    service:
       name: docker
       state: restarted
 
   - name: reload nginx
-    systemd:
+    service:
       name: nginx
       state: reloaded
 ```
+
+💡 **Note** : Utilisez `service` pour la compatibilité avec Docker
 
 ---
 
@@ -2154,10 +2160,12 @@ tasks:
 ```yaml
 handlers:
   - name: restart nginx  # ⚠️ CE NOM DOIT CORRESPONDRE EXACTEMENT
-    systemd:
+    service:
       name: nginx
       state: restarted
 ```
+
+💡 **Note** : Utilisez `service` pour la compatibilité Docker
 
 ---
 
@@ -2801,10 +2809,12 @@ handlers:
       chdir: /var/www/app
 
   - name: restart backend
-    systemd:
+    service:
       name: webapp-api
       state: restarted
 ```
+
+💡 **Note** : Utilisez `service` pour la compatibilité Docker
 
 ---
 
@@ -2866,10 +2876,12 @@ handlers:
     notify: restart app after db update
 
   - name: restart app after db update
-    systemd:
+    service:
       name: webapp
       state: restarted
 ```
+
+💡 **Note** : Utilisez `service` pour la compatibilité Docker
 
 ---
 
@@ -2887,13 +2899,13 @@ tasks:
 
 handlers:
   - name: reload prometheus
-    systemd:
+    service:
       name: prometheus
       state: reloaded
     listen: monitoring stack reload
 
   - name: reload alertmanager
-    systemd:
+    service:
       name: alertmanager
       state: reloaded
     listen: monitoring stack reload
@@ -2902,6 +2914,8 @@ handlers:
     command: amtool check-config /etc/alertmanager/config.yml
     listen: monitoring stack reload
 ```
+
+💡 **Note** : Utilisez `service` pour la compatibilité Docker
 
 ---
 
@@ -3052,11 +3066,13 @@ tasks:
 
 handlers:
   - name: restart app
-    systemd:
+    service:
       name: myapp
       state: restarted
     when: env == "production"
 ```
+
+💡 **Note** : Utilisez `service` pour la compatibilité Docker
 
 **💡 Comportement** :
 - Handler notifié → OK
@@ -3236,16 +3252,18 @@ handlers:
 
 ```yaml
 # ❌ MAUVAIS
-- command: systemctl stop nginx
+- command: service nginx stop
   notify: start nginx
 - uri: url=http://localhost  # ❌ nginx pas encore démarré !
 
 # ✅ BON
-- command: systemctl stop nginx
+- command: service nginx stop
   notify: start nginx
 - meta: flush_handlers
 - uri: url=http://localhost  # ✅ nginx démarré maintenant
 ```
+
+💡 **Note Docker** : Dans les containers, utilisez `service` au lieu de `systemctl`
 
 ---
 
@@ -3756,15 +3774,17 @@ projet-ansible/
 ```yaml
 ---
 - name: restart docker     # ← MÊME syntaxe qu'une task !
-  systemd:
+  service:
     name: docker
     state: restarted
 
 - name: reload docker
-  systemd:
+  service:
     name: docker
     state: reloaded
 ```
+
+💡 **Note** : Utilisez `service` pour la compatibilité Docker
 
 **La seule différence** : Les handlers sont dans `handlers/` et s'exécutent seulement si notifiés !
 
@@ -5333,6 +5353,10 @@ layout: new-section
 
 ### Gestion des services avec systemd
 
+⚠️ **ATTENTION** : `systemd` ne fonctionne **PAS** dans Docker ! Utilisez le module `service` à la place.
+
+Cette section est pour les **VMs et serveurs physiques uniquement**.
+
 ```yaml
 # Démarrer un service
 - name: Démarrer nginx
@@ -5381,6 +5405,10 @@ layout: new-section
 
 # Services : systemd (avancé)
 
+### Fonctionnalités avancées (VMs/serveurs uniquement)
+
+⚠️ **Rappel** : Ces fonctionnalités ne sont **pas disponibles dans Docker**
+
 ```yaml
 # Recharger les daemon systemd
 - name: Recharger systemd
@@ -5401,14 +5429,18 @@ layout: new-section
   register: nginx_status
 ```
 
+💡 **Pour Docker** : Utilisez le module `service` à la place (voir slide suivante)
+
 ---
 
-# Services : service (compatible)
+# Services : service (recommandé pour Docker)
 
 ### Module générique compatible avec tous les systèmes
 
+💡 **Important pour Docker** : Le module `service` fonctionne dans les containers Docker, contrairement à `systemd`
+
 ```yaml
-# Démarrer un service (compatible)
+# Démarrer un service
 - name: Démarrer nginx
   service:
     name: nginx
@@ -5428,39 +5460,32 @@ layout: new-section
 ```
 
 ---
-layout: new-section
----
 
-# 📁 Fichiers & Dossiers
+# Services : systemd (VMs et serveurs physiques uniquement)
 
----
+### Gestion des services avec systemd
 
-# Fichiers : file (création/modification)
-
-### Gestion des fichiers et dossiers
+⚠️ **Attention** : `systemd` ne fonctionne **pas** dans les containers Docker ! Utilisez `service` à la place.
 
 ```yaml
-# Créer un dossier
-- name: Créer dossier application
-  file:
-    path: /opt/myapp
-    state: directory
-    owner: www-data
-    group: www-data
-    mode: '0755'
+# Démarrer un service (sur VM/serveur physique)
+- name: Démarrer nginx
+  systemd:
+    name: nginx
+    state: started
 
-# Créer un fichier vide
-- name: Créer fichier vide
-  file:
-    path: /tmp/test.txt
-    state: touch
-    owner: ubuntu
-    mode: '0644'
+# Arrêter un service
+- name: Arrêter nginx
+  systemd:
+    name: nginx
+    state: stopped
+
+# Redémarrer un service
+- name: Redémarrer nginx
+  systemd:
+    name: nginx
+    state: restarted
 ```
-
----
-
-# Fichiers : file (suppression)
 
 ```yaml
 # Supprimer un fichier
@@ -7938,7 +7963,7 @@ layout: new-section
 
 # Ne pas fail sur certains codes retour
 - name: Check optional service
-  systemd:
+  service:
     name: optional-service
     state: started
   register: service_result
@@ -7954,6 +7979,8 @@ layout: new-section
     - health_check.rc != 0
     - health_check.stdout != "OK"
 ```
+
+💡 **Note** : Utilisez `service` pour la compatibilité Docker
 
 ---
 
@@ -8122,7 +8149,9 @@ layout: new-section
 
 # Systemd : systemd timer
 
-### Alternative moderne à cron
+### Alternative moderne à cron (VMs/serveurs uniquement)
+
+⚠️ **ATTENTION** : Les systemd timers ne fonctionnent **PAS** dans Docker ! Utilisez `cron` à la place.
 
 ```yaml
 # Créer un service systemd
@@ -8160,12 +8189,13 @@ layout: new-section
 ```yaml
 # Activer le timer
 - name: Enable and start timer
-  systemd:
+  service:
     name: backup.timer
     enabled: yes
     state: started
-    daemon_reload: yes
 ```
+
+⚠️ **Rappel** : Cette fonctionnalité n'est disponible que sur VMs/serveurs physiques, pas dans Docker
 
 ---
 layout: new-section
