@@ -5929,35 +5929,87 @@ ansible-galaxy collection install kubernetes.core
 
 ---
 
+# Collections : requirements.yml
+
+### Même dépendances pour toute l’équipe / la CI
+
+```yaml
+# requirements.yml (à la racine du dépôt Ansible)
+collections:
+  - name: community.docker
+    version: ">=3.4.0"
+  - name: amazon.aws
+    version: ">=8.0.0"
+```
+
+---
+
+# Collections : installer depuis requirements.yml
+
+```bash
+ansible-galaxy collection install -r requirements.yml
+# Mise à jour forcée (ex. CI)
+ansible-galaxy collection install -r requirements.yml --force
+```
+
+---
+
+# Collections : chemins et inventaire côté Ansible
+
+### Où elles sont résolues
+
+- **`ansible-galaxy collection list`** : collections visibles par ton installation
+- **`ansible.cfg`** : `collections_paths` pour ajouter un dossier projet (ex. `./collections`)
+
+```ini
+[defaults]
+collections_paths = ~/.ansible/collections:./collections
+```
+
+---
+
+# FQCN et ansible.builtin
+
+### Noms complets (recommandé en 2026)
+
+- **FQCN** : `namespace.collection.module` — pas d’ambiguïté entre collections
+- **`ansible.builtin`** : modules du cœur (`copy`, `file`, `service`, …) ; en FQCN : `ansible.builtin.copy`
+- **Doc** : `ansible-doc -t module community.docker.docker_container`
+
+Une collection peut aussi fournir **plugins** (filtres Jinja, lookups), pas seulement des modules.
+
+---
+
 # Utilisation avec collections
 
 ```yaml
-# Utilisation avec collections
+# Exemple : module cloud (AMI fictive — à adapter à ta région / ton compte)
 - name: Gestion infrastructure cloud + containers
   hosts: localhost
   tasks:
     - name: Création instance AWS
       amazon.aws.ec2_instance:
-        name: 'docker-host'
+        name: docker-host
         image_id: ami-0abcdef1234567890
         instance_type: t3.medium
 ```
 
 ---
 
-# Collections : Attente et déploiement
+# Collections : attente SSH puis Docker (esquisse)
 
 ```yaml
-- name: Attente démarrage
-  wait_for:
-    host: '{{ item.public_ip_address }}'
+- name: Attente port SSH sur l’instance
+  ansible.builtin.wait_for:
+    host: "{{ item.public_ip_address }}"
     port: 22
+    timeout: 300
 
-- name: Déploiement containers
+- name: Déploiement container sur l’hôte distant
   community.docker.docker_container:
     name: myapp
     image: nginx:alpine
-    delegate_to: '{{ item.public_ip_address }}'
+  delegate_to: "{{ item.public_ip_address }}"
 ```
 
 ---
@@ -5966,18 +6018,15 @@ ansible-galaxy collection install kubernetes.core
 
 ### Comprendre `community.docker.docker_container`
 
+**Format** : `namespace.collection.module` — ici `community` · `docker` · `docker_container`
+
 ```yaml
 - name: Lancer un container
-  community.docker.docker_container:  # ⚠️ Namespace complet !
+  community.docker.docker_container:
     name: webapp
     image: nginx
     state: started
 ```
-
-**Format** : `namespace.collection.module_name`
-- `community` = namespace
-- `docker` = collection
-- `docker_container` = module
 
 ---
 
@@ -5985,53 +6034,63 @@ ansible-galaxy collection install kubernetes.core
 
 ### Organisation des milliers de modules
 
-**Avant (Ansible < 2.10)** : Tous les modules dans un seul paquet
-```yaml
-- docker_container:  # ❌ Deprecated
-```
+**Avant (Ansible &lt; 2.10)** : tout dans un gros paquet — noms courts.
 
-**Maintenant (Ansible 2.10+)** : Modules organisés en collections
 ```yaml
-- community.docker.docker_container:  # ✅ Moderne
+- docker_container:  # déprécié / non résolu sans redirection
 ```
-
-**Avantage** : Mises à jour indépendantes, meilleure organisation
 
 ---
 
-# ❌ Erreur courante : Module introuvable
+# Pourquoi les namespaces ? (suite)
+
+**Depuis Ansible 2.10+** : modules livrés par **collections** — mises à jour indépendantes du cœur.
 
 ```yaml
-- name: Lancer container
-  docker_container:  # ❌ ERREUR : Module not found
-    name: webapp
-```
-
-**Message d'erreur** :
-```
-ERROR! couldn't resolve module/action 'docker_container'
-```
-
-**Solutions** :
-
-```yaml
-# ✅ Solution 1 : Utiliser le nom complet
 - community.docker.docker_container:
     name: webapp
 ```
 
 ---
 
+# ❌ Erreur courante : module sans FQCN
+
 ```yaml
-# ✅ Solution 2 : Installer la collection
+- name: Lancer container
+  docker_container:  # ERREUR : plus résolu sans collection / FQCN
+    name: webapp
 ```
+
+---
+
+# ❌ Message Ansible typique
+
+```
+ERROR! couldn't resolve module/action 'docker_container'
+```
+
+---
+
+# ✅ Correctif 1 : FQCN (collection déjà installée)
+
+```yaml
+- community.docker.docker_container:
+    name: webapp
+```
+
+---
+
+# ✅ Correctif 2 : installer la collection
 
 ```bash
 ansible-galaxy collection install community.docker
 ```
 
+---
+
+# ✅ Correctif 2 (suite) : playbook
+
 ```yaml
-# Puis dans votre playbook
 - name: Lancer container
   community.docker.docker_container:
     name: webapp
@@ -6044,8 +6103,8 @@ ansible-galaxy collection install community.docker
 | Collection | Modules | Installation |
 |------------|---------|--------------|
 | `community.docker` | Docker/containers | `ansible-galaxy collection install community.docker` |
-| `community.general` | Utilitaires divers | Inclus par défaut |
-| `ansible.posix` | Linux/POSIX | Inclus par défaut |
+| `community.general` | Utilitaires divers | Souvent déjà présent selon install ; sinon `ansible-galaxy collection install community.general` |
+| `ansible.posix` | Linux/POSIX | Idem (souvent fourni avec le paquet Ansible) |
 | `amazon.aws` | AWS | `ansible-galaxy collection install amazon.aws` |
 | `kubernetes.core` | Kubernetes | `ansible-galaxy collection install kubernetes.core` |
 
@@ -6059,7 +6118,20 @@ Toujours utiliser le nom complet : `namespace.collection.module`
 
 ---
 
-# ✅ Mini-QCM : Module 11 - Collections
+# Collections : rôles publiés dans une collection
+
+### Même mécanisme Galaxy ; utile pour livrer modules **et** rôles sous la même version
+
+Une collection peut embarquer des **rôles** référencés ainsi dans un playbook :
+
+```yaml
+roles:
+  - namespace.collection.nom_du_role
+```
+
+---
+
+# ✅ Mini-QCM : Module 12 - Collections
 
 **Question 1** : Qu'est-ce qu'une collection Ansible ?
 - A) Un groupe de serveurs
@@ -6078,7 +6150,7 @@ Toujours utiliser le nom complet : `namespace.collection.module`
 
 ---
 
-# 📝 Réponses Mini-QCM Module 11
+# 📝 Réponses Mini-QCM Module 12
 
 **Question 1** : **B** ✅
 Une collection est un pack de modules spécialisés (ex: community.docker pour Docker, amazon.aws pour AWS).
@@ -6091,9 +6163,9 @@ Format : `namespace.collection.module`. Ex: `community.docker.docker_container` 
 
 ---
 
-# 🎯 Mini-exercice : Module 11 (5 min)
+# 🎯 Mini-exercice : Module 12 (5 min)
 
-**Objectif** : Installer et utiliser une collection
+### Objectif : installer et utiliser une collection
 
 ```bash
 # 1. Installer la collection
@@ -6106,7 +6178,11 @@ ansible-galaxy collection list
 ansible localhost -m community.general.timezone -a "name=Europe/Paris" --become
 ```
 
-**Vérification** : La collection doit apparaître dans la liste.
+---
+
+# 🎯 Mini-exercice : Module 12 (vérification)
+
+**Attendu** : la collection apparaît dans `ansible-galaxy collection list` ; la commande `timezone` s’exécute sans erreur (selon OS, `--become` peut être nécessaire).
 
 ---
 layout: new-section
@@ -6142,12 +6218,16 @@ routeAlias: 'vault'
 ### Gestion sécurisée des secrets
 
 ```bash
-# Créer un fichier chiffré
+# Créer ou éditer un fichier entièrement chiffré
 ansible-vault create secrets.yml
 ansible-vault edit secrets.yml
 
-# Utilisation
+# Chiffrer / voir / faire tourner les playbooks (2.20+ : --encrypt-vault-id default si besoin)
+ansible-vault encrypt secrets.yml --encrypt-vault-id default
+ansible-vault view secrets.yml
 ansible-playbook -i inventory deploy.yml --ask-vault-pass
+# Équivalent moderne (mot de passe interactif) :
+ansible-playbook -i inventory deploy.yml --vault-id default@prompt
 ```
 
 ---
@@ -6164,31 +6244,30 @@ Il existe plusieurs méthodes pour utiliser les fichiers chiffrés avec Ansible 
 
 ### Charger directement dans le playbook
 
+Le fichier listé dans **`vars_files`** est fusionné au **play** : les clés (`vault_db_password`, etc.) sont disponibles pour toutes les tâches (chemins **relatifs au playbook** sauf si tu utilises `@` / chemins absolus).
+
 ```yaml
 # playbook-deploy.yml
 ---
 - name: Déploiement avec secrets
   hosts: webservers
   become: true
-  
   vars_files:
-    - secrets.yml  # ← Fichier chiffré avec Vault
-  
+    - secrets.yml
+
   tasks:
     - name: Configuration de la base de données
       template:
         src: database.conf.j2
         dest: /etc/app/database.conf
-      vars:
-        db_password: "{{ vault_db_password }}"  # ← Variable du fichier chiffré
-    
+
     - name: Configuration API
       template:
         src: api.conf.j2
         dest: /etc/app/api.conf
-      vars:
-        api_key: "{{ vault_api_key }}"  # ← Variable du fichier chiffré
 ```
+
+Les templates `database.conf.j2` / `api.conf.j2` utilisent directement `{{ vault_db_password }}`, `{{ vault_api_key }}`, etc.
 
 ---
 
@@ -6211,9 +6290,9 @@ vault_jwt_secret: "jwt_random_secret_key_xyz"
 # 1. Créer le fichier secrets.yml avec les valeurs ci-dessus
 nano secrets.yml
 
-# 2. Chiffrer le fichier
-ansible-vault encrypt secrets.yml
-# Entrer un mot de passe vault
+# 2. Chiffrer le fichier (2.20+ : --encrypt-vault-id default si Ansible le demande)
+ansible-vault encrypt secrets.yml --encrypt-vault-id default
+# Entrer un mot de passe vault (ou --vault-password-file)
 
 # 3. Utiliser dans le playbook
 ansible-playbook playbook-deploy.yml --ask-vault-pass
@@ -6225,22 +6304,27 @@ ansible-playbook playbook-deploy.yml --ask-vault-pass
 
 ### Charger automatiquement via group_vars
 
-**Structure recommandée** :
+**Structure recommandée** (secrets pour **tout** l’inventaire) :
 
 ```
 projet-ansible/
 ├── playbook.yml
 ├── inventory.yml
 └── group_vars/
-    ├── all.yml           # Variables non chiffrées (référence les vault_*)
-    └── vault.yml         # Variables chiffrées (préfixe vault_)
+    └── all/
+        ├── public.yml       # Variables non chiffrées (références vault_*)
+        └── vault.yml        # Secrets chiffrés (fusionnés dans le groupe « all »)
 ```
+
+**Piège 1** : un fichier `group_vars/vault.yml` ne s’applique **pas** à tous les hôtes : il ne s’applique qu’aux membres du **groupe d’inventaire nommé** `vault`. D’où le dossier **`group_vars/all/`**.
+
+**Piège 2 (Ansible 2.20+ testé)** : ne mets **pas** en parallèle **`group_vars/all.yml`** (fichier) **et** le dossier **`group_vars/all/`**. Dans ce cas, le fichier racine **`all.yml` est ignoré** : tu ne récupères que les YAML du dossier — typiquement les `vault_*` sans les `db_password: "{{ vault_db_password }}"` définis dans le fichier ignoré.
 
 ---
 
 # Vault : Méthode 2 - group_vars (suite)
 
-**group_vars/all.yml** (NON chiffré, visible dans Git)
+**`group_vars/all/public.yml`** (NON chiffré, visible dans Git)
 
 ```yaml
 ---
@@ -6262,11 +6346,11 @@ app_port: 8080
 
 # Vault : Méthode 2 - group_vars (suite 2)
 
-**group_vars/vault.yml** (CHIFFRÉ avec ansible-vault)
+**`group_vars/all/vault.yml`** (CHIFFRÉ avec `ansible-vault encrypt` — voir slide suivante pour Ansible 2.20+)
 
 ```yaml
 ---
-# Secrets réels (chiffrés)
+# Contenu AVANT chiffrement (exemple pédagogique — ne pas committer en clair)
 vault_db_password: "P@ssw0rd_SuperSecret_2026!"
 vault_api_key: "ak_1234567890abcdef_ghijklmnop"
 vault_smtp_password: "smtp_secret_password"
@@ -6281,11 +6365,25 @@ vault_jwt_secret: "jwt_random_secret_key_xyz"
 - name: Déploiement
   hosts: webservers
   tasks:
-    - debug:
-        msg: "DB Password: {{ db_password }}"  # ← Utilise la variable publique
+    - ansible.builtin.debug:
+        msg: "DB Password: {{ db_password }}"
 ```
 
-**💡 Avantage** : Pas besoin de `vars_files:`, Ansible charge automatiquement group_vars/ !
+**Avantage** : pas de `vars_files` ; Ansible charge **tous les `*.yml`** sous **`group_vars/all/`** pour les hôtes du groupe `all` (inventaire).
+
+---
+
+# Vault : Ansible 2.20+ — chiffrement et vault-id
+
+Si `ansible-vault encrypt` répond que plusieurs **vault-id** sont disponibles, précise celui à utiliser (souvent `default`) :
+
+```bash
+ansible-vault encrypt group_vars/all/vault.yml \
+  --vault-password-file .vault_pass \
+  --encrypt-vault-id default
+```
+
+Même idée pour `ansible-vault create` / `rekey` si Ansible te le demande.
 
 ---
 
@@ -6327,8 +6425,8 @@ ansible-playbook playbook.yml  # ← Déchiffre automatiquement !
 ### Workflow complet avec Vault
 
 ```bash
-# 1. Créer la structure
-mkdir -p group_vars templates
+# 1. Créer la structure (tout sous group_vars/all/ — pas de group_vars/all.yml en parallèle)
+mkdir -p group_vars/all templates
 ```
 
 ---
@@ -6336,8 +6434,8 @@ mkdir -p group_vars templates
 # Vault : Exemple complet (suite)
 
 ```bash
-# 2. Créer group_vars/all.yml (public)
-cat > group_vars/all.yml << 'EOF'
+# 2. Variables publiques (même dossier que le vault)
+cat > group_vars/all/public.yml << 'EOF'
 ---
 db_host: "localhost"
 db_user: "app_user"
@@ -6345,15 +6443,15 @@ db_password: "{{ vault_db_password }}"
 api_key: "{{ vault_api_key }}"
 EOF
 
-# 3. Créer group_vars/vault.yml (à chiffrer)
-cat > group_vars/vault.yml << 'EOF'
+# 3. Secrets pour tout l’inventaire
+cat > group_vars/all/vault.yml << 'EOF'
 ---
 vault_db_password: "P@ssw0rd_2026"
 vault_api_key: "secret_key_xyz"
 EOF
 
-# 4. Chiffrer vault.yml
-ansible-vault encrypt group_vars/vault.yml
+# 4. Chiffrer (invite mot de passe ; en 2.20+ : --encrypt-vault-id default si Ansible le demande)
+ansible-vault encrypt group_vars/all/vault.yml --encrypt-vault-id default
 ```
 
 ---
@@ -6390,8 +6488,9 @@ EOF
 # Vault : Exemple complet (suite 3)
 
 ```bash
-# 7. Exécuter
+# 7. Exécuter (mot de passe vault demandé à l’invite)
 ansible-playbook playbook.yml --ask-vault-pass
+# ou : ansible-playbook playbook.yml --vault-id default@prompt
 
 # 8. Vérifier le résultat
 cat /tmp/app.conf
@@ -6416,10 +6515,10 @@ cat /tmp/app.conf
 | Méthode | Avantages | Inconvénients | Cas d'usage |
 |---------|-----------|---------------|-------------|
 | **vars_files** | Explicite, contrôle total | Doit être dans chaque playbook | Secrets spécifiques à 1 playbook |
-| **group_vars** | Automatique, organisé | Structure à respecter | Secrets partagés (recommandé) |
+| **group_vars/all/** | Automatique, bon pour « tous les hôtes » | **`public.yml` + `vault.yml`** dans `all/` ; pas **`all.yml`** en parallèle du dossier **`all/`** ; pas `group_vars/vault.yml` pour « tout le monde » | Secrets partagés (recommandé) |
 | **vault-password-file** | Pas de saisie manuelle | Fichier sensible à protéger | Automatisation CI/CD |
 
-**💡 Recommandation** : Utilisez **group_vars/** pour la plupart des projets.
+**Recommandation** : utiliser **`group_vars/all/`** (fichier public + vault chiffré) pour la plupart des projets.
 
 ---
 
@@ -6442,12 +6541,12 @@ vault_api_key: '1234567890abcdef'  # ✅ Préfixé
 ### Traçabilité et sécurité
 
 ```yaml
-# group_vars/all.yml (NON chiffré, visible dans Git)
-db_password: '{{ vault_db_password }}'  # Variable utilisée partout
+# group_vars/all/public.yml (NON chiffré, visible dans Git)
+db_password: '{{ vault_db_password }}'
 api_key: '{{ vault_api_key }}'
 
-# group_vars/vault.yml (CHIFFRÉ avec ansible-vault)
-vault_db_password: 'le_vrai_secret'  # Secret protégé
+# group_vars/all/vault.yml (CHIFFRÉ avec ansible-vault)
+vault_db_password: 'le_vrai_secret'
 vault_api_key: 'la_vraie_clé'
 ```
 
@@ -6482,7 +6581,7 @@ api_key: '{{ vault_api_key }}'  # ✅ On sait que c'est chiffré ailleurs
 
 ---
 
-# ✅ Mini-QCM : Module 12 - Ansible Vault
+# ✅ Mini-QCM : Module 13 - Ansible Vault
 
 **Question 1** : À quoi sert Ansible Vault ?
 - A) Stocker les playbooks de manière sécurisée
@@ -6501,7 +6600,7 @@ api_key: '{{ vault_api_key }}'  # ✅ On sait que c'est chiffré ailleurs
 
 ---
 
-# 📝 Réponses Mini-QCM Module 12
+# 📝 Réponses Mini-QCM Module 13
 
 **Question 1** : **B** ✅
 Vault chiffre les données sensibles (mots de passe, clés API, certificats). Le fichier reste dans Git mais chiffré.
@@ -6512,28 +6611,44 @@ Vault chiffre les données sensibles (mots de passe, clés API, certificats). Le
 **Question 3** : **B** ✅
 Préfixe `vault_` = bonne pratique (pas obligatoire). Permet d'identifier rapidement qu'une variable vient du vault.
 
+**Pièges rappel** : secrets **globaux** → **`group_vars/all/vault.yml`**, pas `group_vars/vault.yml` (groupe inventaire `vault`). Et ne pas combiner **`group_vars/all.yml`** + dossier **`group_vars/all/`** (le fichier est ignoré sous Ansible 2.20).
+
 ---
 
-# 🎯 Mini-exercice : Module 12 (10 min)
+# 🎯 Mini-exercice : Module 13 (10 min)
 
-**Objectif** : Créer et utiliser un secret chiffré
+### Objectif : créer et utiliser un secret chiffré
 
 ```bash
-# 1. Créer fichier chiffré
 ansible-vault create secrets.yml
-# Ajouter : vault_api_key: "secret123"
+# Dans l’éditeur, coller par exemple :
+# ---
+# vault_api_key: "secret123"
+```
 
-# 2. Créer playbook utilisant le secret
+---
+
+# 🎯 Mini-exercice : Module 13 (suite)
+
+**`playbook-vault-demo.yml`** (même répertoire que `secrets.yml` pour `vars_files`)
+
+```yaml
 ---
 - hosts: localhost
   vars_files:
     - secrets.yml
   tasks:
-    - debug:
+    - ansible.builtin.debug:
         msg: "API Key: {{ vault_api_key }}"
+```
 
-# 3. Exécuter
-ansible-playbook playbook.yml --ask-vault-pass
+---
+
+# 🎯 Mini-exercice : Module 13 (exécution)
+
+```bash
+ansible-playbook playbook-vault-demo.yml --ask-vault-pass
+# ou : ansible-playbook playbook-vault-demo.yml --vault-id default@prompt
 ```
 
 ---

@@ -631,6 +631,8 @@ sleep 5
 ./test.sh
 ```
 
+**Avec le lab du dépôt** (`docker-compose-lab.yml` à la racine du projet) : `docker compose -f docker-compose-lab.yml up -d` puis `cd correction && ./test-lab.sh` (inventaires `inventories/lab/*.yml`).
+
 ---
 
 ## 📁 Structure de la correction
@@ -890,8 +892,8 @@ docker exec nginx-server-1 service nginx status
 
 ### Depuis votre navigateur
 
-- **Nginx 1** : http://localhost:8080
-- **Nginx 2** : http://localhost:8081
+- **Nginx 1** : http://localhost:9080
+- **Nginx 2** : http://localhost:9081
 
 ### Depuis les containers
 

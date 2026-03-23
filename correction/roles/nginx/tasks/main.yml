@@ -22,6 +22,14 @@
     mode: '0644'
   notify: restart nginx
 
+- name: Activer le vhost deploye (sites-enabled)
+  ansible.builtin.file:
+    path: /etc/nginx/sites-enabled/default
+    src: "{{ nginx_config_path }}"
+    state: link
+    force: true
+  notify: restart nginx
+
 - name: Déployer la page d'accueil
   template:
     src: index.html.j2
