@@ -7,11 +7,11 @@ highlighter: shiki
 title: Formation Ansible 2026
 # download: true
 #transition: slide-left
-# remoteAssets: false
-# export:
-#   zoom: 1
-#   format: pdf
-#   timeout: 300000000
+remoteAssets: false
+export:
+  #  zoom: 1
+   format: pdf
+   timeout: 300000000
 #   pdfOptions:
 #     format: A4
 download: "https://ansible.andromed.fr/slides.pdf"
@@ -23,13 +23,34 @@ themeConfig:
 
 # Ansible 2026
 
-🤖 Une formation présentée par Andromed.
+💚 Une formation présentée par Ascent et Andromed.
 
 <div class="pt-12">
-  <span @click="next" class="px-2 p-1 rounded cursor-pointer hover:bg-white hover:bg-opacity-10">
+  <span @click="next" class="px-2 p-3 rounded cursor-pointer hover:bg-white hover:bg-opacity-10 neon-border">
     Appuyez sur espace pour la page suivante <carbon:arrow-right class="inline"/>
   </span>
 </div>
+
+
+<div class="absolute flex gap-x-2 bottom-0 left-0 p-4 z-50">
+      <SlideCurrentNo
+        class="dark:!text-white !text-[8px] p-1 w-5 h-5 items-center justify-center flex rounded-full bg-white/10 backdrop-blur-sm border border-gray-600 opacity-80"
+      />
+      <span class="text-gray-400">/</span>
+  <SlideTotal
+        class="dark:!text-white !text-[8px] p-1 w-5 h-5 items-center justify-center flex rounded-full bg-white/10 backdrop-blur-sm border border-gray-600 opacity-80"
+      />
+</div>
+
+
+<div class="absolute bottom-0 right-0 z-50 flex flex-col gap-y-2 p-2">
+<div class="hover:bg-white hover:bg-opacity-10 neon-border border-2 rounded-xl w-[200px] p-2 flex flex-col gap-y-2">
+  <img src="/ascent.png" alt="Ascent" class="w-6 h-6 mx-auto rounded-full"></img>
+  <span class="text-gray-400 text-xs">Programme : <b>4-047</b></span>
+  <span class="text-gray-400 text-xs">Lot: <b>4</b></span>
+</div>
+</div>
+
 
 ---
 layout: presenter
@@ -177,7 +198,7 @@ En production, vous remplacerez ces containers par de vrais serveurs (VMs, cloud
 
 ```yaml
 # docker-compose-lab.yml - Infrastructure pour les exercices
-version: '3.8'
+# Note: version: obsolète en Docker Compose 2026, on commence directement par services:
 services:
   web-server-1:
     image: ubuntu:22.04
@@ -270,8 +291,8 @@ routeAlias: 'sommaire'
 ::right::
 
 <div class="flex flex-col gap-2">
-<Link to="handlers">🎯 9. Handlers</Link>
-<Link to="roles">📦 10. Rôles</Link>
+<Link to="roles">📦 9. Rôles</Link>
+<Link to="handlers">🎯 10. Handlers</Link>
 <Link to="collections">🌐 11. Collections</Link>
 <Link to="vault">🔐 12. Ansible Vault</Link>
 <Link to="debugging">🐛 13. Debugging & Troubleshooting</Link>
@@ -547,7 +568,7 @@ flowchart TB
 #### Pour vous aider si vous avez un peu de mal avec la structure de l'exercice :
 
 ```bash
-groups_vars/
+group_vars/
 └── all.yml
 
 inventories/

@@ -2,8 +2,6 @@
 # Ce fichier crée 10 containers Ubuntu qui simulent des serveurs
 # Ansible pourra les gérer comme de vrais serveurs
 
-version: '3.8'
-
 services:
   # Serveurs Web (3 instances)
   web-server-1:

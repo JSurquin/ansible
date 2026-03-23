@@ -172,12 +172,14 @@ all:
 # Exécuter le playbook
 ansible-playbook -i inventory.yml install-nginx.yml
 
-# Vérifier que Nginx fonctionne
-docker exec ansible-lab-web01 systemctl status nginx
+# Vérifier que Nginx fonctionne (avec service dans Docker)
+docker exec ansible-lab-web01 service nginx status
 
 # Tester la page par défaut
 docker exec ansible-lab-web01 curl localhost
 ```
+
+💡 **Note** : Dans les containers Docker, on utilise `service` au lieu de `systemctl`
 
 **✅ Résultat attendu** : Nginx installé et fonctionnel !
 

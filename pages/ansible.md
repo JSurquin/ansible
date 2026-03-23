@@ -323,14 +323,15 @@ routeAlias: 'inventaires'
 L'**inventaire** est un fichier qui liste tous vos serveurs et leurs informations :
 
 - 📍 **Adresses IP** : Où sont vos serveurs
-
 - 👥 **Groupes** : Organiser par fonction (web, base de données...)
-
 - ⚙️ **Variables** : Configuration spécifique à chaque serveur
-
 - 🔑 **Connexion** : Comment se connecter (utilisateur, clés SSH...)
 
 **Analogie** : C'est comme un carnet d'adresses pour vos serveurs !
+
+**2 types d'inventaires** :
+- **Statiques** : Fichiers YAML/INI écrits à la main
+- **Dynamiques** : Scripts qui interrogent AWS, Azure, Docker...
 
 ---
 
@@ -361,7 +362,7 @@ databases:  # Redéfinition du groupe databases (peut créer confusion)
 webservers:  # Définition du groupe webservers
   hosts:  # Serveurs web avec notation de plage
     web-[01:03]:  # Notation de plage : génère web-01, web-02, web-03
-      ansible_host: 10.0.1.30  # IP de base (sera incrémentée)
+      ansible_host: 10.0.1.30  # IP de base (ne sera pas incrémentée par défaut , à vous de le gérer manuellement)
 ```
 
 **💡 Note** : La notation `[01:03]` est une fonctionnalité Ansible pour générer plusieurs hôtes automatiquement.
@@ -521,57 +522,6 @@ web-01: {ansible_host: 10.0.1.10}
 # Après migration vers nouveau serveur
 web-01: {ansible_host: 192.168.50.10}
 # ✅ Vos playbooks fonctionnent toujours sans modification !
-```
-
----
-
-# ✅ Mini-QCM : Module 4 - Inventaires
-
-**Question 1** : Quelle est la différence entre le nom d'hôte et `ansible_host` ?
-- A) Il n'y a pas de différence
-- B) Le nom est un alias, `ansible_host` est l'adresse réelle
-- C) `ansible_host` est obsolète
-
-**Question 2** : Comment grouper des serveurs dans un inventaire ?
-- A) Avec `children:` en YAML
-- B) Avec `[nom_groupe]` en INI
-- C) Les deux sont possibles
-
-**Question 3** : Quelle variable définit l'utilisateur SSH ?
-- A) `ansible_ssh_user`
-- B) `ansible_user`
-- C) `ssh_username`
-
----
-
-# 📝 Réponses Mini-QCM Module 4
-
-**Question 1** : **B** ✅
-Le nom (ex: web-01) est un alias logique. `ansible_host` contient l'IP/FQDN réel.
-
-**Question 2** : **C** ✅
-Les deux formats sont valides : `children:` en YAML ou `[groupe]` en INI.
-
-**Question 3** : **B** ✅
-`ansible_user` est la variable standard (anciennement `ansible_ssh_user`).
-
----
-
-# 🎯 Mini-exercice : Module 4 (5 min)
-
-**Objectif** : Créer un inventaire multi-groupes
-
-```yaml
-# Créer inventory.yml avec :
-# - Groupe "web" : 2 serveurs (web01: 10.0.1.10, web02: 10.0.1.11)
-# - Groupe "db" : 1 serveur (db01: 10.0.1.20)
-# - Variable globale : ansible_user: ubuntu
-```
-
-**Test** :
-```bash
-ansible-inventory -i inventory.yml --graph
-# Doit afficher la structure complète
 ```
 
 ---
@@ -797,38 +747,6 @@ all:
 
 ---
 
-# ✅ Mini-QCM : Variables Ansible
-
-**Question 1** : Quelle valeur pour `ansible_connection` avec Docker ?
-- A) `ssh`
-- B) `docker`
-- C) `container`
-
-**Question 2** : Comment éviter le warning Python ?
-- A) Ignorer le warning
-- B) Spécifier `ansible_python_interpreter`
-- C) Désinstaller Python
-
-**Question 3** : Quel type de connexion pour un hôte distant ?
-- A) `local`
-- B) `ssh`
-- C) `remote`
-
----
-
-# 📝 Réponses Mini-QCM Variables Ansible
-
-**Question 1** : **B** ✅
-`ansible_connection: docker` pour gérer des conteneurs Docker.
-
-**Question 2** : **B** ✅
-Définir explicitement `ansible_python_interpreter` évite la découverte automatique.
-
-**Question 3** : **B** ✅
-`ansible_connection: ssh` est le type par défaut pour les connexions distantes.
-
----
-
 # 📄 Le fichier ansible.cfg (Configuration)
 
 ### Configurer Ansible pour votre projet
@@ -881,6 +799,622 @@ projet-ansible/
 ├── playbook.yml
 └── roles/
 ```
+
+---
+
+# 🔄 Inventaires Dynamiques
+
+### Le problème des inventaires statiques
+
+**Situation** : Votre infrastructure change constamment
+
+- Serveurs créés/détruits automatiquement (Cloud)
+- Auto-scaling qui ajoute/retire des instances
+- Containers Docker qui changent d'IP
+
+**Inventaire statique** = Liste manuelle à jour constamment 😰
+
+**Inventaire dynamique** = Script qui interroge l'infrastructure en temps réel ! 🎉
+
+---
+
+# Inventaire Dynamique : Le concept
+
+### Comment ça fonctionne ?
+
+```mermaid
+flowchart LR
+    A[Ansible] -->|Demande liste| B[Script/Plugin]
+    B -->|Interroge| C[AWS/Azure/Docker]
+    C -->|Retourne infos| B
+    B -->|Format JSON| A
+    A -->|Exécute| D[Serveurs découverts]
+```
+
+**Avantage** : Liste toujours à jour automatiquement !
+
+---
+
+# Types d'inventaires dynamiques
+
+### 3 approches en 2026
+
+**1. Plugins d'inventaire** (Recommandé 2026) ✅
+
+- Intégrés dans Ansible
+- Configuration YAML
+- Exemples : `aws_ec2`, `azure_rm`, `docker`, `gcp_compute`
+
+**2. Scripts personnalisés** (Legacy)
+
+- Script Python/Bash qui retourne du JSON
+- Plus flexible mais plus complexe
+
+**3. Collections** (Moderne)
+
+- Plugins fournis par les collections
+- Exemple : `community.docker.docker_containers`
+
+---
+
+# Plugin d'inventaire : AWS EC2
+
+### Configuration complète
+
+```yaml
+# inventory_aws.yml
+plugin: amazon.aws.aws_ec2
+
+regions:
+  - eu-west-1
+  - eu-west-3
+
+filters:
+  instance-state-name: running
+  tag:Environment:
+    - production
+    - staging
+
+keyed_groups:
+  - key: tags.Environment
+    prefix: env
+  - key: tags.Role
+    prefix: role
+
+hostnames:
+  - dns-name
+  - private-ip-address
+```
+
+---
+
+# Plugin AWS EC2 : Variables extraites
+
+### Ce que le plugin récupère automatiquement
+
+```yaml
+# Variables disponibles pour chaque instance :
+ansible_host: ec2-54-123-45-67.eu-west-1.compute.amazonaws.com
+ec2_instance_id: i-0abc123def456789
+ec2_instance_type: t3.medium
+ec2_region: eu-west-1
+ec2_availability_zone: eu-west-1a
+ec2_security_groups: ['web-sg', 'ssh-sg']
+ec2_tags:
+  Environment: production
+  Role: webserver
+  Name: web-prod-01
+```
+
+**Groupes créés automatiquement** :
+
+- `env_production`
+- `role_webserver`
+- `instance_type_t3_medium`
+
+---
+
+# Utiliser l'inventaire AWS
+
+### Commandes
+
+```bash
+# Installer la collection AWS
+ansible-galaxy collection install amazon.aws
+
+# Configurer les credentials AWS
+export AWS_ACCESS_KEY_ID="xxx"
+export AWS_SECRET_ACCESS_KEY="yyy"
+export AWS_REGION="eu-west-1"
+
+# Lister les serveurs découverts
+ansible-inventory -i inventory_aws.yml --graph
+
+# Résultat :
+@all:
+  |--@aws_ec2:
+  |  |--@env_production:
+  |  |  |--web-prod-01
+  |  |  |--web-prod-02
+  |  |--@role_webserver:
+  |  |  |--web-prod-01
+  |  |  |--web-prod-02
+```
+
+---
+
+# Plugin d'inventaire : Docker
+
+### Configuration pour containers
+
+```yaml
+# Nom du fichier doit finir par docker.yml ou docker.yaml (ex. inventory_docker.yml)
+plugin: community.docker.docker_containers  # hôtes = conteneurs (API Docker)
+
+docker_host: unix:///var/run/docker.sock  # socket local ; TCP/TLS si démon distant
+
+# filters : liste include/exclude (≥ 3.5) ; pas l’ancien bloc status:/label: en dict
+# docker_state.Running | default(false) : extrait de docker inspect → State.Running (true si le conteneur tourne) ; default(false) si la clé manque.
+# (docker_config.Labels | default({})).get("managed_by") == "ansible" : extrait de docker inspect → Config.Labels (dict des --label) ; on impose managed_by == ansible comme dans les exemples docker run plus loin.
+filters:
+  - include: >-
+      docker_state.Running | default(false)
+      and (docker_config.Labels | default({})).get("managed_by") == "ansible"
+  - exclude: true  # rejette le reste
+
+# keyed_groups : labels sous docker_config.Labels → groupes service_* et env_*
+keyed_groups:
+  - key: '(docker_config.Labels | default({})).get("service", "")'  # extrait le label service
+    prefix: service
+  - key: '(docker_config.Labels | default({})).get("environment", "")'  # extrait le label environment
+    prefix: env
+
+compose:
+  ansible_connection: docker
+  ansible_user: root
+```
+
+---
+
+# Plugin Docker : prérequis
+
+### Inventaire Docker qui refuse de se charger
+
+- **Nom de fichier** : suffixe **`docker.yml`** ou **`docker.yaml`** (exigence du plugin).
+- **Collection** : `community.docker` (souvent déjà là si Galaxy affiche *Nothing to do*).
+- **Python** : `pip install docker` pour **le même interpréteur qu’Ansible** (`ansible --version`).
+
+```bash
+ansible-galaxy collection install community.docker
+python3 -m pip install docker
+docker ps
+ansible-inventory -i inventory_docker.yml --graph
+```
+
+---
+
+# Plugin Docker : Exemple concret
+
+### Créer des containers avec labels
+
+```bash
+# Lancer des containers avec labels
+docker run -d --name web-prod-01 \
+  --label managed_by=ansible \
+  --label service=web \
+  --label environment=production \
+  nginx:latest
+
+docker run -d --name web-prod-02 \
+  --label managed_by=ansible \
+  --label service=web \
+  --label environment=production \
+  nginx:latest
+
+# PostgreSQL (image officielle) : sans mot de passe superuser, le conteneur s’arrête tout de suite
+# (message « Database is uninitialized and superuser password is not specified »).
+docker run -d --name db-prod-01 \
+  -e POSTGRES_PASSWORD=lab_only_change_me \
+  --label managed_by=ansible \
+  --label service=database \
+  --label environment=production \
+  postgres:15
+```
+
+---
+
+# Plugin Docker : Résultat
+
+### Inventaire généré automatiquement
+
+```bash
+ansible-inventory -i inventory_docker.yml --graph
+
+# Résultat :
+@all:
+  |--@docker_containers:
+  |  |--@service_web:
+  |  |  |--web-prod-01
+  |  |  |--web-prod-02
+  |  |--@service_database:
+  |  |  |--db-prod-01
+  |  |--@env_production:
+  |  |  |--web-prod-01
+  |  |  |--web-prod-02
+  |  |  |--db-prod-01
+```
+
+**Variables disponibles** : `docker_name`, `docker_image`, `docker_ports`, `docker_labels`
+
+---
+
+# Plugin d'inventaire : Azure
+
+### Configuration Azure RM
+
+```yaml
+# inventory_azure.yml
+plugin: azure.azcollection.azure_rm
+
+auth_source: auto
+
+include_vm_resource_groups:
+  - production-rg
+  - staging-rg
+
+conditional_groups:
+  production: "tags.environment == 'production'"
+  staging: "tags.environment == 'staging'"
+  webservers: "tags.role == 'web'"
+
+hostnames:
+  - default
+
+compose:
+  ansible_host: public_ipv4_addresses[0]
+  ansible_user: azureuser
+```
+
+---
+
+# Plugin d'inventaire : GCP
+
+### Configuration Google Cloud
+
+```yaml
+# inventory_gcp.yml
+plugin: google.cloud.gcp_compute
+
+projects:
+  - my-project-id
+
+regions:
+  - europe-west1
+  - europe-west4
+
+filters:
+  - status = RUNNING
+  - labels.environment = production
+
+keyed_groups:
+  - key: labels.environment
+    prefix: env
+  - key: labels.role
+    prefix: role
+
+hostnames:
+  - public_ip
+  - name
+
+compose:
+  ansible_host: networkInterfaces[0].accessConfigs[0].natIP
+```
+
+---
+
+# Combiner inventaires statique + dynamique
+
+### Configuration hybride
+
+```ini
+# ansible.cfg
+[defaults]
+inventory = ./inventory/
+
+# Structure :
+inventory/
+├── static.yml          # Inventaire statique (localhost, etc.)
+├── aws_ec2.yml        # Plugin AWS
+└── docker.yml         # Plugin Docker
+```
+
+**Ansible fusionne automatiquement tous les inventaires !**
+
+```bash
+ansible-inventory -i ./inventory/ --graph
+# Affiche TOUS les serveurs de toutes les sources
+```
+
+---
+
+# Exemple complet : Infrastructure hybride
+
+### Inventaire combiné
+
+```yaml
+# inventory/static.yml - Serveurs on-premise
+all:
+  children:
+    onpremise:
+      hosts:
+        control-node:
+          ansible_host: 192.168.1.10
+          ansible_connection: local
+```
+
+---
+
+# Exemple complet : Infrastructure hybride (suite 2)
+
+```yaml
+# inventory/aws.yml - Serveurs cloud
+plugin: amazon.aws.aws_ec2
+regions:
+  - eu-west-1
+filters:
+  instance-state-name: running
+keyed_groups:
+  - key: tags.Environment
+    prefix: env
+```
+
+---
+
+# Exemple complet : Infrastructure hybride (suite 3)
+
+```yaml
+# inventory/docker.yml - Containers locaux
+plugin: community.docker.docker_containers
+filters:
+  status: running
+keyed_groups:
+  - key: docker_labels.service
+    prefix: service
+compose:
+  ansible_connection: docker
+```
+
+---
+
+# Résultat de l'inventaire hybride
+
+### Tous les serveurs accessibles
+
+```bash
+ansible-inventory -i ./inventory/ --graph
+
+@all:
+  |--@onpremise:
+  |  |--control-node
+  |--@aws_ec2:
+  |  |--@env_production:
+  |  |  |--web-prod-01.aws
+  |  |  |--db-prod-01.aws
+  |--@docker_containers:
+  |  |--@service_web:
+  |  |  |--nginx-dev-01
+  |  |  |--nginx-dev-02
+```
+
+**Playbook** : Peut cibler n'importe quel groupe !
+
+---
+
+# Cas d'usage : Auto-scaling
+
+### Infrastructure qui change constamment
+
+**Problème** : Auto-scaling ajoute/retire des instances
+
+```yaml
+# Inventaire dynamique AWS
+plugin: amazon.aws.aws_ec2
+regions:
+  - eu-west-1
+filters:
+  tag:AutoScaling: "true"
+  instance-state-name: running
+```
+
+**Résultat** :
+- Ansible interroge AWS à chaque exécution
+- Liste toujours à jour (même avec auto-scaling)
+- Pas besoin de modifier l'inventaire manuellement
+
+---
+
+# Cas d'usage : Containers éphémères
+
+### Docker Swarm ou Kubernetes
+
+```yaml
+# inventory_docker_swarm.yml
+plugin: community.docker.docker_swarm
+
+docker_host: tcp://manager-node:2376
+
+include_host_uri: true
+
+filters:
+  - node_role == "worker"
+  - node_state == "ready"
+
+compose:
+  ansible_connection: ssh
+  ansible_host: node_addr
+```
+
+**Avantage** : Découvre automatiquement les workers du swarm
+
+---
+
+# Inventaire dynamique : Bonnes pratiques
+
+### Ce qu'il faut faire
+
+**✅ DO** :
+- Utiliser les plugins officiels (plus maintenus)
+- Ajouter des filtres pour limiter les serveurs
+- Utiliser `keyed_groups` pour organiser automatiquement
+- Combiner avec inventaire statique pour serveurs fixes
+- Mettre en cache avec `cache: yes` si beaucoup de serveurs
+
+```yaml
+# Ajouter du cache (évite requêtes répétées)
+plugin: amazon.aws.aws_ec2
+cache: yes
+cache_plugin: jsonfile
+cache_timeout: 3600  # 1 heure
+cache_connection: /tmp/ansible_inventory_cache
+```
+
+---
+
+# Inventaire dynamique : Bonnes pratiques (suite)
+
+### À éviter
+
+- Inventorier des milliers d’hôtes **sans filtre** ni **cache** (charge API + lenteur).
+- Laisser des **secrets** en clair dans le fichier d’inventaire → préférer **Ansible Vault** ou variables injectées (CI, contrôleur).
+- Un seul fichier fourre-tout : **séparer** statique / dynamique (ex. répertoire `inventory/` avec plusieurs sources).
+
+### Vérifier avant de jouer les playbooks
+
+- `ansible-inventory -i … --graph` ou `--list` pour valider groupes et hôtes.
+- `ansible-inventory -i … --host <nom>` pour inspecter les variables d’un hôte.
+
+---
+
+# 🎯 Mini-exercice : Module 4 (10 min)
+
+### Créer un inventaire Docker dynamique
+
+**Objectif** : Utiliser le plugin Docker
+
+```bash
+# 1. Installer la collection
+ansible-galaxy collection install community.docker
+
+# 2. Lancer des containers
+docker run -d --name web01 --label env=prod nginx
+docker run -d --name web02 --label env=prod nginx
+docker run -d --name web03 --label env=dev nginx
+```
+
+---
+
+# 🎯 Mini-exercice : Module 4 (suite)
+
+```yaml
+# 3. Créer inventory_docker.yml (suffixe docker.yml obligatoire pour ce plugin)
+plugin: community.docker.docker_containers
+docker_host: unix:///var/run/docker.sock
+filters:
+  - include: docker_state.Running | default(false)
+  - exclude: true
+keyed_groups:
+  - key: '(docker_config.Labels | default({})).get("env", "")'
+    prefix: env
+compose:
+  ansible_connection: docker
+```
+
+```bash
+# 4. Tester
+ansible-inventory -i inventory_docker.yml --graph
+
+# 5. Ping seulement les containers prod
+ansible -i inventory_docker.yml env_prod -m ping
+```
+
+---
+
+# ✅ Mini-QCM : Module 4 - Inventaires
+
+**Question 1** : Quelle est la différence entre le nom d'hôte et `ansible_host` ?
+- A) Il n'y a pas de différence
+- B) Le nom est un alias, `ansible_host` est l'adresse réelle
+- C) `ansible_host` est obsolète
+
+**Question 2** : Comment grouper des serveurs dans un inventaire ?
+- A) Avec `children:` en YAML
+- B) Avec `[nom_groupe]` en INI
+- C) Les deux sont possibles
+
+**Question 3** : Quelle variable définit l'utilisateur SSH ?
+- A) `ansible_ssh_user`
+- B) `ansible_user`
+- C) `ssh_username`
+
+**Question 4** : Quel plugin pour inventaire AWS ?
+- A) `aws_inventory`
+- B) `amazon.aws.aws_ec2`
+- C) `cloud.aws.ec2`
+
+**Question 5** : Avantage principal inventaire dynamique ?
+- A) Plus rapide
+- B) Toujours à jour automatiquement
+- C) Plus simple
+
+---
+
+# 📝 Réponses Mini-QCM Module 4
+
+**Question 1** : **B** ✅
+Le nom (ex: web-01) est un alias logique. `ansible_host` contient l'IP/FQDN réel.
+
+**Question 2** : **C** ✅
+Les deux formats sont valides : `children:` en YAML ou `[groupe]` en INI.
+
+**Question 3** : **B** ✅
+`ansible_user` est la variable standard (anciennement `ansible_ssh_user`).
+
+**Question 4** : **B** ✅
+Le plugin officiel est `amazon.aws.aws_ec2` (depuis la collection amazon.aws).
+
+**Question 5** : **B** ✅
+L'inventaire dynamique interroge l'infrastructure en temps réel = toujours à jour automatiquement !
+
+---
+
+# 📝 Récapitulatif Module 4 : Inventaires
+
+### Ce que vous devez retenir
+
+<div class="text-xs">
+
+**1. Inventaire statique** :
+- Fichiers YAML/INI écrits manuellement
+- Bon pour infrastructure fixe
+- Simple et rapide
+
+**2. Inventaire dynamique** :
+- Plugins ou scripts qui interrogent une API
+- Bon pour cloud et containers
+- Toujours à jour automatiquement
+
+**3. Plugins recommandés 2026** :
+- `amazon.aws.aws_ec2` pour AWS
+- `azure.azcollection.azure_rm` pour Azure
+- `google.cloud.gcp_compute` pour GCP
+- `community.docker.docker_containers` pour Docker
+
+**4. Bonnes pratiques** :
+- Combiner statique + dynamique
+- Utiliser le cache pour performances
+- Filtrer pour limiter les serveurs récupérés
+
+</div>
 
 ---
 layout: new-section
@@ -1434,67 +1968,581 @@ routeAlias: 'variables'
 Une **variable** permet de personnaliser vos playbooks :
 
 - 📊 **Données** : Valeurs réutilisables (version, nom, chemin...)
-
 - 🎯 **Flexibilité** : Même playbook pour différents environnements
-
 - 🔄 **Réutilisabilité** : Évite la duplication de code
-
 - 🌍 **Environnements** : Dev, test, production avec des valeurs différentes
 
 **Analogie** : C'est comme des champs à remplir dans un formulaire !
 
 ---
 
-# Variables et templates 🔧
+# 🎯 Où définir les variables ?
 
-### Configuration dynamique
+### 8 emplacements possibles
+
+Ansible permet de définir des variables à différents endroits. Comprendre **où** et **pourquoi** est crucial !
+
+```
+📁 Structure d'un projet Ansible
+├── inventory.yml                    # ① Variables d'inventaire
+├── group_vars/
+│   ├── all.yml                     # ② Variables pour TOUS les groupes
+│   ├── webservers.yml              # ③ Variables pour groupe webservers
+│   └── production.yml              # ④ Variables pour groupe production
+├── host_vars/
+│   └── web01.yml                   # ⑤ Variables pour UN seul serveur
+├── playbook.yml                     # ⑥ Variables dans le playbook (vars:)
+└── roles/
+    └── nginx/
+        ├── defaults/main.yml        # ⑦ Valeurs PAR DÉFAUT du rôle
+        └── vars/main.yml            # ⑧ Constantes FIXES du rôle
+```
+
+---
+layout: default
+class: text-base
+---
+
+# Module 7 : schéma — carte du projet
+
+### Où vivent les fichiers de variables (vue graphe)
+
+<div class="mx-auto max-w-full" style="transform: scale(0.96); transform-origin: top center;">
+
+```mermaid
+%%{init: {'flowchart': {'useMaxWidth': true, 'nodeSpacing': 32, 'rankSpacing': 26}, 'themeVariables': {'fontSize': '12px'}}}%%
+flowchart LR
+  ROOT((project_root)):::c0
+  ROOT --> INV[inventory]:::c1
+  ROOT --> GV[group_vars]:::c2
+  ROOT --> HV[host_vars]:::c3
+  ROOT --> PB[playbooks]:::c4
+  ROOT --> RO[roles]:::c5
+  GV --> GVA[all.yml]:::c6
+  GV --> GVG[web_or_env.yml]:::c7
+  RO --> DEF[defaults]:::c8
+  RO --> VAR[vars]:::c9
+classDef c0 fill:#0f172a,stroke:#38bdf8,color:#f8fafc
+classDef c1 fill:#b91c1c,stroke:#7f1d1d,color:#fff
+classDef c2 fill:#c2410c,stroke:#9a3412,color:#fff
+classDef c3 fill:#ca8a04,stroke:#a16207,color:#1c1917
+classDef c4 fill:#65a30d,stroke:#3f6212,color:#fff
+classDef c5 fill:#0d9488,stroke:#115e59,color:#fff
+classDef c6 fill:#2563eb,stroke:#1e3a8a,color:#fff
+classDef c7 fill:#7c3aed,stroke:#5b21b6,color:#fff
+classDef c8 fill:#db2777,stroke:#9d174d,color:#fff
+classDef c9 fill:#4f46e5,stroke:#312e81,color:#eef2ff
+```
+
+</div>
+
+---
+
+# ① Variables d'inventaire
+
+### Définies directement dans l'inventaire
+
+**Cas d'usage** : Configuration spécifique à un serveur ou groupe
+
+```yaml
+# inventory.yml
+all:
+  vars:
+    ansible_user: ubuntu           # Variable globale
+    ansible_python_interpreter: /usr/bin/python3
+  
+  children:
+    webservers:
+      vars:
+        http_port: 80              # Variable pour le groupe
+      hosts:
+        web01:
+          ansible_host: 10.0.1.10
+          server_id: 1             # Variable pour CE serveur uniquement
+        web02:
+          ansible_host: 10.0.1.11
+          server_id: 2
+```
+
+---
+
+# ② group_vars/all.yml
+
+### Variables pour TOUS les serveurs
+
+**Cas d'usage** : Configuration globale partagée par tout le monde
 
 ```yaml
 # group_vars/all.yml
-app_version: 'v1.2.0'
-db_password: '{{ vault_db_password }}'
-nginx_worker_processes: '{{ ansible_processor_vcpus }}'
+# Variables globales utilisables par tous les serveurs
+
+# Versions
+app_version: "1.2.0"
+docker_version: "24.0.7"
+
+# Configuration globale
+timezone: "Europe/Paris"
+ntp_servers:
+  - "0.fr.pool.ntp.org"
+  - "1.fr.pool.ntp.org"
+
+# Chemins standards
+app_home: "/opt/app"
+logs_dir: "/var/log/app"
 ```
+
+**💡 Priorité** : Faible (peut être surchargé par group_vars spécifiques ou playbook)
 
 ---
 
-# Variables par environnement
+# ③ group_vars/&lt;groupe&gt;.yml
+
+### Variables spécifiques à un groupe
+
+**Cas d'usage** : Configuration différente selon le type de serveur
 
 ```yaml
-# Variables par environnement
-environments:
-  dev:
-    domain: 'dev.myapp.com'
-    replicas: 1
-  prod:
-    domain: 'myapp.com'
-    replicas: 3
+# group_vars/webservers.yml
+# Variables pour les serveurs web uniquement
+
+web_port: 80
+ssl_enabled: true
+max_connections: 1000
+worker_processes: 4
+
+nginx_config:
+  client_max_body_size: "10M"
+  keepalive_timeout: 65
 ```
 
 ---
 
-# Variables spéciales : Les Facts
+# ③ group_vars/&lt;groupe&gt;.yml (exemple 2)
 
-### Les variables automatiques d'Ansible
+```yaml
+# group_vars/databases.yml
+# Variables pour les serveurs de base de données
+
+db_port: 5432
+db_max_connections: 200
+db_shared_buffers: "256MB"
+db_backup_enabled: true
+db_backup_time: "02:00"
+
+postgresql_version: "15"
+```
+
+**💡 Pourquoi ?** : Les serveurs web et les BDD n'ont pas les mêmes besoins !
+
+---
+
+# ④ group_vars/&lt;environnement&gt;.yml
+
+### Variables par environnement
+
+**Cas d'usage** : Différences entre dev/staging/production
+
+```yaml
+# group_vars/production.yml
+# Configuration pour environnement de production
+
+environment: production
+domain: "myapp.com"
+replicas: 3
+debug_mode: false
+log_level: "ERROR"
+
+database:
+  host: "db-prod.internal"
+  name: "myapp_prod"
+  pool_size: 20
+
+backup_enabled: true
+monitoring_enabled: true
+```
+
+---
+
+# ④ group_vars/&lt;environnement&gt;.yml (exemple 2)
+
+```yaml
+# group_vars/development.yml
+# Configuration pour environnement de développement
+
+environment: development
+domain: "dev.myapp.local"
+replicas: 1
+debug_mode: true
+log_level: "DEBUG"
+
+database:
+  host: "localhost"
+  name: "myapp_dev"
+  pool_size: 5
+
+backup_enabled: false
+monitoring_enabled: false
+```
+
+**🎯 Astuce** : Même structure, valeurs différentes !
+
+---
+
+# ⑤ host_vars/&lt;hostname&gt;.yml
+
+### Variables pour UN seul serveur
+
+**Cas d'usage** : Configuration unique à un serveur spécifique
+
+```yaml
+# host_vars/web01.yml
+# Configuration spécifique au serveur web01
+
+server_id: 1
+server_role: "primary"
+is_load_balancer: true
+
+# Ce serveur a plus de RAM, on augmente les workers
+nginx_worker_processes: 8
+nginx_worker_connections: 2048
+
+# Monitoring spécifique
+monitoring_endpoint: "http://monitoring.internal/web01"
+alert_email: "ops-team@company.com"
+```
+
+**💡 Priorité** : Plus forte que group_vars !
+
+---
+
+# ⑥ Variables dans le playbook
+
+### Définies directement dans le playbook
+
+**Cas d'usage** : Variables spécifiques à ce playbook uniquement
+
+```yaml
+# playbook.yml
+- name: Déployer l'application web
+  hosts: webservers
+  vars:
+    deployment_timestamp: "{{ ansible_date_time.iso8601 }}"
+    app_name: "webapp"
+    app_port: 8080
+    enable_ssl: true
+  
+  tasks:
+    - name: Afficher infos de déploiement
+      debug:
+        msg: "Deploying {{ app_name }} on port {{ app_port }} at {{ deployment_timestamp }}"
+```
+
+**💡 Priorité** : Forte (surcharge group_vars et defaults)
+
+---
+
+# ⑦ roles/*/defaults/main.yml
+
+### Valeurs PAR DÉFAUT du rôle
+
+**Cas d'usage** : Valeurs que l'utilisateur du rôle **PEUT changer**
+
+```yaml
+# roles/nginx/defaults/main.yml
+# Valeurs par défaut - L'utilisateur peut les surcharger
+
+# Configuration serveur
+nginx_port: 80
+nginx_worker_processes: auto
+nginx_worker_connections: 1024
+nginx_keepalive_timeout: 65
+
+# Configuration SSL
+nginx_ssl_enabled: false
+nginx_ssl_certificate: ""
+nginx_ssl_certificate_key: ""
+
+# Tuning performance
+nginx_client_max_body_size: "10M"
+nginx_gzip_enabled: true
+```
+
+**💡 Priorité** : Très faible (la plus basse)
+
+---
+
+# ⑧ roles/*/vars/main.yml
+
+### Constantes FIXES du rôle
+
+**Cas d'usage** : Valeurs que l'utilisateur **NE DOIT PAS changer**
+
+```yaml
+# roles/nginx/vars/main.yml
+# Constantes système - NE DOIVENT PAS être modifiées
+
+nginx_package: "nginx"
+nginx_service: "nginx"
+nginx_user: "www-data"
+nginx_group: "www-data"
+
+nginx_config_path: "/etc/nginx/nginx.conf"
+nginx_sites_available: "/etc/nginx/sites-available"
+nginx_sites_enabled: "/etc/nginx/sites-enabled"
+nginx_log_dir: "/var/log/nginx"
+nginx_pid_path: "/var/run/nginx.pid"
+```
+
+**💡 Priorité** : Très forte (presque impossible à surcharger)
+
+---
+
+# 🔥 Ordre de priorité COMPLET
+
+### Du plus FAIBLE au plus FORT
+
+```
+ 1. role defaults          roles/nginx/defaults/main.yml     ← Plus faible
+ 2. inventory vars (all)   inventory.yml (all: vars:)
+ 3. group_vars/all         group_vars/all.yml
+ 4. group_vars/&lt;groupe&gt;    group_vars/webservers.yml
+ 5. host_vars/&lt;host&gt;       host_vars/web01.yml
+ 6. playbook vars          vars: dans le playbook
+ 7. role vars              roles/nginx/vars/main.yml
+ 8. task vars              vars: dans une task
+ 9. extra-vars             -e key=value en CLI              ← Plus fort
+```
+
+**Règle d'or** : Plus c'est spécifique, plus c'est prioritaire !
+
+---
+layout: default
+class: text-base
+---
+
+# Module 7 : schéma — échelle de précédence
+
+### Chaque flèche : la couche suivante peut écraser la précédente
+
+<div class="mx-auto max-w-full" style="transform: scale(0.93); transform-origin: top center;">
+
+```mermaid
+%%{init: {'flowchart': {'useMaxWidth': true, 'nodeSpacing': 12, 'rankSpacing': 18}, 'themeVariables': {'fontSize': '20px'}}}%%
+flowchart LR
+  N1["1 · defaults du role"]:::c1
+  N2["2 · vars inventaire"]:::c2
+  N3["3 · group_vars all"]:::c3
+  N4["4 · group_vars groupe"]:::c4
+  N5["5 · host_vars"]:::c5
+  N6["6 · vars du playbook"]:::c6
+  N7["7 · vars du role"]:::c7
+  N8["8 · vars de la tache"]:::c8
+  N9["9 · extra-vars ligne de commande"]:::c9
+  N1 --> N2 --> N3 --> N4 --> N5 --> N6 --> N7 --> N8 --> N9
+classDef c1 fill:#64748b,stroke:#0f172a,color:#fff
+classDef c2 fill:#dc2626,stroke:#450a0a,color:#fff
+classDef c3 fill:#ea580c,stroke:#7c2d12,color:#fff
+classDef c4 fill:#ca8a04,stroke:#422006,color:#1c1917
+classDef c5 fill:#84cc16,stroke:#365314,color:#1c1917
+classDef c6 fill:#22c55e,stroke:#14532d,color:#fff
+classDef c7 fill:#06b6d4,stroke:#164e63,color:#fff
+classDef c8 fill:#6366f1,stroke:#312e81,color:#fff
+classDef c9 fill:#d946ef,stroke:#86198f,color:#fff
+```
+
+</div>
+
+---
+
+# 💡 Exemple concret de précédence
+
+### Chaque fichier met un port **différent** — le commentaire dit quelle valeur **gagne si vous vous arrêtez là**
+
+```yaml
+# ① roles/nginx/defaults/main.yml
+#    Si vous n’avez QUE ça → nginx_port vaut 80
+nginx_port: 80
+
+# ② group_vars/all.yml
+#    Avec ① + ② seulement → nginx_port vaut 1111
+nginx_port: 1111
+
+# ③ group_vars/webservers.yml
+#    Hôte dans le groupe webservers, avec ①②③ → nginx_port vaut 2222
+nginx_port: 2222
+
+# ④ host_vars/web01.yml
+#    Pour l’hôte web01 uniquement → nginx_port vaut 3333 (bat ③ pour ce host)
+nginx_port: 3333
+
+# ⑤ playbook.yml (vars du play)
+#    Pendant ce play → nginx_port vaut 4444 (bat ④ pour cette exécution)
+vars:
+  nginx_port: 4444
+```
+
+---
+
+# 💡 Exemple concret de précédence (suite)
+
+```yaml
+# ⑥ roles/nginx/vars/main.yml — autre clé (pas nginx_port)
+#    Personne ne redéfinit nginx_service ailleurs → reste « nginx » (priorité forte du rôle)
+nginx_service: "nginx"
+
+# ⑦ Ligne de commande
+#    ansible-playbook site.yml -e "nginx_port=65000"
+#    Vous forcez nginx_port → il vaut 65000 et écrase ① à ⑤ pour cette run
+```
+
+**Résultat sur `web01` avec la commande ⑦** :
+- `nginx_port` = **65000** (extra-vars au-dessus de defaults, group_vars, host_vars, vars du play)
+- `nginx_service` = **nginx** (défini en ⑥ ; pas concerné par `-e nginx_port=…`)
+
+---
+
+# 🎯 Cas d'usage : Quand utiliser quoi ?
+
+### Guide de décision
+
+<div class="text-xs">
+
+| Emplacement | Quand l'utiliser | Exemple |
+|-------------|------------------|---------|
+| **defaults/** | Valeurs modifiables du rôle | `nginx_port: 80` |
+| **vars/** | Constantes système du rôle | `nginx_config_path: /etc/nginx/` |
+| **group_vars/all** | Config globale | `timezone: Europe/Paris` |
+| **group_vars/&lt;groupe&gt;** | Config par type serveur | `db_port: 5432` |
+| **group_vars/&lt;env&gt;** | Config par environnement | `replicas: 3` |
+| **host_vars/** | Config unique serveur | `is_primary: true` |
+| **playbook vars** | Config spécifique playbook | `deployment_id: 123` |
+| **extra-vars** | Override ponctuel | `-e "debug=true"` |
+
+</div>
+
+---
+
+# 📁 Structure recommandée (2026)
+
+### Organisation claire et maintenable
+
+```bash
+projet-ansible/
+├── inventory.yml                # Juste les serveurs et groupes
+├── group_vars/
+│   ├── all.yml                 # Variables globales (timezone, ntp...)
+│   ├── webservers.yml          # Config serveurs web
+│   ├── databases.yml           # Config BDD
+│   ├── production.yml          # Config prod
+│   └── development.yml         # Config dev
+├── host_vars/
+│   ├── web01.yml               # Config spécifique web01
+│   └── db01.yml                # Config spécifique db01
+├── playbooks/
+│   └── deploy.yml              # Playbook avec vars: si nécessaire
+└── roles/
+    └── nginx/
+        ├── defaults/main.yml   # Valeurs personnalisables
+        └── vars/main.yml       # Constantes système
+```
+
+---
+
+# 🧪 Exercice pratique : Tester la précédence
+
+### Créons un conflit de variables !
+
+```yaml
+# 1. roles/webapp/defaults/main.yml
+app_port: 3000
+
+# 2. group_vars/all.yml
+app_port: 4000
+
+# 3. playbook.yml
+- hosts: webservers
+  vars:
+    app_port: 5000
+  tasks:
+    - debug:
+        msg: "Port = {{ app_port }}"
+```
+
+**Question** : Quelle valeur sera affichée ?
+
+---
+
+# 🧪 Exercice pratique : Résultat
+
+```bash
+ansible-playbook playbook.yml
+# Affiche : Port = 5000
+
+ansible-playbook playbook.yml -e "app_port=6000"
+# Affiche : Port = 6000
+```
+
+**Explication** :
+- `5000` : playbook vars > group_vars > defaults
+- `6000` : extra-vars gagne sur tout !
+
+---
+
+# 💡 Variables spéciales : Les Facts
+
+### Variables automatiques découvertes par Ansible
 
 **Facts** = Informations système collectées automatiquement
 
 ```yaml
 - hosts: all
   tasks:
-    - debug:
-        msg: "Serveur {{ ansible_facts['hostname'] }} sous {{ ansible_facts['distribution'] }}"
+    - name: Afficher infos système
+      debug:
+        msg: |
+          Serveur : {{ ansible_facts['hostname'] }}
+          OS : {{ ansible_facts['distribution'] }} {{ ansible_facts['distribution_version'] }}
+          RAM : {{ ansible_facts['memtotal_mb'] }} MB
+          CPU : {{ ansible_facts['processor_vcpus'] }} cores
+          IP : {{ ansible_facts['default_ipv4']['address'] }}
 ```
 
-**Collecte automatique au début du playbook** (sauf si `gather_facts: no`)
+**💡 Facts** : Variables en lecture seule, collectées au début du playbook
 
-**💡 Les facts sont des variables en lecture seule**
+---
+layout: default
+class: text-base
+---
+
+# Module 7 : schéma — pipeline des facts
+
+### Du gather au template : données lues sur l’hôte
+
+<div class="mx-auto flex justify-center" style="transform: scale(1.02); transform-origin: top center;">
+
+```mermaid
+%%{init: {'flowchart': {'useMaxWidth': false, 'nodeSpacing': 22, 'rankSpacing': 22}, 'themeVariables': {'fontSize': '20px'}}}%%
+flowchart LR
+  A([control]):::a
+  B[gather_facts]:::b
+  C[(ansible_facts)]:::c
+  D[merge_vars]:::d
+  E[tasks_templates]:::e
+  A --> B --> C --> D --> E
+classDef a fill:#1d4ed8,stroke:#172554,color:#fff
+classDef b fill:#ea580c,stroke:#7c2d12,color:#fff
+classDef c fill:#16a34a,stroke:#14532d,color:#fff
+classDef d fill:#a855f7,stroke:#581c87,color:#fff
+classDef e fill:#e11d48,stroke:#881337,color:#fff
+```
+
+</div>
 
 ---
 
-# Facts : Les plus utilisés
+# Facts les plus utiles
 
-### Variables système courantes
+### À connaître par cœur
 
 ```yaml
 # Système
@@ -1502,6 +2550,7 @@ environments:
 {{ ansible_facts['fqdn'] }}                  # web01.example.com
 {{ ansible_facts['distribution'] }}          # Ubuntu
 {{ ansible_facts['distribution_version'] }}  # 22.04
+{{ ansible_facts['os_family'] }}             # Debian
 
 # Matériel
 {{ ansible_facts['processor_vcpus'] }}       # 4
@@ -1509,277 +2558,350 @@ environments:
 {{ ansible_facts['architecture'] }}          # x86_64
 
 # Réseau
-{{ ansible_facts['default_ipv4']['address'] }}  # 192.168.1.10
-{{ ansible_facts['all_ipv4_addresses'] }}       # ['192.168.1.10', '10.0.0.5']
+{{ ansible_facts['default_ipv4']['address'] }}    # 192.168.1.10
+{{ ansible_facts['all_ipv4_addresses'] }}         # ['192.168.1.10']
 ```
-
----
-
-# Facts vs Variables classiques
-
-### Différence fondamentale
-
-**Variables classiques** → Vous les définissez
-
-```yaml
-vars:
-  app_name: "myapp"
-  app_port: 8080
-```
-
-**Facts** → Ansible les découvre
-
-```yaml
-# Automatiquement disponibles
-{{ ansible_facts['hostname'] }}
-{{ ansible_facts['memtotal_mb'] }}
-```
-
-**💡 Les facts permettent d'adapter la config selon le serveur**
 
 ---
 
 # Exemple pratique : Facts + Variables
 
-### Adaptation automatique
+### Configuration adaptative selon le serveur
 
 ```yaml
 - hosts: webservers
   vars:
-    app_name: "myapp"
-    base_memory: 512
+    memory_per_worker_mb: 100
   
   tasks:
-    - name: Calculer mémoire selon serveur
-      debug:
-        msg: |
-          App: {{ app_name }}
-          Serveur: {{ ansible_facts['hostname'] }}
-          RAM totale: {{ ansible_facts['memtotal_mb'] }} MB
-          RAM allouée: {{ (ansible_facts['memtotal_mb'] * 0.5) | int }} MB
+    - name: Calculer nombre de workers selon RAM
+      set_fact:
+        optimal_workers: "{{ (ansible_facts['memtotal_mb'] / memory_per_worker_mb) | int }}"
+    
+    - name: Configurer Nginx avec workers optimaux
+      template:
+        src: nginx.conf.j2
+        dest: /etc/nginx/nginx.conf
 ```
 
-**🎯 Combinaison** : Variables fixes + Facts dynamiques = Configuration intelligente
+---
+
+# Exemple pratique : Facts + Variables (suite)
+
+```nginx
+# templates/nginx.conf.j2
+# Configuration générée automatiquement
+
+worker_processes {{ optimal_workers }};
+
+# Serveur: {{ ansible_facts['hostname'] }}
+# RAM: {{ ansible_facts['memtotal_mb'] }} MB
+# Workers: {{ optimal_workers }}
+
+events {
+    worker_connections 1024;
+}
+```
+
+**Résultat** : Serveur avec 8GB → 80 workers, serveur avec 4GB → 40 workers
+
+---
+
+# 🎯 Exemple complet : Multi-environnement
+
+### Production vs Développement
+
+```yaml
+# group_vars/production.yml
+environment: production
+domain: "myapp.com"
+replicas: 3
+db_host: "db-prod.internal"
+db_pool_size: 50
+debug_mode: false
+log_level: "ERROR"
+ssl_enabled: true
+backup_retention_days: 30
+monitoring_enabled: true
+```
+
+---
+
+# 🎯 Exemple complet : Multi-environnement (suite)
+
+```yaml
+# group_vars/development.yml
+environment: development
+domain: "dev.myapp.local"
+replicas: 1
+db_host: "localhost"
+db_pool_size: 5
+debug_mode: true
+log_level: "DEBUG"
+ssl_enabled: false
+backup_retention_days: 7
+monitoring_enabled: false
+```
+
+**Usage** :
+```bash
+ansible-playbook deploy.yml --limit production  # Utilise production.yml
+ansible-playbook deploy.yml --limit development # Utilise development.yml
+```
+
+---
+
+# 📊 Tableau récapitulatif : defaults/ vs vars/
+
+### La règle d'or des rôles
+
+| Critère | defaults/main.yml | vars/main.yml |
+|---------|-------------------|---------------|
+| **Priorité** | Très faible (1) | Très forte (7) |
+| **Peut être surchargé** | ✅ Facilement | ❌ Très difficile |
+| **Usage** | Configuration modifiable | Constantes système |
+| **Exemples** | ports, timeouts, tailles | chemins, noms services, users |
+| **Utilisateur peut changer** | Oui, c'est fait pour | Non, déconseillé |
+
+**Bonne pratique 2026** :
+- Mettez TOUT ce qui est modifiable dans `defaults/`
+- Mettez SEULEMENT les constantes dans `vars/`
+
+---
+layout: default
+class: text-base
+---
+
+# Module 7 : schéma — defaults vs vars (rôle)
+
+### Deux dossiers dans un rôle : rôles différents
+
+<div class="mx-auto max-w-full flex justify-center" style="transform: scale(1.0); transform-origin: top center;">
+
+```mermaid
+%%{init: {'flowchart': {'useMaxWidth': false, 'nodeSpacing': 40, 'rankSpacing': 30}, 'themeVariables': {'fontSize': '15px'}}}%%
+flowchart TB
+  D1[Défauts modifiables]:::d1
+  D2[Ports options tailles]:::d2
+  V1[Vars fortes du rôle]:::v1
+  V2[Chemins paquets noms]:::v2
+  MERGE[[Fusion par hôte]]:::m
+  D1 --> MERGE
+  D2 --> MERGE
+  V1 --> MERGE
+  V2 --> MERGE
+classDef d1 fill:#22d3ee,stroke:#0e7490,color:#0c4a6e
+classDef d2 fill:#2dd4bf,stroke:#0f766e,color:#042f2e
+classDef v1 fill:#fb7185,stroke:#9f1239,color:#fff
+classDef v2 fill:#f472b6,stroke:#9d174d,color:#fff
+classDef m fill:#1e293b,stroke:#fbbf24,color:#f8fafc
+```
+
+</div>
+
+---
+
+# Module 7 : defaults vs vars — lire le schéma
+
+#### Ce que signifient les blocs et la flèche vers « Fusion par hôte »
+
+<div class="text-xs">
+
+- **Blocs cyan / turquoise (`defaults/`)** : fichier **`roles/.../defaults/main.yml`**. 
+
+Ce sont des **valeurs par défaut** — pensées pour être **changées** depuis l’extérieur (inventaire, `group_vars`, `host_vars`, `vars` du playbook…). Exemples types : **port d’écoute**, **options**, **tailles** de buffers, flags ON/OFF.
+
+- **Blocs rose / magenta (`vars/`)** : fichier **`roles/.../vars/main.yml`**. 
+
+Ce sont des variables **fortes côté rôle** : priorité **plus élevée** que les defaults **du même rôle**. On y met surtout ce qui est **lié au système / au paquet** : **chemins** installés par le paquet, **noms** de service ou d’utilisateur, identifiants de paquets — ce qu’on ne veut **pas** voir “cassé” par un simple `group_vars`.
+
+- **« Fusion par hôte »** : Ansible ne choisit **pas** un seul fichier. 
+
+Il **calcule l’ensemble des variables** visibles **pour chaque hôte** en appliquant les **règles de précédence** (échelle de la slide d’avant). Les flèches du schéma disent : *ces quatre types de contenus **alimentent** le jeu de variables final* ; si **deux sources définissent la même clé**, **la plus prioritaire gagne**.
+
+**À retenir** : **`defaults/`** = “valeurs d’usine **modifiables**” · **`vars/`** = “constantes **structurelles** du rôle, difficiles à surcharger”.
+
+</div>
 
 ---
 
 # ✅ Mini-QCM : Module 7 - Variables
 
-**Question 1** : Comment définir une variable dans un playbook ?
-- A) `set: var_name value`
-- B) `vars:` puis `var_name: value`
-- C) `define var_name = value`
+**Question 1** : Quel fichier a la priorité la plus FAIBLE ?
+- A) `group_vars/all.yml`
+- B) `roles/nginx/defaults/main.yml`
+- C) `roles/nginx/vars/main.yml`
 
-**Question 2** : Comment utiliser une variable dans une tâche ?
-- A) `$var_name`
-- B) `{{ var_name }}`
-- C) `%var_name%`
+**Question 2** : Où mettre une variable modifiable d'un rôle ?
+- A) `roles/*/defaults/main.yml`
+- B) `roles/*/vars/main.yml`
+- C) `group_vars/all.yml`
 
-**Question 3** : Quelle est la priorité des variables ?
-- A) Playbook > Inventaire > extra-vars (-e)
-- B) extra-vars (-e) > Playbook > Inventaire
-- C) Inventaire > extra-vars (-e) > Playbook
+**Question 3** : Comment surcharger TOUTES les variables ?
+- A) `group_vars/all.yml`
+- B) `playbook vars:`
+- C) `-e key=value`
 
 ---
 
 # 📝 Réponses Mini-QCM Module 7
 
 **Question 1** : **B** ✅
-On définit les variables avec `vars:` suivi d'une liste clé-valeur en YAML (`var_name: value`).
+`roles/nginx/defaults/main.yml` a la priorité la plus faible (1). C'est normal, ce sont des valeurs par défaut.
 
-**Question 2** : **B** ✅
-Syntaxe Jinja2 : `{{ var_name }}`. Fonctionne partout : tâches, templates, conditions.
+**Question 2** : **A** ✅
+`roles/*/defaults/main.yml` pour les valeurs que l'utilisateur peut modifier. `vars/main.yml` est pour les constantes.
 
-**Question 3** : **B** ✅
-Ordre de priorité (du + fort au + faible) : extra-vars (-e) > vars du playbook > group_vars > defaults. Les extra-vars gagnent toujours.
-
----
-
-# Variables : Précédence détaillée 🔧
-
-### Les 5 niveaux les plus courants
-
-**Du plus FAIBLE au plus FORT** :
-
-1. **role defaults** (`roles/*/defaults/main.yml`)
-2. **group_vars** (`group_vars/all.yml`)
-3. **playbook vars** (`vars:` dans le playbook)
-4. **role vars** (`roles/*/vars/main.yml`) ⚠️
-5. **extra-vars** (`-e` en ligne de commande)
+**Question 3** : **C** ✅
+`-e key=value` (extra-vars) surcharge absolument TOUT. Priorité maximale (9).
 
 ---
 
-# Variables : Précédence détaillée (suite)
+# 🎯 Mini-exercice : Module 7 (10 min)
 
-### Pourquoi c'est important ?
+### Tester la précédence des variables
 
-```yaml
-# roles/nginx/defaults/main.yml
-nginx_port: 80  # Priorité 1 (faible)
+**Objectif** : Créer un conflit de variables et observer le résultat
 
-# group_vars/production.yml  
-nginx_port: 443  # Priorité 2 (surcharge defaults ✅)
-
-# roles/nginx/vars/main.yml
-nginx_service: nginx  # Priorité 4 (très forte!)
-
-# Commande
-ansible-playbook site.yml -e "nginx_port=8080"
-# Priorité 5 (surcharge TOUT ✅)
+**Étape 1** : Créer la structure
+```bash
+mkdir -p group_vars roles/webapp/defaults roles/webapp/tasks
 ```
 
-**Résultat final** : `nginx_port` = `8080` (extra-vars gagne)
+**Étape 2** : Définir la variable à plusieurs endroits
+```bash
+# Variable dans defaults (priorité faible)
+echo "app_port: 3000" > roles/webapp/defaults/main.yml
 
----
+# Variable dans group_vars (priorité moyenne)
+echo "app_port: 4000" > group_vars/all.yml
 
-# 💡 Règle d'or : defaults/ vs vars/
-
-### Quand utiliser defaults/ ou vars/ dans un rôle ?
-
-**roles/*/defaults/main.yml** → Ce que l'utilisateur **PEUT** changer
-
-```yaml
-# roles/nginx/defaults/main.yml
-nginx_port: 80
-nginx_worker_processes: auto
-nginx_max_clients: 1024
+# Créer un rôle minimal
+echo "---" > roles/webapp/tasks/main.yml
 ```
 
 ---
 
-# 💡 Règle d'or : defaults/ vs vars/ (suite)
+# 🎯 Mini-exercice : Module 7 (suite)
 
-**roles/*/vars/main.yml** → Ce que l'utilisateur **NE DOIT PAS** changer
-
-```yaml
-# roles/nginx/vars/main.yml  
-nginx_package: nginx
-nginx_service: nginx
-nginx_config_path: /etc/nginx/nginx.conf
-nginx_pid_path: /var/run/nginx.pid
-```
-
-**Bonne pratique Ansible 2026** :
-- `defaults/` = Configuration (valeurs personnalisables)
-- `vars/` = Constantes système (chemins, noms de services)
-
----
-
-# 🧪 Exemple concret de précédence
-
-### Comprendre l'ordre avec un cas réel
-
-**Situation** : Vous avez un rôle `webapp` et vous voulez définir le port.
+**Étape 3** : Créer le playbook avec variable haute priorité
 
 ```yaml
-# roles/webapp/defaults/main.yml
-app_port: 3000  # ← Valeur par défaut du rôle
-```
-
----
-
-# 🧪 Exemple concret de précédence (suite)
-
-```yaml
-# group_vars/production.yml
-app_port: 8080  # ← Surcharge pour production
-
 # playbook.yml
-- hosts: webservers
+---
+- name: Test de précédence des variables
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  
   vars:
-    app_port: 9000  # ← Surcharge dans le playbook
+    app_port: 5000  # Priorité forte
+  
   roles:
     - webapp
+  
+  tasks:
+    - name: Afficher le port utilisé
+      debug:
+        msg: "Port actuel = {{ app_port }}"
 ```
-
-**Question** : Quel port sera utilisé ?
-
-**Réponse** : `9000` (playbook vars > group_vars > defaults)
 
 ---
 
-# 🧪 Exemple concret de précédence (suite 2)
+# 🎯 Mini-exercice : Module 7 (résultats attendus)
 
-### Et si on ajoute role vars ?
+**Étape 4** : Tester les différentes priorités
 
-```yaml
-# roles/webapp/vars/main.yml
-app_name: "MyApp"  # ← Nom de l'app (constante)
-app_user: "www-data"  # ← Utilisateur système
-
-# group_vars/production.yml
-app_user: "nginx"  # ← Tentative de surcharge
-```
-
-**Question** : Quel utilisateur sera utilisé ?
-
-**Réponse** : `www-data` (role vars > group_vars !)
-
-**💡 C'est pour ça qu'on met les constantes dans vars/**
-
----
-
-# 📊 Tableau récapitulatif complet
-
-### Toutes les sources de variables (2026)
-
-<small>
-
-| Priorité | Source | Fichier/Emplacement | Usage |
-|----------|--------|---------------------|-------|
-| 1 (faible) | Role defaults | `roles/*/defaults/main.yml` | Config par défaut |
-| 2-4 | Inventory vars | `inventory.yml` | Config serveurs |
-| 5-8 | group_vars/host_vars | `group_vars/all.yml` | Config environnement |
-| 9-12 | Play vars | `vars:` dans playbook | Config ponctuelle |
-| 13 (fort) | Role vars | `roles/*/vars/main.yml` | Constantes rôle |
-| 14-17 | Task vars | `vars:` dans task | Config task |
-| 18 (+ fort) | extra-vars | `-e` ligne de commande | Override total |
-
-</small>
-
----
-
-# 🎯 Mini-exercice : Module 7 (5 min)
-
-**Objectif** : Utiliser des variables
-
-```yaml
-# Créer playbook-vars.yml avec :
-# - Variable app_name: "mon-app"
-# - Variable app_version: "1.0.0"
-# - Tâche debug affichant : "Deploying {{ app_name }} v{{ app_version }}"
-```
-
-**Test avec extra-vars** :
 ```bash
-ansible-playbook playbook-vars.yml -e app_version=2.0.0
-# Doit afficher version 2.0.0 (override)
+# Test 1 : Sans extra-vars
+ansible-playbook playbook.yml
+```
+
+**Résultat attendu** :
+```
+TASK [Afficher le port utilisé]
+ok: [localhost] => {
+    "msg": "Port actuel = 5000"
+}
+```
+
+**Explication** : `playbook vars (5000)` > `group_vars (4000)` > `defaults (3000)`
+
+---
+
+# 🎯 Mini-exercice : Module 7 (résultats attendus suite)
+
+```bash
+# Test 2 : Avec extra-vars (priorité maximale)
+ansible-playbook playbook.yml -e "app_port=6000"
+```
+
+**Résultat attendu** :
+```
+TASK [Afficher le port utilisé]
+ok: [localhost] => {
+    "msg": "Port actuel = 6000"
+}
+```
+
+**Explication** : `extra-vars (6000)` gagne sur TOUT !
+
+---
+
+# 🎯 Mini-exercice : Module 7 (bonus)
+
+**Bonus** : Vérifier ce qui se passe sans la variable dans le playbook
+
+```yaml
+# playbook-sans-vars.yml
+---
+- name: Test sans vars dans playbook
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  
+  roles:
+    - webapp
+  
+  tasks:
+    - debug:
+        msg: "Port = {{ app_port }}"
+```
+
+```bash
+ansible-playbook playbook-sans-vars.yml
+# Résultat : Port = 4000 (group_vars gagne car pas de playbook vars)
 ```
 
 ---
 
-# 📝 Récapitulatif Module 7 : Variables & Facts
+# 📝 Récapitulatif Module 7 : Variables
 
 ### Ce que vous devez retenir
 
-**1. Types de variables** :
-- Variables statiques (`vars:`, `defaults/`, `group_vars/`)
-- Facts (infos système automatiques)
-- Variables dynamiques (créées avec `set_fact`)
+<div class="text-[10px]">
 
-**2. Précédence** :
-- extra-vars (`-e`) > role vars > playbook vars > group_vars > defaults
-- Les extra-vars gagnent toujours !
+**1. Ordre de priorité** (faible → fort) :
+```
+defaults/ → group_vars/all → group_vars/&lt;groupe&gt; → host_vars/ 
+→ playbook vars → role vars → extra-vars
+```
+
+**2. Règle d'or** :
+- `defaults/` = Configuration modifiable
+- `vars/` = Constantes système
 
 **3. Facts** :
-- Collectés automatiquement au début (`gather_facts: yes`)
-- Lecture seule (infos système)
-- Exemples : `ansible_facts['hostname']`, `ansible_facts['memtotal_mb']`
+- Variables automatiques (système, réseau, matériel)
+- Lecture seule
+- Permettent configuration adaptative
 
-**4. Bonnes pratiques** :
-- `defaults/` pour config modifiable
-- `vars/` pour constantes système
-- Utiliser facts pour adapter la config au serveur
+**4. Organisation** :
+- `group_vars/` pour environnements/types de serveurs
+- `host_vars/` pour configurations uniques
+- extra-vars pour override ponctuels
+
+</div>
 
 ---
 layout: new-section
@@ -1799,170 +2921,705 @@ routeAlias: 'templates'
 Un **template** est un fichier modèle avec des variables :
 
 - 📄 **Modèle** : Fichier avec des zones à remplir automatiquement
-
 - 🔧 **Variables** : Placeholders remplacés par des vraies valeurs
-
 - 🎯 **Génération** : Crée des fichiers personnalisés pour chaque serveur
-
 - ⚙️ **Configuration** : Fichiers de config adaptés à chaque environnement
 
 **Analogie** : C'est comme un document Word avec des champs à compléter automatiquement !
 
 ---
 
-# Template : Exemple concret 📄
+# Template : Le problème sans template
 
-### De la théorie à la pratique
+### Situation réelle
 
-**Situation** : Vous devez configurer une application web sur 10 serveurs différents, chacun avec son IP et sa configuration spécifique.
+Vous avez 10 serveurs web avec Nginx. Chaque serveur a :
+- Son propre nom de domaine
+- Son propre nombre de workers
+- Sa propre configuration SSL
+- Ses propres backends
 
-**Sans template** : 10 fichiers de config différents à maintenir manuellement 😰
+**Sans template** : 10 fichiers `nginx.conf` différents à maintenir 😰
 
-**Avec template** : 1 seul fichier modèle + variables = 10 configs générées automatiquement ! 🎉
+**Avec template** : 1 fichier `nginx.conf.j2` + variables = 10 configs générées automatiquement ! 🎉
 
 ---
 
-# Template : Exemple simple 📄
+# Syntaxe Jinja2 : Les 3 balises essentielles
 
-### Fichier de configuration d'application
+### À connaître par cœur
 
-```bash
-{# templates/app.conf.j2 - Le template (modèle) #}
-# Configuration pour {{ inventory_hostname }}
+```jinja
+{# 1. COMMENTAIRE - Ne sera pas dans le fichier final #}
+{# Ceci est un commentaire qui n'apparaîtra pas #}
+
+{# 2. VARIABLE - Affiche une valeur #}
+{{ variable }}
+{{ ansible_facts['hostname'] }}
+{{ port | default(80) }}
+
+{# 3. CONTRÔLE - Instructions de logique #}
+{% if condition %}
+  ...
+{% endif %}
+
+{% for item in liste %}
+  ...
+{% endfor %}
+```
+
+---
+
+# Variables dans les templates
+
+### Syntaxe et filtres
+
+```jinja
+{# templates/app.conf.j2 #}
+
+{# Variable simple #}
 server_name={{ inventory_hostname }}
-server_ip={{ ansible_default_ipv4.address }}
-database_host={{ db_host }}
-database_port={{ db_port | default(5432) }}
-debug_mode={{ debug | default('false') }}
 
-# Génération conditionnelle
+{# Variable avec valeur par défaut #}
+port={{ app_port | default(8080) }}
+
+{# Variable avec filtre #}
+hostname={{ ansible_facts['hostname'] | upper }}
+
+{# Variable avec arithmétique #}
+max_connections={{ ansible_facts['processor_vcpus'] * 100 }}
+
+{# Variable conditionnelle inline #}
+debug={{ 'true' if environment == 'dev' else 'false' }}
+```
+
+---
+
+# Filtres Jinja2 les plus utiles
+
+### Manipulation de données
+
+```jinja
+{# Valeurs par défaut #}
+{{ variable | default('valeur') }}
+{{ variable | default(omit) }}
+
+{# Transformation de texte #}
+{{ name | upper }}                    # NGINX
+{{ name | lower }}                    # nginx
+{{ name | capitalize }}               # Nginx
+
+{# Nombres #}
+{{ 3.14159 | round(2) }}              # 3.14
+{{ "42" | int }}                      # 42
+{{ memory_mb | int / 1024 }}          # Conversion MB → GB
+
+{# Listes #}
+{{ servers | length }}                # Nombre d'éléments
+{{ servers | join(', ') }}            # server1, server2, server3
+```
+
+---
+
+# Conditions : if / elif / else
+
+### Structure conditionnelle
+
+```jinja
+{# templates/app.conf.j2 #}
+
+{# Condition simple #}
 {% if environment == 'production' %}
 log_level=ERROR
+{% endif %}
+
+{# Condition avec else #}
+{% if ssl_enabled %}
+listen 443 ssl;
 {% else %}
+listen 80;
+{% endif %}
+```
+
+---
+
+# Conditions : if / elif / else (suite)
+
+```jinja
+{# Condition multiple #}
+{% if environment == 'production' %}
+log_level=ERROR
+workers=8
+{% elif environment == 'staging' %}
+log_level=WARNING
+workers=4
+{% else %}
+log_level=DEBUG
+workers=2
+{% endif %}
+
+{# Conditions complexes #}
+{% if ssl_enabled and environment == 'production' %}
+ssl_protocols TLSv1.2 TLSv1.3;
+ssl_ciphers HIGH:!aNULL:!MD5;
+{% endif %}
+```
+
+---
+
+# Boucles : for
+
+### Itérer sur des listes
+
+```jinja
+{# templates/hosts.j2 #}
+
+{# Boucle simple sur une liste #}
+{% for server in webservers %}
+{{ server }}
+{% endfor %}
+
+{# Résultat si webservers = ['web01', 'web02', 'web03'] :
+web01
+web02
+web03
+#}
+```
+
+---
+
+# Boucles : for avec index
+
+### Variables spéciales dans les boucles
+
+```jinja
+{# Boucle avec numérotation #}
+{% for server in webservers %}
+Server {{ loop.index }}: {{ server }}
+{% endfor %}
+
+{# Résultat :
+Server 1: web01
+Server 2: web02
+Server 3: web03
+#}
+
+{# Variables disponibles dans les boucles :
+  loop.index      # 1, 2, 3, 4...
+  loop.index0     # 0, 1, 2, 3...
+  loop.first      # True pour le premier élément
+  loop.last       # True pour le dernier élément
+  loop.length     # Nombre total d'éléments
+#}
+```
+
+---
+
+# Boucles : for avec range()
+
+### Générer des séquences numériques
+
+```jinja
+{# Boucle avec range() #}
+{% for i in range(1, 4) %}
+server app-{{ i }}:8080;
+{% endfor %}
+
+{# Résultat :
+server app-1:8080;
+server app-2:8080;
+server app-3:8080;
+#}
+
+{# Avec une variable #}
+{% for i in range(1, replicas + 1) %}
+server app-{{ i }}:8080;
+{% endfor %}
+```
+
+---
+
+# Boucles : for sur dictionnaires
+
+### Itérer sur des clés/valeurs
+
+```jinja
+{# Variable : 
+   env_vars:
+     NODE_ENV: production
+     PORT: 8080
+     DB_HOST: localhost
+#}
+
+{% for key, value in env_vars.items() %}
+{{ key }}={{ value }}
+{% endfor %}
+
+{# Résultat :
+NODE_ENV=production
+PORT=8080
+DB_HOST=localhost
+#}
+```
+
+---
+
+# Exemple complet : Configuration applicative
+
+### Template simple mais complet
+
+```jinja
+{# templates/app.conf.j2 #}
+# Configuration générée automatiquement par Ansible
+# Serveur: {{ ansible_facts['hostname'] }}
+# Date: {{ ansible_date_time.iso8601 }}
+
+[application]
+name={{ app_name }}
+version={{ app_version }}
+environment={{ environment }}
+
+[server]
+host={{ ansible_facts['default_ipv4']['address'] }}
+port={{ app_port | default(8080) }}
+
+{% if environment == 'production' %}
+debug=false
+log_level=ERROR
+{% else %}
+debug=true
 log_level=DEBUG
 {% endif %}
 ```
 
 ---
 
-# Template : Résultat généré 📄
+# Exemple complet : Configuration applicative (suite)
 
-### Ce que produit le template sur le serveur web-01
+```jinja
+[database]
+host={{ db_host }}
+port={{ db_port | default(5432) }}
+name={{ db_name }}
+pool_size={{ db_pool_size | default(10) }}
 
-```bash
-# Configuration pour web-01
-server_name=web-01
-server_ip=10.0.1.31
-database_host=db-01.mondomaine.com
-database_port=5432
-debug_mode=false
-
-# Génération conditionnelle
-log_level=ERROR
+[cache]
+enabled={{ cache_enabled | default(true) }}
+{% if cache_enabled %}
+type={{ cache_type | default('redis') }}
+servers={% for server in cache_servers %}{{ server }}{% if not loop.last %},{% endif %}{% endfor %}
+{% endif %}
 ```
-
-**🎯 Magie** : Même template → Configs différentes selon le serveur !
 
 ---
 
-# Template nginx avancé
+# Exemple intermédiaire : Configuration serveur web simple
 
-```bash
+### Avant d'attaquer nginx.conf, un exemple plus simple
+
+```apache
+{# templates/vhost.conf.j2 - VirtualHost Apache simple #}
+<VirtualHost *:{{ http_port | default(80) }}>
+    ServerName {{ server_name }}
+    DocumentRoot {{ document_root }}
+    
+    {% if admin_email %}
+    ServerAdmin {{ admin_email }}
+    {% endif %}
+
+    <Directory {{ document_root }}>
+        Options Indexes FollowSymLinks
+        AllowOverride All
+        {% if environment == 'production' %}
+        Require all denied
+        Require ip 192.168.1.0/24
+        {% else %}
+        Require all granted
+        {% endif %}
+    </Directory>
+```
+
+---
+
+# Exemple intermédiaire : Configuration serveur web simple (suite)
+
+```apache
+    # Logs séparés par environnement
+    ErrorLog ${APACHE_LOG_DIR}/{{ server_name }}-{{ environment }}-error.log
+    CustomLog ${APACHE_LOG_DIR}/{{ server_name }}-{{ environment }}-access.log combined
+
+    {% if ssl_enabled %}
+    # Redirection HTTPS
+    RewriteEngine On
+    RewriteCond %{HTTPS} off
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}$1 [R=301,L]
+    {% endif %}
+
+    # Variables d'environnement pour l'application
+    {% for key, value in env_vars.items() %}
+    SetEnv {{ key }} "{{ value }}"
+    {% endfor %}
+</VirtualHost>
+```
+
+**💡 Points clés** : Conditions imbriquées, boucle sur dictionnaire, valeurs par défaut
+
+---
+
+# Exemple complet : nginx.conf (partie 1)
+
+### Configuration Nginx réelle et complète
+
+```nginx
 {# templates/nginx.conf.j2 #}
-worker_processes {{ nginx_worker_processes }};
-# On peut utiliser des boucles pour générer des fichiers de config dynamiquement
-upstream app {
-# autant de x le nombre de replicas dans le ".env" alors on fais l'action
-# (si replicas = 3 => on écrira dans la conf de nginx 3 x la commande server app-)
-{% for i in range(environments[env].replicas) %}
-    server app-{{ i+1 }}:8080;
-{% endfor %}
+# Configuration Nginx générée par Ansible
+# Serveur: {{ ansible_facts['hostname'] }}
+# Environnement: {{ environment }}
+
+user {{ nginx_user | default('www-data') }};
+worker_processes {{ nginx_worker_processes | default('auto') }};
+pid {{ nginx_pid_path | default('/var/run/nginx.pid') }};
+
+events {
+    worker_connections {{ nginx_worker_connections | default(1024) }};
+    use epoll;
+    multi_accept on;
 }
 ```
 
 ---
 
-# Template nginx (suite)
+# Exemple complet : nginx.conf (partie 2)
 
-```bash
-server {
-    server_name {{ environments[env].domain }};
-    
-    location / {
-        proxy_pass http://app;
+```nginx
+http {
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+
+    # Logs
+    access_log {{ nginx_access_log | default('/var/log/nginx/access.log') }} main;
+    error_log {{ nginx_error_log | default('/var/log/nginx/error.log') }} warn;
+
+    # Performance
+    sendfile on;
+    keepalive_timeout {{ nginx_keepalive_timeout | default(65) }};
+    client_max_body_size {{ nginx_client_max_body_size | default('10M') }};
+
+    # Compression
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript;
+```
+
+---
+
+# Exemple complet : nginx.conf (partie 3)
+
+```nginx
+    # Upstream avec boucle pour générer les backends
+    upstream {{ app_name }}_backend {
+        {% if load_balancing_method %}
+        {{ load_balancing_method }};
+        {% endif %}
+        
+        {% for i in range(1, app_replicas + 1) %}
+        server {{ app_name }}-{{ i }}:{{ app_port }} max_fails=3 fail_timeout=30s;
+        {% endfor %}
+        
+        keepalive 32;
+    }
+```
+
+---
+
+# Exemple complet : nginx.conf (partie 4)
+
+```nginx
+    # Configuration serveur
+    server {
+        listen {{ http_port | default(80) }};
+        server_name {{ server_name }};
+
+        {% if ssl_enabled %}
+        # Redirection HTTPS en production
+        return 301 https://$server_name$request_uri;
+    }
+    server {
+        listen {{ https_port | default(443) }} ssl http2;
+        server_name {{ server_name }};
+        ssl_certificate {{ ssl_certificate_path }};
+        ssl_certificate_key {{ ssl_certificate_key_path }};
+        {% endif %}
+
+        # Headers de sécurité (si production)
+        {% if environment == 'production' %}
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        {% endif %}
+```
+
+---
+
+# Exemple complet : nginx.conf (partie 5)
+
+```nginx
+        # Racine et fichiers statiques
+        root {{ nginx_document_root | default('/var/www/html') }};
+        index index.html;
+
+        location ~* \.(jpg|png|css|js)$ {
+            expires 1y;
+            add_header Cache-Control "public, immutable";
+        }
+
+        # Proxy vers l'application
+        location / {
+            proxy_pass http://{{ app_name }}_backend;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        }
+
+        # Health check
+        location /health {
+            return 200 "healthy\n";
+        }
     }
 }
 ```
 
 ---
 
-# Template : Syntaxe Jinja2 📄
+# Variables pour nginx.conf
 
-### Les éléments essentiels à retenir
+### Définir dans group_vars/ ou playbook
 
-```bash
-{# Ceci est un commentaire (ne sera pas dans le fichier final) #}
+```yaml
+# group_vars/webservers.yml
+nginx_user: www-data
+nginx_worker_processes: auto
+nginx_worker_connections: 1024
+nginx_keepalive_timeout: 65
+nginx_client_max_body_size: "10M"
 
-{{ variable }}                    # Affiche la valeur d'une variable
-{{ variable | default('valeur') }} # Valeur par défaut si variable vide
-{{ ansible_hostname }}            # Variable automatique d'Ansible
+app_name: "myapp"
+app_replicas: 3
+app_port: 8080
 
-{% if condition %}                # Structure conditionnelle
-  contenu si vrai
-{% else %}
-  contenu si faux
-{% endif %}
+http_port: 80
+https_port: 443
+server_name: "myapp.com"
 
-{% for item in liste %}           # Boucle
-  traiter {{ item }}
+ssl_enabled: true
+ssl_certificate_path: "/etc/ssl/certs/myapp.crt"
+ssl_certificate_key_path: "/etc/ssl/private/myapp.key"
+
+load_balancing_method: "least_conn"
+environment: "production"
+```
+
+---
+
+# Déployer le template nginx.conf
+
+### Playbook complet
+
+```yaml
+- name: Configurer Nginx
+  hosts: webservers
+  become: yes
+  
+  tasks:
+    - name: Installer Nginx
+      apt:
+        name: nginx
+        state: present
+        update_cache: yes
+
+    - name: Déployer configuration Nginx
+      template:
+        src: nginx.conf.j2
+        dest: /etc/nginx/nginx.conf
+        owner: root
+        group: root
+        mode: '0644'
+        backup: yes
+      notify: reload nginx
+```
+
+---
+
+# Déployer le template nginx.conf (suite)
+
+```yaml
+    - name: Vérifier la configuration Nginx
+      command: nginx -t
+      changed_when: false
+      
+    - name: S'assurer que Nginx est démarré
+      service:
+        name: nginx
+        state: started
+        enabled: yes
+
+  handlers:
+    - name: reload nginx
+      service:
+        name: nginx
+        state: reloaded
+```
+
+---
+
+# Boucles avancées : Générer plusieurs virtualhosts
+
+### Template pour plusieurs sites
+
+```nginx
+{# templates/sites.conf.j2 #}
+{% for site in websites %}
+# Configuration pour {{ site.name }}
+server {
+    listen 80;
+    server_name {{ site.domain }};
+    root {{ site.root }};
+    
+    {% if site.ssl_enabled | default(false) %}
+    listen 443 ssl;
+    ssl_certificate {{ site.ssl_cert }};
+    ssl_certificate_key {{ site.ssl_key }};
+    {% endif %}
+    
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}
+
 {% endfor %}
 ```
 
-**💡 Astuce** : Les templates utilisent l'extension `.j2` (pour Jinja2)
-
 ---
 
-# ✅ Template : Extension et chemins
+# Variables pour virtualhosts multiples
 
-### Comprendre .j2 et les chemins
+### Structure de données
 
 ```yaml
-- name: Déployer config nginx
-  template:
-    src: nginx.conf.j2  # ⚠️ Fichier LOCAL (sur votre machine Ansible)
-    dest: /etc/nginx/nginx.conf  # ⚠️ Fichier DISTANT (sur le serveur cible)
+# group_vars/webservers.yml
+websites:
+  - name: "Site 1"
+    domain: "site1.com"
+    root: "/var/www/site1"
+    ssl_enabled: true
+    ssl_cert: "/etc/ssl/site1.crt"
+    ssl_key: "/etc/ssl/site1.key"
+  
+  - name: "Site 2"
+    domain: "site2.com"
+    root: "/var/www/site2"
+    ssl_enabled: false
+  
+  - name: "Site 3"
+    domain: "site3.com"
+    root: "/var/www/site3"
+    ssl_enabled: true
+    ssl_cert: "/etc/ssl/site3.crt"
+    ssl_key: "/etc/ssl/site3.key"
 ```
-
-**Important** :
-- `src` : Cherche dans `templates/` par défaut
-- `dest` : Chemin absolu sur le serveur distant
-- `.j2` : Extension pour Jinja2 (le moteur de template)
 
 ---
 
-# Template : Où Ansible cherche le fichier source
+# Template : Bonnes pratiques 2026
 
-### Ordre de recherche automatique
+### Ce qu'il faut faire
 
+**✅ DO** :
+- Utiliser des valeurs par défaut avec `| default()`
+- Commenter les sections complexes avec `{# #}`
+- Valider la syntaxe avant déploiement
+- Faire des backups avec `backup: yes`
+- Utiliser `validate:` pour vérifier le fichier généré
+
+```yaml
+- template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/nginx.conf
+    backup: yes
+    validate: nginx -t -c %s
 ```
-Quand vous faites : src: nginx.conf.j2
 
-Ansible cherche dans cet ordre :
-1. templates/nginx.conf.j2  ✅ (dans votre playbook)
-2. roles/ROLE_NAME/templates/nginx.conf.j2  ✅ (si dans un rôle)
+---
+
+# Template : Bonnes pratiques 2026 (suite)
+
+### Ce qu'il faut éviter
+
+**❌ DON'T** :
+- Mettre de la logique complexe dans les templates (faites-le dans les tasks)
+- Dupliquer des blocs (utilisez des variables ou includes)
+- Oublier les valeurs par défaut
+- Générer des fichiers sans validation
+
+---
+
+# Exemple : Template avec validation
+
+### Sécurité avant tout
+
+```yaml
+- name: Configurer application
+  template:
+    src: app.conf.j2
+    dest: /etc/app/app.conf
+    owner: app
+    group: app
+    mode: '0640'
+    backup: yes
+  notify: restart app
+
+- name: Vérifier la configuration
+  command: /usr/bin/app --check-config /etc/app/app.conf
+  changed_when: false
+  
+- name: Recharger si changement
+  meta: flush_handlers
 ```
 
-Vous n'avez PAS besoin d'écrire `templates/nginx.conf.j2` !
+---
+
+# Template : Chemins et organisation
+
+### Structure recommandée
+
+```bash
+projet-ansible/
+├── templates/
+│   ├── nginx.conf.j2           # Template Nginx principal
+│   ├── app.conf.j2             # Template application
+│   └── hosts.j2                # Template /etc/hosts
+├── roles/
+│   └── nginx/
+│       └── templates/
+│           ├── nginx.conf.j2   # Template du rôle
+│           └── site.conf.j2    # Template virtualhost
+└── playbooks/
+    └── deploy.yml
+```
+
+**Ansible cherche automatiquement** :
+1. `templates/` (à côté du playbook)
+2. `roles/ROLE/templates/` (dans le rôle)
 
 ---
 
 # ❌ Erreurs courantes avec les templates
 
+### À éviter absolument
+
 ```yaml
-# ❌ ERREUR : Mettre le chemin complet local
+# ❌ ERREUR : Chemin complet pour src
 - template:
     src: /home/user/ansible/templates/nginx.conf.j2
-    # Ansible cherche déjà dans templates/ !
+    dest: /etc/nginx/nginx.conf
 
 # ✅ CORRECT : Juste le nom du fichier
 - template:
@@ -1970,83 +3627,905 @@ Vous n'avez PAS besoin d'écrire `templates/nginx.conf.j2` !
     dest: /etc/nginx/nginx.conf
 ```
 
+---
+
+# ❌ Erreurs courantes avec les templates (suite)
+
 ```yaml
-# ❌ ERREUR : Oublier le chemin absolu pour dest
+# ❌ ERREUR : dest relatif
 - template:
     src: app.conf.j2
-    dest: app.conf  # ⚠️ Où ça ? Ansible ne sait pas !
+    dest: app.conf  # Où ça exactement ?
 
-# ✅ CORRECT : Chemin absolu complet
+# ✅ CORRECT : dest absolu
 - template:
     src: app.conf.j2
     dest: /etc/app/app.conf
+```
+
+```jinja
+{# ❌ ERREUR : Variable non protégée #}
+port={{ app_port }}  {# Si app_port est vide → erreur #}
+
+{# ✅ CORRECT : Avec valeur par défaut #}
+port={{ app_port | default(8080) }}
 ```
 
 ---
 
 # 🧠 Règle à retenir : Templates
 
-> **`src` = relatif au dossier templates/ (automatique)**
-> 
-> **`dest` = chemin ABSOLU sur le serveur distant**
+### Les 3 règles d'or
 
-L'extension `.j2` n'est qu'une convention, pas une obligation !
+1. **`src`** = relatif à `templates/` (Ansible cherche automatiquement)
+2. **`dest`** = chemin ABSOLU sur le serveur distant
+3. **Toujours utiliser** `| default()` pour les variables optionnelles
+
+```yaml
+- template:
+    src: nginx.conf.j2              # ← Relatif
+    dest: /etc/nginx/nginx.conf     # ← Absolu
+    backup: yes                      # ← Toujours !
+```
 
 ---
 
 # ✅ Mini-QCM : Module 8 - Templates Jinja2
 
-**Question 1** : Où Ansible cherche-t-il les templates par défaut ?
-- A) Dans le dossier courant
-- B) Dans `templates/`
-- C) Dans `/etc/ansible/templates/`
+**Question 1** : Quelle syntaxe pour une variable avec valeur par défaut ?
+- A) `{{ var : 80 }}`
+- B) `{{ var | default(80) }}`
+- C) `{{ var ?? 80 }}`
 
-**Question 2** : Quelle est la syntaxe pour afficher une variable dans un template ?
-- A) `${ variable }`
-- B) `{{ variable }}`
-- C) `<%= variable %>`
+**Question 2** : Comment faire une boucle sur 5 éléments ?
+- A) `{% loop 5 %}`
+- B) `{% for i in range(5) %}`
+- C) `{% repeat 5 %}`
 
-**Question 3** : Le paramètre `dest:` du module template doit être :
-- A) Relatif au dossier templates/
-- B) Un chemin absolu sur le serveur distant
-- C) N'importe quel chemin
+**Question 3** : Où Ansible cherche-t-il les templates ?
+- A) `/etc/ansible/templates/`
+- B) `templates/` ou `roles/*/templates/`
+- C) Le dossier courant
 
 ---
 
 # 📝 Réponses Mini-QCM Module 8
 
 **Question 1** : **B** ✅
-Ansible cherche automatiquement dans `templates/` (playbook) ou `roles/ROLE/templates/` (rôle). Pas besoin du chemin complet.
+Syntaxe Jinja2 : `{{ variable | default(valeur) }}`. Le filtre `default()` fournit une valeur si la variable est undefined.
 
 **Question 2** : **B** ✅
-Jinja2 utilise `{{ variable }}` pour afficher, `{% if %}` pour conditions, `{% for %}` pour boucles.
+`{% for i in range(5) %}` génère 0,1,2,3,4. Pour 1-5 : `range(1, 6)`.
 
 **Question 3** : **B** ✅
-`src` est relatif (cherche dans templates/), `dest` doit être absolu sur le serveur cible (ex: `/etc/app/config.conf`).
+Ansible cherche automatiquement dans `templates/` (playbook) ou `roles/ROLE/templates/` (rôle).
 
 ---
 
-# 🎯 Mini-exercice : Module 8 (10 min)
+# 🎯 Mini-exercice : Module 8 (15 min)
 
-**Objectif** : Créer et déployer un template
+### Créer un template Nginx basique avec boucles et conditions
 
-```yaml
-# 1. Créer templates/app.conf.j2 :
-app_name={{ app_name }}
-environment={{ environment | default('dev') }}
-port={{ app_port }}
+**Objectif** : Template nginx avec boucle et conditions
 
-# 2. Créer playbook avec :
-vars:
-  app_name: "myapp"
-  app_port: 8080
-tasks:
-  - template:
-      src: app.conf.j2
-      dest: /tmp/app.conf
+**Étape 1** : Créer la structure
+```bash
+mkdir -p templates
 ```
 
-**Test** : `cat /tmp/app.conf` doit afficher les valeurs.
+**Étape 2** : Créer le template
+```bash
+# Créer templates/nginx-simple.conf.j2
+```
+
+```nginx
+worker_processes {{ workers | default(2) }};
+
+upstream backend {
+    {% for i in range(1, replicas + 1) %}
+    server app-{{ i }}:8080;
+    {% endfor %}
+}
+
+server {
+    listen {{ port | default(80) }};
+    {% if ssl_enabled %}
+    listen 443 ssl;
+    {% endif %}
+    
+    location / {
+        proxy_pass http://backend;
+    }
+}
+```
+
+---
+
+# 🎯 Mini-exercice : Module 8 (suite)
+
+**Étape 3** : Créer le playbook
+
+```yaml
+# playbook.yml
+---
+- name: Test de template Nginx
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  
+  vars:
+    replicas: 3
+    port: 8080
+    ssl_enabled: true
+  
+  tasks:
+    - name: Générer la configuration Nginx
+      template:
+        src: nginx-simple.conf.j2
+        dest: /tmp/nginx-test.conf
+    
+    - name: Afficher le fichier généré
+      command: cat /tmp/nginx-test.conf
+      register: result
+    
+    - name: Montrer le résultat
+      debug:
+        var: result.stdout_lines
+```
+
+---
+
+# 🎯 Mini-exercice : Module 8 (résultat attendu)
+
+**Étape 4** : Exécuter le playbook
+
+```bash
+ansible-playbook playbook.yml
+```
+
+**Résultat attendu dans `/tmp/nginx-test.conf`** :
+
+```nginx
+worker_processes 2;
+
+upstream backend {
+    server app-1:8080;
+    server app-2:8080;
+    server app-3:8080;
+}
+
+server {
+    listen 8080;
+    listen 443 ssl;
+    
+    location / {
+        proxy_pass http://backend;
+    }
+}
+```
+
+---
+
+# 🎯 Mini-exercice : Module 8 (bonus)
+
+**Bonus** : Tester avec différentes valeurs
+
+```bash
+# Test sans SSL
+ansible-playbook playbook.yml -e "ssl_enabled=false"
+
+# Test avec plus de replicas
+ansible-playbook playbook.yml -e "replicas=5"
+
+# Test avec valeur par défaut pour workers
+ansible-playbook playbook.yml -e "workers=auto"
+```
+
+**Questions** :
+- Combien de lignes `server app-X` avec `replicas=5` ?
+- Le port 443 apparaît-il avec `ssl_enabled=false` ?
+- Que vaut `workers` si vous ne passez pas la variable ?
+
+---
+
+# 📝 Récapitulatif Module 8 : Templates
+
+### Ce que vous devez retenir
+
+**1. Syntaxe Jinja2** :
+- `{{ variable }}` : Afficher une valeur
+- `{% if condition %}` : Condition
+- `{% for item in list %}` : Boucle
+- `{# commentaire #}` : Commentaire
+
+**2. Filtres essentiels** :
+- `| default(value)` : Valeur par défaut
+- `| upper`, `| lower` : Transformation texte
+- `| int`, `| float` : Conversion nombres
+
+---
+
+# 📝 Récapitulatif Module 8 : Templates (suite)
+
+**3. Bonnes pratiques** :
+- `src` relatif, `dest` absolu
+- Toujours utiliser `| default()` pour variables optionnelles
+- `backup: yes` pour sauvegarder l'ancien fichier
+- `validate:` pour vérifier avant déploiement
+
+**4. Structure de boucle** :
+```jinja
+{% for item in liste %}
+  {{ loop.index }}: {{ item }}
+{% endfor %}
+```
+
+**5. Cas d'usage** :
+- Configurations serveurs (nginx, apache)
+- Fichiers application (app.conf)
+- Scripts générés dynamiquement
+
+---
+layout: new-section
+routeAlias: 'roles'
+---
+
+<a name="roles" id="roles"></a>
+
+# Module 9 : Rôles
+
+---
+
+# Qu'est-ce qu'un Rôle ? 📦
+
+### Les modules réutilisables
+
+Un **rôle** est un ensemble organisé de tâches réutilisables :
+
+- 📁 **Organisation** : Structure claire (tâches, variables, templates...)
+
+- 🔄 **Réutilisabilité** : Utilisable dans plusieurs playbooks
+
+- 📚 **Bibliothèque** : Partageable avec d'autres équipes
+
+- 🧩 **Modularité** : Combine plusieurs rôles pour une solution complète
+
+**Analogie** : C'est comme une application mobile que vous installez pour une fonction précise !
+
+---
+
+# 🧠 Rôles = Segmentation avancée des tâches
+
+### Concept fondamental
+
+**Un rôle n'est rien d'autre qu'une collection de tâches organisées !**
+
+```
+Playbook simple (tout mélangé)
+    ↓
+  Tasks dispersées
+    ↓
+Playbook avec rôles (organisé)
+    ↓
+  Tasks rangées par fonction
+```
+
+**Pourquoi ?** Imaginez un playbook de 500 lignes... impossible à maintenir !
+
+**Solution** : Découper en rôles (docker, nginx, app, monitoring...)
+
+---
+
+# 📁 Structure complète d'un Rôle
+
+### Le rangement standardisé
+
+```
+roles/
+└── nom_du_role/           # ← Le nom du dossier = nom du rôle !
+    ├── tasks/             # ← VOS TÂCHES (obligatoire)
+    │   └── main.yml       #    Point d'entrée
+    ├── handlers/          # ← VOS HANDLERS (optionnel)
+    │   └── main.yml       #    Réactions aux changements
+    ├── templates/         # ← VOS TEMPLATES Jinja2 (optionnel)
+    │   └── config.j2      #    Fichiers de config dynamiques
+    ├── files/             # ← FICHIERS STATIQUES (optionnel)
+    │   └── script.sh      #    Fichiers à copier tels quels
+    ├── vars/              # ← VARIABLES (optionnel)
+    │   └── main.yml       #    Variables du rôle
+    ├── defaults/          # ← VARIABLES PAR DÉFAUT (optionnel)
+    │   └── main.yml       #    Valeurs par défaut
+    └── meta/              # ← MÉTADONNÉES (optionnel)
+        └── main.yml       #    Dépendances, infos
+```
+
+---
+
+# 📁 Structure minimale vs complète
+
+### Ce qui est VRAIMENT obligatoire
+
+**Minimal** (fonctionnel) :
+```
+roles/nginx/
+└── tasks/
+    └── main.yml           # ← Suffit pour un rôle fonctionnel !
+```
+
+**Complet** (production) :
+```
+roles/nginx/
+├── tasks/main.yml         # ← Tâches d'installation
+├── handlers/main.yml      # ← Redémarrage nginx
+├── templates/nginx.conf.j2 # ← Config dynamique
+├── files/index.html       # ← Page par défaut
+├── vars/main.yml          # ← Variables
+└── defaults/main.yml      # ← Valeurs par défaut
+```
+
+**Règle** : Commencez simple, ajoutez ce dont vous avez besoin !
+
+---
+
+# 📁 defaults/ vs vars/ : La différence cruciale
+
+### Deux dossiers de variables, mais rôles différents !
+
+**Question fréquente** : Pourquoi 2 dossiers de variables dans un rôle ?
+
+```
+roles/nginx/
+├── vars/main.yml       # ← Variables "dures"
+└── defaults/main.yml   # ← Variables "souples"
+```
+
+**Réponse** : Précédence différente !
+
+- `defaults/` = Priorité **FAIBLE** (facilement surchargeable)
+- `vars/` = Priorité **FORTE** (difficilement surchargeable)
+
+---
+
+# 📁 defaults/main.yml : Configuration
+
+### Ce que l'utilisateur PEUT personnaliser
+
+```yaml
+# roles/nginx/defaults/main.yml
+---
+# Configuration personnalisable par l'utilisateur
+nginx_port: 80
+nginx_worker_processes: auto
+nginx_worker_connections: 1024
+nginx_keepalive_timeout: 65
+nginx_client_max_body_size: 10M
+
+# Features optionnelles
+nginx_enable_gzip: true
+nginx_enable_ssl: false
+```
+
+**Usage** : Valeurs par défaut raisonnables que l'utilisateur peut changer.
+
+---
+
+# 📁 defaults/main.yml : Configuration (suite)
+
+### Comment surcharger defaults/ ?
+
+**Plusieurs méthodes (par ordre de priorité)** :
+
+```yaml
+# 1. Dans group_vars/production.yml
+nginx_port: 443
+nginx_enable_ssl: true
+
+# 2. Dans le playbook
+- hosts: webservers
+  vars:
+    nginx_port: 8080
+  roles:
+    - nginx
+
+# 3. En ligne de commande
+ansible-playbook site.yml -e "nginx_port=9090"
+```
+
+**Tous surchargent defaults/ facilement** ✅
+
+---
+
+# 📁 vars/main.yml : Constantes
+
+### Ce que l'utilisateur NE DOIT PAS changer
+
+```yaml
+# roles/nginx/vars/main.yml
+---
+# Constantes système (ne pas modifier)
+nginx_package: nginx
+nginx_service: nginx
+nginx_config_path: /etc/nginx/nginx.conf
+nginx_pid_path: /var/run/nginx.pid
+nginx_log_path: /var/log/nginx
+nginx_user: www-data
+nginx_group: www-data
+
+# Chemins internes du rôle
+nginx_vhost_path: /etc/nginx/sites-available
+nginx_modules_path: /etc/nginx/modules-enabled
+```
+
+**Usage** : Chemins système, noms de packages/services (dépendent de l'OS).
+
+---
+
+# 📁 vars/main.yml : Constantes (suite)
+
+### Pourquoi c'est important ?
+
+**vars/ a une priorité TRÈS FORTE** :
+
+```yaml
+# roles/nginx/vars/main.yml
+nginx_user: www-data  # Priorité 13 (forte)
+
+# group_vars/production.yml
+nginx_user: nginx  # Priorité 7 (moyenne)
+```
+
+**Résultat** : `nginx_user` = `www-data` (vars/ gagne !)
+
+**💡 Utilisez vars/ pour les valeurs qui ne doivent JAMAIS être surchargées accidentellement.**
+
+---
+
+# 🎯 Exemple réel : Rôle Apache2
+
+### defaults/ : Configuration utilisateur
+
+```yaml
+# roles/apache2/defaults/main.yml
+---
+# L'utilisateur peut personnaliser ces valeurs
+apache_port: 80
+apache_server_name: localhost
+apache_document_root: /var/www/html
+apache_timeout: 300
+apache_max_clients: 150
+apache_enable_ssl: false
+admin_email: admin@example.com
+```
+
+---
+
+# 🎯 Exemple réel : Rôle Apache2 (suite)
+
+### vars/ : Constantes système
+
+```yaml
+# roles/apache2/vars/main.yml
+---
+# Constantes système (ne pas modifier)
+apache_package: apache2
+apache_service: apache2
+apache_config_path: /etc/apache2/sites-available/000-default.conf
+apache_user: www-data
+apache_group: www-data
+apache_log_dir: /var/log/apache2
+```
+
+**Ces valeurs sont hardcodées car elles dépendent du système d'exploitation.**
+
+---
+
+# 🧪 Test pratique : defaults vs vars
+
+### Exercice de compréhension
+
+**Situation** : Vous voulez changer le port Apache
+
+**Méthode 1** : Port dans defaults/
+
+```yaml
+# roles/apache2/defaults/main.yml
+apache_port: 80
+
+# group_vars/production.yml
+apache_port: 443  # ✅ Ça marche !
+```
+
+---
+
+# 🧪 Test pratique : defaults vs vars (suite)
+
+**Méthode 2** : Port dans vars/ (❌ Mauvaise pratique)
+
+```yaml
+# roles/apache2/vars/main.yml
+apache_port: 80
+
+# group_vars/production.yml  
+apache_port: 443  # ❌ N'a AUCUN EFFET (vars/ prioritaire)
+```
+
+**Le port restera 80 !**
+
+**💡 Règle** : Configuration personnalisable → defaults/, Constantes → vars/
+
+---
+
+# 📊 Tableau récapitulatif defaults vs vars
+
+### Quand utiliser quoi ?
+
+| Critère | defaults/ | vars/ |
+|---------|-----------|-------|
+| **Priorité** | Faible (1) | Forte (13) |
+| **Surchargeable** | ✅ Facilement | ❌ Difficilement |
+| **Usage** | Configuration | Constantes |
+| **Exemples** | Ports, timeouts | Chemins, packages |
+| **Modifiable par** | group_vars, playbook | extra-vars uniquement |
+
+---
+
+# 💡 Bonnes pratiques 2026 : Variables de rôles
+
+### Ce qu'il faut retenir
+
+1. **defaults/** : Valeurs que l'utilisateur personnalise souvent
+   - Ports, domaines, tailles, timeouts
+   - Features on/off
+
+2. **vars/** : Valeurs système qui ne changent jamais
+   - Noms de packages/services
+   - Chemins de configuration
+   - Utilisateurs système
+
+3. **Si vous hésitez** : Mettez dans defaults/ (plus flexible)
+
+4. **Documentation** : Documentez vos defaults/ dans README.md
+
+---
+
+# 📦 Exemple concret : Projet multi-rôles
+
+```
+projet-ansible/
+│
+├── playbook.yml           # Orchestrateur principal
+├── inventory.yml          # Vos serveurs
+│
+└── roles/                 # ← Tous vos rôles ici
+    ├── common/            # Rôle 1 : Config de base
+    │   ├── tasks/
+    │   │   └── main.yml   # Install packages de base
+    │   └── handlers/
+    │       └── main.yml   # Restart services
+    │
+    ├── docker/            # Rôle 2 : Docker
+    │   ├── tasks/
+    │   │   └── main.yml   # Install Docker
+    │   ├── templates/
+    │   │   └── daemon.json.j2
+    │   └── handlers/
+    │       └── main.yml   # Restart docker
+    │
+    └── webapp/            # Rôle 3 : Application
+        ├── tasks/
+        │   └── main.yml   # Deploy app
+        ├── templates/
+        │   └── app.conf.j2
+        └── files/
+            └── deploy.sh
+```
+
+---
+
+# 📝 Contenu réel : tasks vs handlers
+
+### Même syntaxe, usage différent !
+
+**roles/docker/tasks/main.yml** (tâches normales)
+```yaml
+---
+- name: Installation Docker
+  apt:
+    name: docker.io
+    state: present
+
+- name: Configuration Docker daemon
+  template:
+    src: daemon.json.j2
+    dest: /etc/docker/daemon.json
+  notify: restart docker    # ← Déclenche le handler
+```
+
+---
+
+# 📝 Contenu réel : tasks vs handlers (suite)
+
+**roles/docker/handlers/main.yml** (tâches réactives)
+```yaml
+---
+- name: restart docker     # ← MÊME syntaxe qu'une task !
+  service:
+    name: docker
+    state: restarted
+
+- name: reload docker
+  service:
+    name: docker
+    state: reloaded
+```
+
+💡 **Note** : Utilisez `service` pour la compatibilité Docker
+
+**La seule différence** : Les handlers sont dans `handlers/` et s'exécutent seulement si notifiés !
+
+---
+
+# Rôles : Réutilisabilité 📦
+
+### Structure modulaire
+
+```yaml
+# roles/docker/tasks/main.yml
+---
+- name: Installation Docker
+  apt:
+    name: [docker.io, docker-compose-plugin]
+    state: present
+
+- name: Configuration Docker daemon
+  template:
+    src: daemon.json.j2
+    dest: /etc/docker/daemon.json
+  notify: restart docker
+```
+
+---
+
+# 🔄 Du Playbook monolithique aux Rôles
+
+### Transformation d'un gros playbook
+
+**AVANT** : Tout dans un seul fichier (difficile à maintenir)
+```yaml
+# playbook-monolithique.yml (200 lignes)
+---
+- hosts: all
+  tasks:
+    - name: Install Docker
+      apt: name=docker.io state=present
+    - name: Copy Docker daemon config
+      template: src=daemon.json.j2 dest=/etc/docker/daemon.json
+    - name: Install Nginx
+      apt: name=nginx state=present
+    - name: Copy Nginx config
+      template: src=nginx.conf.j2 dest=/etc/nginx/nginx.conf
+    # ... 50 autres tâches ...
+```
+
+---
+
+# 🔄 Du Playbook monolithique aux Rôles (suite)
+
+**APRÈS** : Organisé en rôles (clair et maintenable)
+```yaml
+# playbook.yml (10 lignes)
+---
+- name: Setup infrastructure
+  hosts: all
+  become: true
+  roles:
+    - docker    # ← Toutes les tâches Docker
+    - nginx     # ← Toutes les tâches Nginx
+    - app       # ← Toutes les tâches App
+```
+
+**Résultat** : Même exécution, mais code organisé !
+
+---
+
+# Utilisation des rôles
+
+```yaml
+# Utilisation dans un playbook
+---
+- name: Setup infrastructure
+  hosts: all
+  become: true
+
+  roles:
+    - docker
+    - nginx
+    - {role: app, app_version: 'v2.0.0'}
+```
+
+**Ce qui se passe** : Ansible exécute automatiquement :
+1. `roles/docker/tasks/main.yml`
+2. `roles/nginx/tasks/main.yml`
+3. `roles/app/tasks/main.yml` (avec la variable app_version)
+
+---
+
+# ✅ Comment Ansible détermine le nom d'un rôle
+
+```
+roles/nginx/
+```
+
+➡️ Le rôle s'appelle `nginx` parce que le dossier s'appelle `nginx`
+
+Rien de plus. Rien de magique.
+
+---
+
+# 📌 Où ce nom est utilisé
+
+### Dans le playbook
+
+```yaml
+- hosts: web
+  roles:
+    - nginx
+```
+
+👉 Ansible cherche automatiquement :
+
+```
+roles/nginx/tasks/main.yml
+```
+
+---
+
+# Si tu renommes le dossier
+
+```
+roles/webserver/
+```
+
+Alors le rôle devient :
+
+```yaml
+roles:
+  - webserver
+```
+
+**C'est tout !** Le nom du dossier = le nom du rôle.
+
+---
+
+# ❌ Ce qui NE définit PAS le nom du rôle
+
+- ❌ `meta/main.yml`
+- ❌ `galaxy_info.name`
+- ❌ Un champ dans `tasks/main.yml`
+- ❌ Une variable
+
+Tout ça est informatif, pas structurel.
+
+---
+
+# 🧠 Règle à retenir (ultra importante)
+
+> **1 dossier = 1 rôle = 1 nom**
+
+Le système de fichiers détermine le nom, pas le contenu.
+
+---
+
+# 🔑 Concept clé : Tasks vs Handlers dans un rôle
+
+### C'est toujours des tâches !
+
+```
+roles/nginx/
+├── tasks/main.yml         # ← Tâches "normales"
+│   - Install nginx
+│   - Copy config
+│   - Enable service
+│
+└── handlers/main.yml      # ← Tâches "réactives"
+    - Restart nginx        # ← MÊME SYNTAXE qu'une task !
+    - Reload nginx         # ← MÊME CHOSE techniquement !
+```
+
+**La seule différence** : Les handlers s'exécutent seulement quand notifiés !
+
+---
+
+# 💡 Visualiser la segmentation complète
+
+### Du plus simple au plus organisé
+
+```
+Niveau 1 : Tout dans un playbook
+playbook.yml (500 lignes)
+
+Niveau 2 : Handlers séparés
+playbook.yml (300 lignes)
+  ├── tasks:
+  └── handlers:
+
+Niveau 3 : Fichiers séparés
+playbook.yml (50 lignes)
+  ├── tasks/
+  └── handlers/
+
+Niveau 4 : Rôles (organisation maximale)
+playbook.yml (10 lignes)
+  └── roles/
+      ├── docker/
+      │   ├── tasks/
+      │   └── handlers/
+      ├── nginx/
+      │   ├── tasks/
+      │   └── handlers/
+      └── app/
+          ├── tasks/
+          └── handlers/
+```
+
+**Même code, juste mieux rangé !**
+
+---
+
+# ✅ Mini-QCM : Module 10 - Rôles
+
+**Question 1** : Comment Ansible détermine-t-il le nom d'un rôle ?
+- A) Par le nom du dossier
+- B) Par le contenu de meta/main.yml
+- C) Par le nom dans tasks/main.yml
+
+**Question 2** : Quelle est la structure minimale d'un rôle ?
+- A) Juste le dossier tasks/
+- B) tasks/, handlers/, vars/, files/
+- C) Tous les dossiers sont obligatoires
+
+**Question 3** : Comment utiliser un rôle dans un playbook ?
+- A) `roles: - nom_role`
+- B) `include_role: nom_role`
+- C) Les deux sont possibles
+
+---
+
+# 📝 Réponses Mini-QCM Module 10
+
+**Question 1** : **A** ✅
+Le nom du rôle = le nom du dossier. Si le dossier s'appelle `nginx`, le rôle s'appelle `nginx`. Le contenu ne change rien.
+
+**Question 2** : **A** ✅
+Seul `tasks/` est obligatoire (avec main.yml). Les autres dossiers (handlers/, vars/, files/, templates/) sont optionnels.
+
+**Question 3** : **C** ✅
+Les deux syntaxes fonctionnent : `roles:` (statique, au début) ou `include_role:` (dynamique, dans les tasks).
+
+---
+
+# 🎯 Mini-exercice : Module 10 (15 min)
+
+**Objectif** : Créer votre premier rôle
+
+```bash
+# 1. Créer la structure
+mkdir -p roles/hello/tasks
+
+# 2. Créer roles/hello/tasks/main.yml :
+---
+- name: Afficher message
+  debug:
+    msg: "Hello from role!"
+
+# 3. Playbook utilisant le rôle :
+---
+- hosts: localhost
+  roles:
+    - hello
+```
+
+**Test** : Le message doit s'afficher.
 
 ---
 layout: new-section
@@ -2055,7 +4534,7 @@ routeAlias: 'handlers'
 
 <a name="handlers" id="handlers"></a>
 
-# Module 9 : Handlers
+# Module 10 : Handlers
 
 ---
 
@@ -2108,19 +4587,32 @@ tasks:
 
 ---
 
-# Handlers : Déploiement multi-réplicas
+# Handlers : loop multi-réplicas + `notify`
+
+### Rappel `loop` **et** vrai enchaînement handler : après N conteneurs, **un** reload frontal si au moins une tâche a changé
+
+Même nom de handler sur chaque itération : exécution **une seule fois** à la fin du play (sauf `meta: flush_handlers`).
 
 ```yaml
-- name: Déploiement app selon environnement
-  community.docker.docker_container:
-    name: 'webapp-{{ item }}'
-    image: 'myapp:{{ app_version }}'
-    ports:
-      - '{{ 8080 + item }}:8080'
-    env:
-      ENV: '{{ env }}'
-      REPLICA: '{{ item }}'
-  loop: '{{ range(1, environments[env].replicas + 1) | list }}'
+# Fragment de play : une tâche par réplica, puis un handler unique (ex. reverse proxy)
+tasks:
+  - name: Déploiement app selon environnement
+    community.docker.docker_container:
+      name: 'webapp-{{ item }}'
+      image: 'myapp:{{ app_version }}'
+      ports:
+        - '{{ 8080 + item }}:8080'
+      env:
+        ENV: '{{ env }}'
+        REPLICA: '{{ item | string }}'
+    loop: '{{ range(1, environments[env].replicas + 1) | list }}'
+    notify: reload nginx reverse proxy
+
+handlers:
+  - name: reload nginx reverse proxy
+    ansible.builtin.service:
+      name: nginx
+      state: reloaded
 ```
 
 ---
@@ -3389,668 +5881,6 @@ handlers:
 ```
 
 **Test** : Exécuter 2x, le handler ne s'exécute que la 1ère fois.
-
----
-layout: new-section
-routeAlias: 'roles'
----
-
-<a name="roles" id="roles"></a>
-
-# Module 10 : Rôles
-
----
-
-# Qu'est-ce qu'un Rôle ? 📦
-
-### Les modules réutilisables
-
-Un **rôle** est un ensemble organisé de tâches réutilisables :
-
-- 📁 **Organisation** : Structure claire (tâches, variables, templates...)
-
-- 🔄 **Réutilisabilité** : Utilisable dans plusieurs playbooks
-
-- 📚 **Bibliothèque** : Partageable avec d'autres équipes
-
-- 🧩 **Modularité** : Combine plusieurs rôles pour une solution complète
-
-**Analogie** : C'est comme une application mobile que vous installez pour une fonction précise !
-
----
-
-# 🧠 Rôles = Segmentation avancée des tâches
-
-### Concept fondamental
-
-**Un rôle n'est rien d'autre qu'une collection de tâches organisées !**
-
-```
-Playbook simple (tout mélangé)
-    ↓
-  Tasks dispersées
-    ↓
-Playbook avec rôles (organisé)
-    ↓
-  Tasks rangées par fonction
-```
-
-**Pourquoi ?** Imaginez un playbook de 500 lignes... impossible à maintenir !
-
-**Solution** : Découper en rôles (docker, nginx, app, monitoring...)
-
----
-
-# 📁 Structure complète d'un Rôle
-
-### Le rangement standardisé
-
-```
-roles/
-└── nom_du_role/           # ← Le nom du dossier = nom du rôle !
-    ├── tasks/             # ← VOS TÂCHES (obligatoire)
-    │   └── main.yml       #    Point d'entrée
-    ├── handlers/          # ← VOS HANDLERS (optionnel)
-    │   └── main.yml       #    Réactions aux changements
-    ├── templates/         # ← VOS TEMPLATES Jinja2 (optionnel)
-    │   └── config.j2      #    Fichiers de config dynamiques
-    ├── files/             # ← FICHIERS STATIQUES (optionnel)
-    │   └── script.sh      #    Fichiers à copier tels quels
-    ├── vars/              # ← VARIABLES (optionnel)
-    │   └── main.yml       #    Variables du rôle
-    ├── defaults/          # ← VARIABLES PAR DÉFAUT (optionnel)
-    │   └── main.yml       #    Valeurs par défaut
-    └── meta/              # ← MÉTADONNÉES (optionnel)
-        └── main.yml       #    Dépendances, infos
-```
-
----
-
-# 📁 Structure minimale vs complète
-
-### Ce qui est VRAIMENT obligatoire
-
-**Minimal** (fonctionnel) :
-```
-roles/nginx/
-└── tasks/
-    └── main.yml           # ← Suffit pour un rôle fonctionnel !
-```
-
-**Complet** (production) :
-```
-roles/nginx/
-├── tasks/main.yml         # ← Tâches d'installation
-├── handlers/main.yml      # ← Redémarrage nginx
-├── templates/nginx.conf.j2 # ← Config dynamique
-├── files/index.html       # ← Page par défaut
-├── vars/main.yml          # ← Variables
-└── defaults/main.yml      # ← Valeurs par défaut
-```
-
-**Règle** : Commencez simple, ajoutez ce dont vous avez besoin !
-
----
-
-# 📁 defaults/ vs vars/ : La différence cruciale
-
-### Deux dossiers de variables, mais rôles différents !
-
-**Question fréquente** : Pourquoi 2 dossiers de variables dans un rôle ?
-
-```
-roles/nginx/
-├── vars/main.yml       # ← Variables "dures"
-└── defaults/main.yml   # ← Variables "souples"
-```
-
-**Réponse** : Précédence différente !
-
-- `defaults/` = Priorité **FAIBLE** (facilement surchargeable)
-- `vars/` = Priorité **FORTE** (difficilement surchargeable)
-
----
-
-# 📁 defaults/main.yml : Configuration
-
-### Ce que l'utilisateur PEUT personnaliser
-
-```yaml
-# roles/nginx/defaults/main.yml
----
-# Configuration personnalisable par l'utilisateur
-nginx_port: 80
-nginx_worker_processes: auto
-nginx_worker_connections: 1024
-nginx_keepalive_timeout: 65
-nginx_client_max_body_size: 10M
-
-# Features optionnelles
-nginx_enable_gzip: true
-nginx_enable_ssl: false
-```
-
-**Usage** : Valeurs par défaut raisonnables que l'utilisateur peut changer.
-
----
-
-# 📁 defaults/main.yml : Configuration (suite)
-
-### Comment surcharger defaults/ ?
-
-**Plusieurs méthodes (par ordre de priorité)** :
-
-```yaml
-# 1. Dans group_vars/production.yml
-nginx_port: 443
-nginx_enable_ssl: true
-
-# 2. Dans le playbook
-- hosts: webservers
-  vars:
-    nginx_port: 8080
-  roles:
-    - nginx
-
-# 3. En ligne de commande
-ansible-playbook site.yml -e "nginx_port=9090"
-```
-
-**Tous surchargent defaults/ facilement** ✅
-
----
-
-# 📁 vars/main.yml : Constantes
-
-### Ce que l'utilisateur NE DOIT PAS changer
-
-```yaml
-# roles/nginx/vars/main.yml
----
-# Constantes système (ne pas modifier)
-nginx_package: nginx
-nginx_service: nginx
-nginx_config_path: /etc/nginx/nginx.conf
-nginx_pid_path: /var/run/nginx.pid
-nginx_log_path: /var/log/nginx
-nginx_user: www-data
-nginx_group: www-data
-
-# Chemins internes du rôle
-nginx_vhost_path: /etc/nginx/sites-available
-nginx_modules_path: /etc/nginx/modules-enabled
-```
-
-**Usage** : Chemins système, noms de packages/services (dépendent de l'OS).
-
----
-
-# 📁 vars/main.yml : Constantes (suite)
-
-### Pourquoi c'est important ?
-
-**vars/ a une priorité TRÈS FORTE** :
-
-```yaml
-# roles/nginx/vars/main.yml
-nginx_user: www-data  # Priorité 13 (forte)
-
-# group_vars/production.yml
-nginx_user: nginx  # Priorité 7 (moyenne)
-```
-
-**Résultat** : `nginx_user` = `www-data` (vars/ gagne !)
-
-**💡 Utilisez vars/ pour les valeurs qui ne doivent JAMAIS être surchargées accidentellement.**
-
----
-
-# 🎯 Exemple réel : Rôle Apache2
-
-### defaults/ : Configuration utilisateur
-
-```yaml
-# roles/apache2/defaults/main.yml
----
-# L'utilisateur peut personnaliser ces valeurs
-apache_port: 80
-apache_server_name: localhost
-apache_document_root: /var/www/html
-apache_timeout: 300
-apache_max_clients: 150
-apache_enable_ssl: false
-admin_email: admin@example.com
-```
-
----
-
-# 🎯 Exemple réel : Rôle Apache2 (suite)
-
-### vars/ : Constantes système
-
-```yaml
-# roles/apache2/vars/main.yml
----
-# Constantes système (ne pas modifier)
-apache_package: apache2
-apache_service: apache2
-apache_config_path: /etc/apache2/sites-available/000-default.conf
-apache_user: www-data
-apache_group: www-data
-apache_log_dir: /var/log/apache2
-```
-
-**Ces valeurs sont hardcodées car elles dépendent du système d'exploitation.**
-
----
-
-# 🧪 Test pratique : defaults vs vars
-
-### Exercice de compréhension
-
-**Situation** : Vous voulez changer le port Apache
-
-**Méthode 1** : Port dans defaults/
-
-```yaml
-# roles/apache2/defaults/main.yml
-apache_port: 80
-
-# group_vars/production.yml
-apache_port: 443  # ✅ Ça marche !
-```
-
----
-
-# 🧪 Test pratique : defaults vs vars (suite)
-
-**Méthode 2** : Port dans vars/ (❌ Mauvaise pratique)
-
-```yaml
-# roles/apache2/vars/main.yml
-apache_port: 80
-
-# group_vars/production.yml  
-apache_port: 443  # ❌ N'a AUCUN EFFET (vars/ prioritaire)
-```
-
-**Le port restera 80 !**
-
-**💡 Règle** : Configuration personnalisable → defaults/, Constantes → vars/
-
----
-
-# 📊 Tableau récapitulatif defaults vs vars
-
-### Quand utiliser quoi ?
-
-| Critère | defaults/ | vars/ |
-|---------|-----------|-------|
-| **Priorité** | Faible (1) | Forte (13) |
-| **Surchargeable** | ✅ Facilement | ❌ Difficilement |
-| **Usage** | Configuration | Constantes |
-| **Exemples** | Ports, timeouts | Chemins, packages |
-| **Modifiable par** | group_vars, playbook | extra-vars uniquement |
-
----
-
-# 💡 Bonnes pratiques 2026 : Variables de rôles
-
-### Ce qu'il faut retenir
-
-1. **defaults/** : Valeurs que l'utilisateur personnalise souvent
-   - Ports, domaines, tailles, timeouts
-   - Features on/off
-
-2. **vars/** : Valeurs système qui ne changent jamais
-   - Noms de packages/services
-   - Chemins de configuration
-   - Utilisateurs système
-
-3. **Si vous hésitez** : Mettez dans defaults/ (plus flexible)
-
-4. **Documentation** : Documentez vos defaults/ dans README.md
-
----
-
-# 📦 Exemple concret : Projet multi-rôles
-
-```
-projet-ansible/
-│
-├── playbook.yml           # Orchestrateur principal
-├── inventory.yml          # Vos serveurs
-│
-└── roles/                 # ← Tous vos rôles ici
-    ├── common/            # Rôle 1 : Config de base
-    │   ├── tasks/
-    │   │   └── main.yml   # Install packages de base
-    │   └── handlers/
-    │       └── main.yml   # Restart services
-    │
-    ├── docker/            # Rôle 2 : Docker
-    │   ├── tasks/
-    │   │   └── main.yml   # Install Docker
-    │   ├── templates/
-    │   │   └── daemon.json.j2
-    │   └── handlers/
-    │       └── main.yml   # Restart docker
-    │
-    └── webapp/            # Rôle 3 : Application
-        ├── tasks/
-        │   └── main.yml   # Deploy app
-        ├── templates/
-        │   └── app.conf.j2
-        └── files/
-            └── deploy.sh
-```
-
----
-
-# 📝 Contenu réel : tasks vs handlers
-
-### Même syntaxe, usage différent !
-
-**roles/docker/tasks/main.yml** (tâches normales)
-```yaml
----
-- name: Installation Docker
-  apt:
-    name: docker.io
-    state: present
-
-- name: Configuration Docker daemon
-  template:
-    src: daemon.json.j2
-    dest: /etc/docker/daemon.json
-  notify: restart docker    # ← Déclenche le handler
-```
-
----
-
-# 📝 Contenu réel : tasks vs handlers (suite)
-
-**roles/docker/handlers/main.yml** (tâches réactives)
-```yaml
----
-- name: restart docker     # ← MÊME syntaxe qu'une task !
-  service:
-    name: docker
-    state: restarted
-
-- name: reload docker
-  service:
-    name: docker
-    state: reloaded
-```
-
-💡 **Note** : Utilisez `service` pour la compatibilité Docker
-
-**La seule différence** : Les handlers sont dans `handlers/` et s'exécutent seulement si notifiés !
-
----
-
-# Rôles : Réutilisabilité 📦
-
-### Structure modulaire
-
-```yaml
-# roles/docker/tasks/main.yml
----
-- name: Installation Docker
-  apt:
-    name: [docker.io, docker-compose-plugin]
-    state: present
-
-- name: Configuration Docker daemon
-  template:
-    src: daemon.json.j2
-    dest: /etc/docker/daemon.json
-  notify: restart docker
-```
-
----
-
-# 🔄 Du Playbook monolithique aux Rôles
-
-### Transformation d'un gros playbook
-
-**AVANT** : Tout dans un seul fichier (difficile à maintenir)
-```yaml
-# playbook-monolithique.yml (200 lignes)
----
-- hosts: all
-  tasks:
-    - name: Install Docker
-      apt: name=docker.io state=present
-    - name: Copy Docker daemon config
-      template: src=daemon.json.j2 dest=/etc/docker/daemon.json
-    - name: Install Nginx
-      apt: name=nginx state=present
-    - name: Copy Nginx config
-      template: src=nginx.conf.j2 dest=/etc/nginx/nginx.conf
-    # ... 50 autres tâches ...
-```
-
----
-
-# 🔄 Du Playbook monolithique aux Rôles (suite)
-
-**APRÈS** : Organisé en rôles (clair et maintenable)
-```yaml
-# playbook.yml (10 lignes)
----
-- name: Setup infrastructure
-  hosts: all
-  become: true
-  roles:
-    - docker    # ← Toutes les tâches Docker
-    - nginx     # ← Toutes les tâches Nginx
-    - app       # ← Toutes les tâches App
-```
-
-**Résultat** : Même exécution, mais code organisé !
-
----
-
-# Utilisation des rôles
-
-```yaml
-# Utilisation dans un playbook
----
-- name: Setup infrastructure
-  hosts: all
-  become: true
-
-  roles:
-    - docker
-    - nginx
-    - {role: app, app_version: 'v2.0.0'}
-```
-
-**Ce qui se passe** : Ansible exécute automatiquement :
-1. `roles/docker/tasks/main.yml`
-2. `roles/nginx/tasks/main.yml`
-3. `roles/app/tasks/main.yml` (avec la variable app_version)
-
----
-
-# ✅ Comment Ansible détermine le nom d'un rôle
-
-```
-roles/nginx/
-```
-
-➡️ Le rôle s'appelle `nginx` parce que le dossier s'appelle `nginx`
-
-Rien de plus. Rien de magique.
-
----
-
-# 📌 Où ce nom est utilisé
-
-### Dans le playbook
-
-```yaml
-- hosts: web
-  roles:
-    - nginx
-```
-
-👉 Ansible cherche automatiquement :
-
-```
-roles/nginx/tasks/main.yml
-```
-
----
-
-# Si tu renommes le dossier
-
-```
-roles/webserver/
-```
-
-Alors le rôle devient :
-
-```yaml
-roles:
-  - webserver
-```
-
-**C'est tout !** Le nom du dossier = le nom du rôle.
-
----
-
-# ❌ Ce qui NE définit PAS le nom du rôle
-
-- ❌ `meta/main.yml`
-- ❌ `galaxy_info.name`
-- ❌ Un champ dans `tasks/main.yml`
-- ❌ Une variable
-
-Tout ça est informatif, pas structurel.
-
----
-
-# 🧠 Règle à retenir (ultra importante)
-
-> **1 dossier = 1 rôle = 1 nom**
-
-Le système de fichiers détermine le nom, pas le contenu.
-
----
-
-# 🔑 Concept clé : Tasks vs Handlers dans un rôle
-
-### C'est toujours des tâches !
-
-```
-roles/nginx/
-├── tasks/main.yml         # ← Tâches "normales"
-│   - Install nginx
-│   - Copy config
-│   - Enable service
-│
-└── handlers/main.yml      # ← Tâches "réactives"
-    - Restart nginx        # ← MÊME SYNTAXE qu'une task !
-    - Reload nginx         # ← MÊME CHOSE techniquement !
-```
-
-**La seule différence** : Les handlers s'exécutent seulement quand notifiés !
-
----
-
-# 💡 Visualiser la segmentation complète
-
-### Du plus simple au plus organisé
-
-```
-Niveau 1 : Tout dans un playbook
-playbook.yml (500 lignes)
-
-Niveau 2 : Handlers séparés
-playbook.yml (300 lignes)
-  ├── tasks:
-  └── handlers:
-
-Niveau 3 : Fichiers séparés
-playbook.yml (50 lignes)
-  ├── tasks/
-  └── handlers/
-
-Niveau 4 : Rôles (organisation maximale)
-playbook.yml (10 lignes)
-  └── roles/
-      ├── docker/
-      │   ├── tasks/
-      │   └── handlers/
-      ├── nginx/
-      │   ├── tasks/
-      │   └── handlers/
-      └── app/
-          ├── tasks/
-          └── handlers/
-```
-
-**Même code, juste mieux rangé !**
-
----
-
-# ✅ Mini-QCM : Module 10 - Rôles
-
-**Question 1** : Comment Ansible détermine-t-il le nom d'un rôle ?
-- A) Par le nom du dossier
-- B) Par le contenu de meta/main.yml
-- C) Par le nom dans tasks/main.yml
-
-**Question 2** : Quelle est la structure minimale d'un rôle ?
-- A) Juste le dossier tasks/
-- B) tasks/, handlers/, vars/, files/
-- C) Tous les dossiers sont obligatoires
-
-**Question 3** : Comment utiliser un rôle dans un playbook ?
-- A) `roles: - nom_role`
-- B) `include_role: nom_role`
-- C) Les deux sont possibles
-
----
-
-# 📝 Réponses Mini-QCM Module 10
-
-**Question 1** : **A** ✅
-Le nom du rôle = le nom du dossier. Si le dossier s'appelle `nginx`, le rôle s'appelle `nginx`. Le contenu ne change rien.
-
-**Question 2** : **A** ✅
-Seul `tasks/` est obligatoire (avec main.yml). Les autres dossiers (handlers/, vars/, files/, templates/) sont optionnels.
-
-**Question 3** : **C** ✅
-Les deux syntaxes fonctionnent : `roles:` (statique, au début) ou `include_role:` (dynamique, dans les tasks).
-
----
-
-# 🎯 Mini-exercice : Module 10 (15 min)
-
-**Objectif** : Créer votre premier rôle
-
-```bash
-# 1. Créer la structure
-mkdir -p roles/hello/tasks
-
-# 2. Créer roles/hello/tasks/main.yml :
----
-- name: Afficher message
-  debug:
-    msg: "Hello from role!"
-
-# 3. Playbook utilisant le rôle :
----
-- hosts: localhost
-  roles:
-    - hello
-```
-
-**Test** : Le message doit s'afficher.
 
 ---
 layout: new-section

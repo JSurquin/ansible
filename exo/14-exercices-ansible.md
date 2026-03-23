@@ -1,10 +1,3 @@
----
-layout: new-section
-routeAlias: 'exercices-ansible'
----
-
-<a name="EXERCICES_ANSIBLE" id="EXERCICES_ANSIBLE"></a>
-
 # Exercices Ansible 🤖
 
 ### 3 niveaux progressifs alignés sur les exemples

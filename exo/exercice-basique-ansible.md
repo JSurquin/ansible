@@ -271,7 +271,7 @@ ansible-playbook -i inventory.yml playbook-webservers.yml
           ########################################
           # Configuration de base de données
           # Serveur: {{ inventory_hostname }}
-          # Généré le: {{ ansible_date_time.iso8601 }}
+          # Généré le: {{ ansible_facts["date_time"]["iso8601"] }}
           ########################################
           
           [database]
@@ -282,13 +282,13 @@ ansible-playbook -i inventory.yml playbook-webservers.yml
           
           [server]
           HOSTNAME={{ inventory_hostname }}
-          CONTAINER={{ ansible_host }}
-          DISTRIBUTION={{ ansible_distribution }} {{ ansible_distribution_version }}
-          MEMORY={{ ansible_memtotal_mb }}MB
-          
+          FQDN={{ ansible_facts["fqdn"] }}
+          DISTRIBUTION={{ ansible_facts["distribution"] }} {{ ansible_facts["distribution_version"] }}
+          MEMORY={{ ansible_facts["memtotal_mb"] }}MB
+
           [admin]
           ADMIN_EMAIL={{ admin_email }}
-          ANSIBLE_USER={{ ansible_user }}
+          ANSIBLE_USER={{ ansible_facts["user_id"] }}
           
           [network]
           GROUPS={{ group_names | join(', ') }}
