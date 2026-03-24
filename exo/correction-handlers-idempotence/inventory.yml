@@ -1,0 +1,12 @@
+---
+# Un seul nœud du lab pour simplifier la lecture du récapitulatif et du journal de handler.
+all:
+  vars:
+    ansible_connection: docker
+    ansible_user: root
+    ansible_python_interpreter: /usr/bin/python3
+  children:
+    handler_lab:
+      hosts:
+        lab01:
+          ansible_host: ansible-lab-web01
