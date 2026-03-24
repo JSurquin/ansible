@@ -302,6 +302,9 @@ routeAlias: 'sommaire'
 <Link to="exercices-ansible">🎯 Exercices pratiques</Link>
 <Link to="qcm-ansible">✅ QCM de validation</Link>
 <Link to="cheatsheet">📝 Cheatsheet - Référence rapide</Link>
+<Link to="cheatsheet-changed">📝 Cheatsheet - Les changed Ansible</Link>
+<Link to="cheatsheet-command-shell-raw">📝 Cheatsheet — command, shell et raw</Link>
+<Link to="cheatsheet-yaml-anchors">📝 Cheatsheet — ancres YAML (&amp; / *)</Link>
 <Link to="cheatsheet-tasks">🚀 CheatSheet - toutes les tâches possible en playbook</Link>
 <Link to="exercice-groupe-modules">🚀 Exercice de groupe - modules</Link>
 <a target="_blank" href="https://github.com/JSurquin/ansible">📝 Github - Le lien de la formation</a>
@@ -480,6 +483,18 @@ db_password: !vault |
 ### Merci et bon déploiement avec Ansible !
 
 N'oubliez pas : l'automatisation est votre meilleur ami ! 🚀
+
+---
+src: './pages/cheatsheet-changed-ansible.md'
+---
+
+---
+src: './pages/cheatsheet-command-shell-raw.md'
+---
+
+---
+src: './pages/cheatsheet-yaml-anchors-ansible.md'
+---
 
 ---
 routeAlias: 'exercice-groupe-modules'

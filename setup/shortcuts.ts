@@ -11,6 +11,11 @@ export default defineShortcutsSetup(
         autoRepeat: true,
       },
       {
+        key: "a",
+        fn: () => nav.go("sommaire"),
+        autoRepeat: true,
+      },
+      {
         key: "backspace",
         fn: () => nav.prev(),
         autoRepeat: true,
