@@ -3,6 +3,8 @@
 ## Objectif
 Créer votre premier inventaire et playbook Ansible pour gérer les serveurs du lab Docker.
 
+Ce fichier est la **correction** à comparer avec les consignes détaillées dans `exercice-basique-ansible-consignes.md` : les playbooks ci‑dessous reprennent **exactement** ce qui y est demandé (inventaire, `playbook.yml`, `playbook-webservers.yml`, `playbook-avec-variables.yml`). Les sections sur les commandes ad‑hoc et le récapitulatif proposent en plus des exemples pour aller plus loin.
+
 ---
 
 ## Prérequis
@@ -109,9 +111,11 @@ ansible all -i inventory.yml -m ping
 
 ---
 
-## Partie 2 : Créer un playbook simple
+## Partie 2 : Créer votre premier playbook
 
 ### Créer le fichier playbook.yml
+
+Aligné sur les consignes (message de bienvenue, APT, paquets, fichier d’information minimal, lecture du fichier, puis debug des infos système).
 
 ```yaml
 # playbook.yml
@@ -123,7 +127,7 @@ ansible all -i inventory.yml -m ping
   tasks:
     - name: Afficher un message de bienvenue
       debug:
-        msg: "👋 Hello depuis {{ inventory_hostname }} ({{ ansible_host }})"
+        msg: "👋 Hello depuis {{ inventory_hostname }}"
 
     - name: Mettre à jour le cache APT
       apt:
@@ -139,50 +143,26 @@ ansible all -i inventory.yml -m ping
           - net-tools
         state: present
 
-    - name: Créer un fichier de test
+    - name: Créer un fichier d'information
       copy:
         content: |
-          ========================================
-          INFORMATIONS DU SERVEUR
-          ========================================
           Nom du serveur: {{ inventory_hostname }}
-          Container Docker: {{ ansible_host }}
-          Groupes: {{ group_names | join(', ') }}
-          
-          SYSTÈME
-          ========================================
-          Distribution: {{ ansible_distribution }} {{ ansible_distribution_version }}
-          Architecture: {{ ansible_architecture }}
-          Mémoire totale: {{ ansible_memtotal_mb }} MB
-          Processeurs: {{ ansible_processor_vcpus }} vCPUs
-          
-          CONFIGURATION
-          ========================================
-          Date d'installation: {{ ansible_date_time.iso8601 }}
-          Utilisateur Ansible: {{ ansible_user }}
-          Python: {{ ansible_python_interpreter }}
-          
-          Configuré avec Ansible ✅
+          Date: {{ ansible_date_time.iso8601 }}
         dest: /tmp/ansible-info.txt
         mode: '0644'
 
-    - name: Afficher le contenu du fichier
+    - name: Afficher le contenu du fichier créé
       command: cat /tmp/ansible-info.txt
       register: file_content
       changed_when: false
 
-    - name: Montrer le fichier créé
-      debug:
-        var: file_content.stdout_lines
-
     - name: Afficher les informations système
       debug:
         msg: |
-          ✅ Configuration terminée pour {{ inventory_hostname }}
-          📦 Système: {{ ansible_distribution }} {{ ansible_distribution_version }}
-          🖥️  Architecture: {{ ansible_architecture }}
-          💾 Mémoire: {{ ansible_memtotal_mb }} MB
-          🔧 Groupes: {{ group_names | join(', ') }}
+          Distribution: {{ ansible_distribution }}
+          Version: {{ ansible_distribution_version }}
+          Architecture: {{ ansible_architecture }}
+          Mémoire (Mo): {{ ansible_memtotal_mb }}
 ```
 
 ---
@@ -198,9 +178,9 @@ ansible-playbook -i inventory.yml playbook.yml
 
 ---
 
-## Partie 3 : Exercices de pratique
+## Partie 3 : Playbook pour un groupe spécifique
 
-### Exercice 3.1 : Cibler un groupe spécifique
+### playbook-webservers.yml
 
 ```yaml
 # playbook-webservers.yml
@@ -238,7 +218,9 @@ ansible-playbook -i inventory.yml playbook-webservers.yml
 
 ---
 
-### Exercice 3.2 : Utiliser des variables
+## Partie 4 : Playbook avec variables
+
+### playbook-avec-variables.yml
 
 ```yaml
 # playbook-avec-variables.yml
@@ -251,76 +233,27 @@ ansible-playbook -i inventory.yml playbook-webservers.yml
     db_port: 5432
     db_name: production
     admin_email: admin@example.com
-    max_connections: 100
-    shared_buffers: "256MB"
 
   tasks:
-    - name: Afficher les variables disponibles
-      debug:
-        msg: |
-          📊 Configuration pour {{ inventory_hostname }}
-          🔌 Port: {{ db_port }}
-          🗄️  Base: {{ db_name }}
-          📧 Admin: {{ admin_email }}
-          👥 Connexions max: {{ max_connections }}
-          💾 Buffer: {{ shared_buffers }}
-
     - name: Créer un fichier de configuration
       copy:
         content: |
-          ########################################
           # Configuration de base de données
-          # Serveur: {{ inventory_hostname }}
-          # Généré le: {{ ansible_facts["date_time"]["iso8601"] }}
-          ########################################
-          
-          [database]
           DB_PORT={{ db_port }}
           DB_NAME={{ db_name }}
-          MAX_CONNECTIONS={{ max_connections }}
-          SHARED_BUFFERS={{ shared_buffers }}
-          
-          [server]
-          HOSTNAME={{ inventory_hostname }}
-          FQDN={{ ansible_facts["fqdn"] }}
-          DISTRIBUTION={{ ansible_facts["distribution"] }} {{ ansible_facts["distribution_version"] }}
-          MEMORY={{ ansible_facts["memtotal_mb"] }}MB
-
-          [admin]
           ADMIN_EMAIL={{ admin_email }}
-          ANSIBLE_USER={{ ansible_facts["user_id"] }}
-          
-          [network]
-          GROUPS={{ group_names | join(', ') }}
+          HOSTNAME={{ inventory_hostname }}
         dest: /etc/db-config.conf
         mode: '0644'
 
-    - name: Afficher la configuration
+    - name: Afficher le contenu du fichier créé
       command: cat /etc/db-config.conf
-      register: config
+      register: db_config_content
       changed_when: false
 
-    - name: Montrer le résultat
+    - name: Montrer la configuration
       debug:
-        var: config.stdout_lines
-
-    - name: Créer un fichier avec variables conditionnelles
-      copy:
-        content: |
-          # Environment: {% if 'databases' in group_names %}DATABASE SERVER{% else %}OTHER{% endif %}
-          # Is DB server: {{ 'databases' in group_names }}
-          # Total groups: {{ group_names | length }}
-        dest: /tmp/server-type.txt
-        mode: '0644'
-
-    - name: Afficher le type de serveur
-      command: cat /tmp/server-type.txt
-      register: server_type
-      changed_when: false
-
-    - name: Montrer le type
-      debug:
-        var: server_type.stdout_lines
+        var: db_config_content.stdout_lines
 ```
 
 ```bash
@@ -330,7 +263,7 @@ ansible-playbook -i inventory.yml playbook-avec-variables.yml
 
 ---
 
-## Partie 4 : Commandes ad-hoc utiles
+## Partie 5 : Commandes ad-hoc utiles (compléments)
 
 ```bash
 # Vérifier la version d'Ubuntu sur tous les serveurs
@@ -399,7 +332,7 @@ ansible all -i inventory.yml -m setup -a "filter=ansible_memtotal_mb"
 
 ---
 
-## Partie 5 : Vérifications et tests
+## Partie 6 : Vérifications et tests
 
 ### Tester la configuration
 
@@ -420,7 +353,7 @@ ansible databases -i inventory.yml -m command -a "cat /etc/db-config.conf"
 
 ---
 
-## Partie 6 : Nettoyage
+## Partie 7 : Nettoyage
 
 ```bash
 # Supprimer les fichiers de test
@@ -465,7 +398,7 @@ docker-compose -f docker-compose-lab.yml down -v
      - `{{ group_names }}` - Liste des groupes
    - Variables personnalisées dans `vars:`
    - Enregistrement de résultats avec `register:`
-   - Filtres Jinja2 (`join`, `length`, conditions)
+   - Filtres Jinja2 : d’autres exemples (`join`, conditions, etc.) figurent dans la partie « Commandes ad-hoc utiles (compléments) »
 
 3. **Modules Ansible essentiels**
    - `ping` : Tester la connectivité
