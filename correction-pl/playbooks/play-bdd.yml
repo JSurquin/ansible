@@ -1,0 +1,5 @@
+- name: Konfiguracja serwerów BDD
+  hosts: bdd_servers
+  become: yes
+  roles:
+    - bdd

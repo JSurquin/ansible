@@ -1,0 +1,6 @@
+---
+- name: Konfiguracja serwerów Nginx
+  hosts: nginx_servers
+  become: yes
+  roles:
+    - nginx

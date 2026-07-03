@@ -1,0 +1,12 @@
+---
+# Zmienne globalne dla wszystkich serwerów
+# 
+# Uwaga: Zmienne specyficzne są teraz zdefiniowane w:
+#   - ansible_connection: Zdefiniowane w każdym inwentarzu (inventories/*.yml)
+#   - Porty i konfiguracja: Zdefiniowane w vars każdej roli (roles/*/vars/main.yml)
+#
+# Ten plik może zawierać zmienne naprawdę globalne dla wszystkich środowisk
+# Na przykład:
+#   company_name: "Moja Firma"
+#   timezone: "Europe/Paris"
+#   ntp_server: "pool.ntp.org"

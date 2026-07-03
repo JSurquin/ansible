@@ -1,0 +1,32 @@
+# Pliki i foldery do ignorowania w rozwiązaniu
+
+# Logi Ansible
+*.retry
+*.log
+
+# Cache Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Środowiska wirtualne
+venv/
+env/
+ENV/
+
+# Pliki tymczasowe
+.tmp/
+tmp/
+*.tmp
+*.bak
+*.swp
+*~
+
+# IDE
+.vscode/
+.idea/
+*.sublime-*
+
+# System operacyjny
+.DS_Store
+Thumbs.db
